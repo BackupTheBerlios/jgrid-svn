@@ -26,6 +26,7 @@ import java.util.Iterator;
  * <li>Don't issue an error-level log message if the channel was disconnected.  This just means
  * that the listener is shutting down.</li>
  * <li>Show the full exception if there is a problem notifying.</li>
+ * <li>Fix concurrent access problem with the message listener list.</li>
  * </ul>
  * Starts a thread that receives messages on the transport and delegates them to the MessageListener.
  * <br>User: Joshua Davis
@@ -165,17 +166,35 @@ public class MessagePump extends PullPushAdapter
         }
     }
 
+    public void addMembershipListener(MembershipListener l)
+    {
+        synchronized (this)
+        {
+            super.addMembershipListener(l);
+        }
+    }
+
+    public void removeMembershipListener(MembershipListener l)
+    {
+        synchronized (this)
+        {
+            super.removeMembershipListener(l);
+        }
+    }
+
     protected void notifyViewChange(View v) {
         MembershipListener l;
-
         if(v == null) return;
-        for(Iterator it=membership_listeners.iterator(); it.hasNext();) {
-            l=(MembershipListener)it.next();
-            try {
-                l.viewAccepted(v);
-            }
-            catch(Throwable ex) {
-                if(log.isErrorEnabled()) log.error("exception notifying " + l + ": " + ex,ex);
+        synchronized (this)
+        {
+            for(Iterator it=membership_listeners.iterator(); it.hasNext();) {
+                l=(MembershipListener)it.next();
+                try {
+                    l.viewAccepted(v);
+                }
+                catch(Throwable ex) {
+                    if(log.isErrorEnabled()) log.error("exception notifying " + l + ": " + ex,ex);
+                }
             }
         }
     }
@@ -184,13 +203,16 @@ public class MessagePump extends PullPushAdapter
         MembershipListener l;
 
         if(suspected_mbr == null) return;
-        for(Iterator it=membership_listeners.iterator(); it.hasNext();) {
-            l=(MembershipListener)it.next();
-            try {
-                l.suspect(suspected_mbr);
-            }
-            catch(Throwable ex) {
-                if(log.isErrorEnabled()) log.error("exception notifying " + l + ": " + ex,ex);
+        synchronized (this)
+        {
+            for(Iterator it=membership_listeners.iterator(); it.hasNext();) {
+                l=(MembershipListener)it.next();
+                try {
+                    l.suspect(suspected_mbr);
+                }
+                catch(Throwable ex) {
+                    if(log.isErrorEnabled()) log.error("exception notifying " + l + ": " + ex,ex);
+                }
             }
         }
     }
@@ -198,13 +220,16 @@ public class MessagePump extends PullPushAdapter
     protected void notifyBlock() {
         MembershipListener l;
 
-        for(Iterator it=membership_listeners.iterator(); it.hasNext();) {
-            l=(MembershipListener)it.next();
-            try {
-                l.block();
-            }
-            catch(Throwable ex) {
-                if(log.isErrorEnabled()) log.error("exception notifying " + l + ": " + ex,ex);
+        synchronized (this)
+        {
+            for(Iterator it=membership_listeners.iterator(); it.hasNext();) {
+                l=(MembershipListener)it.next();
+                try {
+                    l.block();
+                }
+                catch(Throwable ex) {
+                    if(log.isErrorEnabled()) log.error("exception notifying " + l + ": " + ex,ex);
+                }
             }
         }
     }
