@@ -33,7 +33,8 @@ public class NetworkUtil
                     InetAddress addr = (InetAddress) en2.nextElement();
                     if ((!addr.isLoopbackAddress()) && (addr instanceof Inet4Address))
                     {
-                        log.info("Address = " + addr.toString());
+                        if (log.isDebugEnabled())
+                            log.debug("Address = " + addr.toString());
                         return addr;
                     }
                 }

@@ -11,13 +11,13 @@ import java.awt.event.ActionEvent;
  */
 public class GridControlPanel
 {
-    private GridMonitor monitor;
+    private ServerGui monitor;
     private JButton connect;
     private JPanel panel;
     private JButton disconnect;
     private JButton stop;
 
-    public GridControlPanel(GridMonitor monitor)
+    public GridControlPanel(ServerGui monitor)
     {
         this.monitor = monitor;
         connect.addActionListener(new ActionListener() {

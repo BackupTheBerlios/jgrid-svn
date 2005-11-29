@@ -152,7 +152,7 @@ class GridListener extends GridComponent implements MessageListener
         // We don't need a lock on the state to do this, so do it after the synchronized block.
         if (updateApplied)
         {
-            gridBus.notifyPeersUpdated();
+            gridBus.getNotifier().notifyPeersUpdated();
             return MessageConstants.ACK;
         }
         else

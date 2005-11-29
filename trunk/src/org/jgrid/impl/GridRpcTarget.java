@@ -14,6 +14,7 @@ public class GridRpcTarget implements MessageConstants
     private static Logger log = Logger.getLogger(GridRpcTarget.class);
 
     private GridBusImpl gridBus;
+
     private static ThreadLocal localMessage = new ThreadLocal();
 
     public static void setLocalMessage(Message req)
@@ -39,6 +40,9 @@ public class GridRpcTarget implements MessageConstants
     public Object _stop()
     {
         log.info(gridBus.getLocalAddress() + " _stop()");
+        // Stop the message pump right away.
+        gridBus.stop();
+
         // Disconnect after returning.
         Thread disconnector = new Thread(new Runnable()
         {

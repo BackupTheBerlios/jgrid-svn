@@ -22,6 +22,8 @@ import java.util.Vector;
  */
 public class GridRpcDispatcher extends RpcDispatcher
 {
+    private boolean ready = false;
+
     public GridRpcDispatcher(PullPushAdapter adapter,
                              MessageListener listener,
                              MembershipListener membership,
@@ -29,6 +31,22 @@ public class GridRpcDispatcher extends RpcDispatcher
     {
         super(adapter, "grid-rpc-dispatcher", listener, membership, target);
         setMarshaller(new GridMarshaller());
+    }
+
+    public boolean isReady()
+    {
+        synchronized (this)
+        {
+            return ready;
+        }
+    }
+
+    public void setReady(boolean ready)
+    {
+        synchronized (this)
+        {
+            this.ready = ready;
+        }
     }
 
     public Object callRemoteMethod(Address dest, String methodName, Object arg,
@@ -43,10 +61,19 @@ public class GridRpcDispatcher extends RpcDispatcher
 
     public Object handle(Message req)
     {
-        // Set the actual message in a thread local.
-        GridRpcTarget.setLocalMessage(req);
-        Object rv = super.handle(req);  // Invoke the method on the local target.
-        GridRpcTarget.setLocalMessage(null);
+        Object rv = null;  // Invoke the method on the local target.
+        if (isReady())
+        {
+            // Set the actual message in a thread local.
+            GridRpcTarget.setLocalMessage(req);
+            rv = super.handle(req);
+            GridRpcTarget.setLocalMessage(null);
+        }
+        else
+        {
+            // This dispatcher isn't ready yet, so... ignore the message?
+            return MessageConstants.NACK;
+        }
         return rv;
     }
 

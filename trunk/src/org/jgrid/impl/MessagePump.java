@@ -41,6 +41,13 @@ public class MessagePump extends PullPushAdapter
         super(transport, l);
     }
 
+    public void stop()
+    {
+        log.info("stopping...");
+        super.stop();
+        log.info("stopped.");
+    }
+
     /**
      * Reentrant run(): message reception is serialized, then the listener is notified of the
      * message reception

@@ -2,6 +2,7 @@
 package org.jgrid.impl;
 
 import org.apache.log4j.Logger;
+import org.jgrid.*;
 import org.jgroups.Address;
 import org.jgroups.Channel;
 import org.jgroups.ChannelException;
@@ -10,18 +11,6 @@ import org.jgroups.blocks.GroupRequest;
 import org.jgroups.blocks.MethodCall;
 import org.jgroups.util.RspList;
 import org.jgroups.util.Util;
-import org.jgrid.GridEventListener;
-import org.jgrid.GridException;
-import org.jgrid.PeerInfo;
-import org.jgrid.Peers;
-import org.jgrid.Server;
-import org.jgrid.GridBus;
-import org.jgrid.GridConfiguration;
-import org.jgrid.*;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * The communications backplane of the grid.
@@ -44,7 +33,9 @@ public class GridBusImpl implements GridBus, MessageConstants
 
     private String localAddress;
     private boolean running = false;
-    private List eventListeners;
+
+    // Event listeners.
+    private Notifier notifier;
 
     // The set of services on this node.
     private ServerImpl server;
@@ -63,7 +54,7 @@ public class GridBusImpl implements GridBus, MessageConstants
     public GridBusImpl(GridConfiguration config)
     {
         this.config = config;
-        this.eventListeners = new ArrayList();
+        notifier = new Notifier(this);
     }
 
     Object getComponentInstance(Object key)
@@ -74,6 +65,21 @@ public class GridBusImpl implements GridBus, MessageConstants
     GridRpcDispatcher getDispatcher()
     {
         return dispatcher;
+    }
+
+    Notifier getNotifier()
+    {
+        return notifier;
+    }
+
+    public void addEventListener(GridEventListener listener)
+    {
+        notifier.addEventListener(listener);
+    }
+
+    public void removeEventListener(GridEventListener listener)
+    {
+        notifier.removeEventListener(listener);
     }
 
     ServerImpl getServer()
@@ -126,11 +132,7 @@ public class GridBusImpl implements GridBus, MessageConstants
             running = true;
             notify();
             log.info(getLocalAddress() + " connected.");
-            for (Iterator iterator = eventListeners.iterator(); iterator.hasNext();)
-            {
-                GridEventListener gridEventListener = (GridEventListener) iterator.next();
-                gridEventListener.connected(this);
-            }
+            notifier.notifyConnected();
         }
     }
 
@@ -176,6 +178,7 @@ public class GridBusImpl implements GridBus, MessageConstants
                 log.info(channel.getLocalAddress() + " *** State was not retrieved (therefore I am the coordinator)");
                 listener.setCoordinator(myState);
             }
+            dispatcher.setReady(true);
         }
         catch (ChannelException e)
         {
@@ -196,6 +199,16 @@ public class GridBusImpl implements GridBus, MessageConstants
                 STATE_UPDATE_TIMEOUT);
     }
 
+    void stop()
+    {
+        if (pump != null)
+            pump.stop();
+        if (dispatcher != null)
+            dispatcher.stop();
+        if (peersImpl != null)
+            peersImpl.stop();
+    }
+
     public void disconnect()
     {
         synchronized (this)
@@ -204,23 +217,11 @@ public class GridBusImpl implements GridBus, MessageConstants
                 return;
             String localAddress = getLocalAddress();
             // Stop the message pump thread.
-            if (pump != null)
-            {
-                pump.stop();
-                pump = null;
-            }
-            // Stop the message dispatcher.
-            if (dispatcher != null)
-            {
-                dispatcher.stop();
-                dispatcher = null;
-            }
-            // Stop the peer tracker.
-            if (peersImpl != null)
-            {
-                peersImpl.disconnect();
-                peersImpl = null;
-            }
+            stop();
+            pump = null;
+            dispatcher = null;
+            peersImpl = null;
+
             // Close the channel.
             if (channel != null)
             {
@@ -230,7 +231,7 @@ public class GridBusImpl implements GridBus, MessageConstants
             running = false;
             notify();
             log.info(localAddress + " disconnected.");
-            notifyDisconnect();
+            notifier.notifyDisconnect();
         }
     }
 
@@ -269,22 +270,6 @@ public class GridBusImpl implements GridBus, MessageConstants
         }
     }
 
-    public void addEventListener(GridEventListener listener)
-    {
-        synchronized (this)
-        {
-            eventListeners.add(listener);
-        }
-    }
-
-    public void removeEventListener(GridEventListener listener)
-    {
-        synchronized (this)
-        {
-            eventListeners.remove(listener);
-        }
-    }
-
     public GridConfiguration getConfig()
     {
         return config;
@@ -295,33 +280,6 @@ public class GridBusImpl implements GridBus, MessageConstants
     {
         Address localAddress = (channel == null) ? null : channel.getLocalAddress();
         return sender.compareTo(localAddress) == 0;
-    }
-
-    private void notifyDisconnect()
-    {
-        for (Iterator iterator = eventListeners.iterator(); iterator.hasNext();)
-        {
-            GridEventListener gridEventListener = (GridEventListener) iterator.next();
-            gridEventListener.disconnected(this);
-        }
-    }
-
-    void notifyPeersChanged()
-    {
-        for (Iterator iterator = eventListeners.iterator(); iterator.hasNext();)
-        {
-            GridEventListener gridEventListener = (GridEventListener) iterator.next();
-            gridEventListener.peersChanged(this);
-        }
-    }
-
-    void notifyPeersUpdated()
-    {
-        for (Iterator iterator = eventListeners.iterator(); iterator.hasNext();)
-        {
-            GridEventListener gridEventListener = (GridEventListener) iterator.next();
-            gridEventListener.peersUpdated(this);
-        }
     }
 
     public GridStateImpl getGridState()

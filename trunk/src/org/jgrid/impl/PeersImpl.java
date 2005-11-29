@@ -60,13 +60,12 @@ public class PeersImpl extends GridComponent implements MembershipListener, Peer
             viewsAccepted++;
             this.notify();
         }
-        if (gridBus != null)
-            gridBus.notifyPeersChanged();
+        gridBus.getNotifier().notifyPeersChanged();
     }
 
     private String getLocalAdress()
     {
-        return gridBus == null ? "(no address)" : gridBus.getLocalAddress();
+        return gridBus.getLocalAddress();
     }
 
     public int size()
@@ -92,8 +91,6 @@ public class PeersImpl extends GridComponent implements MembershipListener, Peer
                 {
                 }
             }
-            if (gridBus == null)
-                log.info("Disconnected while waiting for view.");
         }
     }
 
@@ -177,13 +174,11 @@ public class PeersImpl extends GridComponent implements MembershipListener, Peer
 
     public void suspect(Address address)
     {
-        if (gridBus == null)
-            return;
         if (log.isDebugEnabled())
             log.debug("suspect() : " + address);
         NodeStateImpl state = gridBus.getGridState().getNodeState(address);
         state.setStatus(PeerInfo.STATUS_SUSPECT);
-        gridBus.notifyPeersChanged();
+        gridBus.getNotifier().notifyPeersChanged();
     }
 
     public void block()
@@ -191,7 +186,7 @@ public class PeersImpl extends GridComponent implements MembershipListener, Peer
         log.info(getLocalAdress() + " ** Block ** ");
     }
 
-    void disconnect()
+    void stop()
     {
         view = null;
         viewsAccepted = 0;

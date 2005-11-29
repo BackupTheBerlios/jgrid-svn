@@ -18,7 +18,7 @@ import java.util.Iterator;
  * <br>User: Joshua Davis
  * <br>Date: Oct 2, 2005 Time: 7:38:12 AM
  */
-public class GridMonitor implements GridEventListener
+public class ServerGui implements GridEventListener
 {
     private JFrame frame;
     private JPanel contentPane;
@@ -26,9 +26,9 @@ public class GridMonitor implements GridEventListener
     private GridBus bus;
     private DefaultTableModel tableModel;
 
-    public GridMonitor()
+    public ServerGui()
     {
-        frame = new JFrame("Grid Monitor");
+        frame = new JFrame("Grid Server");
         contentPane = new JPanel(new GridLayout(3, 1));
         // First row: a panel with all the grid properties in it.
         GridControlPanel panel = new GridControlPanel(this);
@@ -142,7 +142,7 @@ public class GridMonitor implements GridEventListener
 
     public static void main(String[] args)
     {
-        GridMonitor monitor = new GridMonitor();
+        ServerGui monitor = new ServerGui();
         monitor.run();
     }
 

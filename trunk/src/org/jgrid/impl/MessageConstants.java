@@ -7,4 +7,5 @@ package org.jgrid.impl;
 interface MessageConstants
 {
     String ACK = "ACK";
+    String NACK = "NACK";
 }
