@@ -3,8 +3,42 @@
 
     <property environment="env"/>
     <property name="checkout.dir" value="${basedir}"/>
+    <property name="build.dir" value="${checkout.dir}/build"/>
 
-    <target name="all" description="Build everything.">
+    <path id="main.classpath">
+        <fileset dir="${checkout.dir}/lib">
+            <include name="commons-logging*.jar"/>
+            <include name="concurrent.jar"/>
+            <include name="jgroups-all*.jar"/>
+            <include name="log4j*.jar"/>
+            <include name="picocontainer*.jar"/>
+        </fileset>
+    </path>
+
+    <path id="test.classpath">
+        <path refid="main.classpath"/>
+        <pathelement location="${build.dir}/classes"/>
+        <fileset dir="${checkout.dir}/lib">
+            <include name="junit*.jar"/>
+        </fileset>
+    </path>
+
+    <target name="compile" description="Compile all the java code.">
+        <mkdir dir="${build.dir}/classes"/>
+        <javac srcdir="${checkout.dir}/src" destdir="${build.dir}/classes">
+            <classpath refid="main.classpath"/>
+        </javac>
+        <mkdir dir="${build.dir}/test_classes"/>
+        <javac srcdir="${checkout.dir}/test_src" destdir="${build.dir}/test_classes">
+            <classpath refid="test.classpath"/>
+        </javac>
+    </target>
+
+    <target name="test">
+        <!-- TODO: Run the unit tests here -->
+    </target>
+
+    <target name="all" depends="compile,test,site" description="Build everything.">
     </target>
 
     <target name="site" description="Build the website with Forrest.">
