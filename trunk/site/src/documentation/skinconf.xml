@@ -92,7 +92,7 @@ which will be used to configure the chosen Forrest skin.
 
   <!-- The following are used to construct a copyright statement -->
   <year>2005</year>
-  <vendor>The EnterGrid team.</vendor>
+  <vendor>The JEGrid team.</vendor>
   <!-- The optional copyright-link URL will be used as a link in the
     copyright statement
   <copyright-link>http://www.apache.org/licenses/</copyright-link>
@@ -111,7 +111,7 @@ which will be used to configure the chosen Forrest skin.
   -->
   <trail>
     <link1 name="berlios" href="http://developer.berlios.de"/>
-    <link2 name="EnterGrid" href="http://jgrid.berlios.de/"/>
+    <link2 name="JEGrid" href="http://jgrid.berlios.de/"/>
     <link3 name="" href=""/>
   </trail>
 

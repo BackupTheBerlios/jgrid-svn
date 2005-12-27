@@ -18,14 +18,14 @@
 <!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
 <document> 
   <header> 
-    <title>EnterGrid - Enterprise Grid Computing for Java</title> 
+    <title>JEGrid - Enterprise Grid Computing for Java</title> 
   </header> 
   <body> 
     <section id="background">
       <title>Background</title>
       <p>The Java Enterprise (J2EE) framework is designed applications that require the server to process lots of
       very small requests, typically with database transactions.
-      While this is <i>great</i> for OLTP and web based applications, which most applications are, it
+      While this is <strong>great</strong> for OLTP and web based applications, which most applications are, it
       doesn't provide much help for applications that have compute-bound, long running processes.   These
       are more suited for traditional 'batch processing' systems.   EnterGrid is designed for this special case.
       It provides 'batch processing' services that can be scaled economically using COTS hardware and isolates

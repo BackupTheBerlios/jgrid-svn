@@ -18,17 +18,18 @@
 <!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
 <document> 
   <header> 
-    <title>EnterGrid - Enterprise Grid Computing for Java</title>
+    <title>JEGrid - Enterprise Grid Computing for Java</title>
   </header> 
   <body> 
     <section id="intro">
       <title>Introduction</title>
-      <p>EnterGrid is an <strong>enterprise grid framework for Java</strong>.   With EnterGrid, application developers
+      <p>
+      JEGrid is an <strong>enterprise grid framework for Java</strong>.   With EnterGrid, application developers
           can write computationally intensive code that can be scaled out using
           COTS (Commodity, Off-The-Shelf) machines without any change to the sofware.  Developers
           can also take advantage of coarse-grained parallel processing available in network of
           COTS machines.
-       </p>
+        </p>
     </section>
     <section id="features">
         <title>Features</title>

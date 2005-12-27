@@ -1,0 +1,17 @@
+
+<project name="jegrid" default="all">
+
+    <property environment="env"/>
+    <property name="checkout.dir" value="${basedir}"/>
+
+    <target name="all" description="Build everything.">
+    </target>
+
+    <target name="site" description="Build the website with Forrest.">
+        <!-- FORREST_HOME must be set as an environment variable -->
+        <property name="forrest.home" value="${env.FORREST_HOME}"/>
+        <ant antfile="${forrest.home}/main/forrest.build.xml" target="site" dir="${basedir}/site">
+        </ant>
+    </target>
+
+</project>
