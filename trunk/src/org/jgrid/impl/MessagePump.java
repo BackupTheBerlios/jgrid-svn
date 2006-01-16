@@ -32,17 +32,21 @@ import java.util.Iterator;
  * <br>User: Joshua Davis
  * <br>Date: Oct 4, 2005 Time: 8:02:10 AM
  */
-public class MessagePump extends PullPushAdapter
-{
+public class MessagePump extends PullPushAdapter {
     private static Log log = LogFactory.getLog(MessagePump.class);
+    private ClassLoader oldClassLoader;
 
-    public MessagePump(Transport transport, MessageListener l)
-    {
-        super(transport, l);
+    public MessagePump(Transport transport, GridListener listener) {
+        super(transport,listener);
     }
 
-    public void stop()
-    {
+    public void start() {
+        log.info("starting...");
+        super.start();
+        log.info("started.");
+    }
+
+    public void stop() {
         log.info("stopping...");
         super.stop();
         log.info("stopped.");
@@ -52,155 +56,142 @@ public class MessagePump extends PullPushAdapter
      * Reentrant run(): message reception is serialized, then the listener is notified of the
      * message reception
      */
-    public void run()
-    {
+    public void run() {
         if (log.isDebugEnabled())
             log.debug("run() : ENTER");
         Object obj;
-        while (receiver_thread != null && Thread.currentThread().equals(receiver_thread))
-        {
-            try
-            {
-                obj = transport.receive(0);
-                if (obj == null)
-                    continue;
+        Thread thread = Thread.currentThread();
+        try {
+            setClassLoaderOnRecieverThread();
+            while (receiver_thread != null && thread.equals(receiver_thread)) {
+                try {
+                    obj = transport.receive(0);
+                    if (obj == null)
+                        continue;
 
-                if (obj instanceof Message)
-                {
-                    handleMessage((Message) obj);
+                    if (obj instanceof Message) {
+                        handleMessage((Message) obj);
+                    } else if (obj instanceof GetStateEvent) {
+                        handleGetState();
+                    } else if (obj instanceof SetStateEvent) {
+                        handleSetState(obj);
+                    } else if (obj instanceof View) {
+                        notifyViewChange((View) obj);
+                    } else if (obj instanceof SuspectEvent) {
+                        notifySuspect((Address) ((SuspectEvent) obj).getMember());
+                    } else if (obj instanceof BlockEvent) {
+                        notifyBlock();
+                    }
                 }
-                else if (obj instanceof GetStateEvent)
-                {
-                    handleGetState();
+                catch (ChannelNotConnectedException conn) {
+                    Address local_addr = ((Channel) transport).getLocalAddress();
+                    if (log.isWarnEnabled()) log.warn('[' + getAddressString(local_addr) +
+                            "] channel not connected, exception is " + conn);
+                    Util.sleep(1000);   // why?
+                    receiver_thread = null;
+                    break;
                 }
-                else if (obj instanceof SetStateEvent)
-                {
-                    handleSetState(obj);
+                catch (ChannelClosedException closed_ex) {
+                    Address local_addr = ((Channel) transport).getLocalAddress();
+                    if (receiver_thread == null)
+                        log.info("Channel closed, thread stopped.");
+                    else if (log.isWarnEnabled()) log.warn('[' + getAddressString(local_addr) +
+                            "] channel closed, exception is " + closed_ex);
+                    receiver_thread = null;
+                    break;
                 }
-                else if (obj instanceof View)
-                {
-                    notifyViewChange((View) obj);
-                }
-                else if (obj instanceof SuspectEvent)
-                {
-                    notifySuspect((Address) ((SuspectEvent) obj).getMember());
-                }
-                else if (obj instanceof BlockEvent)
-                {
-                    notifyBlock();
+                catch (Throwable e) {
+                    log.error("Unexpected exception: " + e.getMessage(), e);
                 }
             }
-            catch (ChannelNotConnectedException conn)
-            {
-                Address local_addr = ((Channel) transport).getLocalAddress();
-                if (log.isWarnEnabled()) log.warn('[' + getAddressString(local_addr) +
-                        "] channel not connected, exception is " + conn);
-                Util.sleep(1000);   // why?
-                receiver_thread = null;
-                break;
-            }
-            catch (ChannelClosedException closed_ex)
-            {
-                Address local_addr = ((Channel) transport).getLocalAddress();
-                if (receiver_thread == null)
-                    log.info("Channel closed, thread stopped.");
-                else if (log.isWarnEnabled()) log.warn('[' + getAddressString(local_addr) +
-                        "] channel closed, exception is " + closed_ex);
-                receiver_thread = null;
-                break;
-            }
-            catch (Throwable e)
-            {
-                log.error("Unexpected exception: " + e.getMessage(),e);
-            }
+        } finally {
+            // Restore the original class loader.
+            restoreClassLoaderOnReceiverThread();
         }
         log.info("run() : Message pump stopped.");
     }
 
-    private String getAddressString(Address local_addr)
-    {
+    private void restoreClassLoaderOnReceiverThread() {
+        if (oldClassLoader != null)
+            receiver_thread.setContextClassLoader(oldClassLoader);
+    }
+
+    private void setClassLoaderOnRecieverThread() {
+        // Downcast the listener, because it's the only thing we know will be set for sure before the thread is started
+        // because PushPullAdapter starts the thread inside the constructor!  :P
+        GridBusImpl gridBusImpl = ((GridListener)listener).gridBus;
+        oldClassLoader = receiver_thread.getContextClassLoader();
+        GridClassLoader gridClassLoader = new GridClassLoader(oldClassLoader,
+                        null,
+                        gridBusImpl);
+        receiver_thread.setContextClassLoader(gridClassLoader);
+        log.info("Grid class loader set for reciever thread.");
+    }
+
+
+    private String getAddressString(Address local_addr) {
         return (local_addr == null ? "<null>" : local_addr.toString());
     }
 
-    private void handleSetState(Object obj)
-    {
-        if (listener != null)
-        {
-            try
-            {
+    private void handleSetState(Object obj) {
+        if (listener != null) {
+            try {
                 listener.setState(((SetStateEvent) obj).getArg());
             }
-            catch (ClassCastException cast_ex)
-            {
+            catch (ClassCastException cast_ex) {
                 if (log.isErrorEnabled()) log.error("received SetStateEvent, but argument " +
                         ((SetStateEvent) obj).getArg() + " is not serializable ! Discarding message.");
             }
-        }
-        else
-        {
+        } else {
             log.warn("handleSetState() : no listener registered, state ignored");
         }
     }
 
-    private void handleGetState()
-    {
+    private void handleGetState() {
         byte[] retval = null;
-        if (listener != null)
-        {
-            try
-            {
+        if (listener != null) {
+            try {
                 retval = listener.getState();
             }
-            catch (Throwable t)
-            {
+            catch (Throwable t) {
                 log.error("getState() from application failed, will return empty state", t);
             }
-        }
-        else
-        {
+        } else {
             log.warn("handleGetState() : no listener registered, returning empty state");
         }
 
-        if (transport instanceof Channel)
-        {
+        if (transport instanceof Channel) {
             ((Channel) transport).returnState(retval);
-        }
-        else
-        {
+        } else {
             if (log.isErrorEnabled())
                 log.error("underlying transport is not a Channel, but a " +
                         transport.getClass().getName() + ": cannot return state using returnState()");
         }
     }
 
-    public void addMembershipListener(MembershipListener l)
-    {
-        synchronized (this)
-        {
+    public void addMembershipListener(MembershipListener l) {
+        synchronized (this) {
             super.addMembershipListener(l);
         }
     }
 
-    public void removeMembershipListener(MembershipListener l)
-    {
-        synchronized (this)
-        {
+    public void removeMembershipListener(MembershipListener l) {
+        synchronized (this) {
             super.removeMembershipListener(l);
         }
     }
 
     protected void notifyViewChange(View v) {
         MembershipListener l;
-        if(v == null) return;
-        synchronized (this)
-        {
-            for(Iterator it=membership_listeners.iterator(); it.hasNext();) {
-                l=(MembershipListener)it.next();
+        if (v == null) return;
+        synchronized (this) {
+            for (Iterator it = membership_listeners.iterator(); it.hasNext();) {
+                l = (MembershipListener) it.next();
                 try {
                     l.viewAccepted(v);
                 }
-                catch(Throwable ex) {
-                    if(log.isErrorEnabled()) log.error("exception notifying " + l + ": " + ex,ex);
+                catch (Throwable ex) {
+                    if (log.isErrorEnabled()) log.error("exception notifying " + l + ": " + ex, ex);
                 }
             }
         }
@@ -209,16 +200,15 @@ public class MessagePump extends PullPushAdapter
     protected void notifySuspect(Address suspected_mbr) {
         MembershipListener l;
 
-        if(suspected_mbr == null) return;
-        synchronized (this)
-        {
-            for(Iterator it=membership_listeners.iterator(); it.hasNext();) {
-                l=(MembershipListener)it.next();
+        if (suspected_mbr == null) return;
+        synchronized (this) {
+            for (Iterator it = membership_listeners.iterator(); it.hasNext();) {
+                l = (MembershipListener) it.next();
                 try {
                     l.suspect(suspected_mbr);
                 }
-                catch(Throwable ex) {
-                    if(log.isErrorEnabled()) log.error("exception notifying " + l + ": " + ex,ex);
+                catch (Throwable ex) {
+                    if (log.isErrorEnabled()) log.error("exception notifying " + l + ": " + ex, ex);
                 }
             }
         }
@@ -227,15 +217,14 @@ public class MessagePump extends PullPushAdapter
     protected void notifyBlock() {
         MembershipListener l;
 
-        synchronized (this)
-        {
-            for(Iterator it=membership_listeners.iterator(); it.hasNext();) {
-                l=(MembershipListener)it.next();
+        synchronized (this) {
+            for (Iterator it = membership_listeners.iterator(); it.hasNext();) {
+                l = (MembershipListener) it.next();
                 try {
                     l.block();
                 }
-                catch(Throwable ex) {
-                    if(log.isErrorEnabled()) log.error("exception notifying " + l + ": " + ex,ex);
+                catch (Throwable ex) {
+                    if (log.isErrorEnabled()) log.error("exception notifying " + l + ": " + ex, ex);
                 }
             }
         }

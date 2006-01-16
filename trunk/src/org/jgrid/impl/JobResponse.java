@@ -1,6 +1,9 @@
 package org.jgrid.impl;
 
+import org.jgrid.util.SerializationUtil;
+
 import java.io.Serializable;
+import java.io.IOException;
 
 /**
  * Response from a server when a job has been accepted.
@@ -9,7 +12,7 @@ import java.io.Serializable;
  */
 class JobResponse extends JobMessage
 {
-    private Serializable output;
+    private byte[] outputBytes;
     private Throwable throwable;
     private long startTime;
     private long endTime;
@@ -19,14 +22,12 @@ class JobResponse extends JobMessage
         super(jobId, serviceClassName);
     }
 
-    public void setOutput(Serializable output)
-    {
-        this.output = output;
+    public void setOutput(Serializable output) throws IOException {
+        this.outputBytes = SerializationUtil.objectToByteArray(output);
     }
 
-    public Serializable getOutput()
-    {
-        return output;
+    public Serializable getOutput() throws IOException, ClassNotFoundException {
+        return (Serializable) SerializationUtil.byteArrayToObject(outputBytes);
     }
 
     public Throwable getThrowable()
@@ -64,7 +65,7 @@ class JobResponse extends JobMessage
         return "JobResponse{" +
                 "requestId='" + getRequestId() + '\'' +
                 ", serviceClassName='" + getServiceClassName() + '\'' +
-                ", output=" + output +
+                ", outputBytes.length=" + outputBytes.length +
                 ", throwable=" + throwable +
                 ", startTime=" + startTime +
                 ", endTime=" + endTime +

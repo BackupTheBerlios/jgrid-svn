@@ -3,6 +3,11 @@ package org.jgrid.impl;
 import org.apache.log4j.Logger;
 import org.jgroups.Message;
 import org.jgroups.util.Util;
+import org.jgrid.util.StreamCopier;
+
+import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  * Handles messages sent from the GridRpcDispatcher.
@@ -73,5 +78,19 @@ public class GridRpcTarget implements MessageConstants
             return "NACK: This node is not a client.";
         else
             return client.completed(response);
+    }
+
+    public Object _getClassBytes(String name) throws IOException {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        String path = name.replace('.', '/').concat(".class");
+        InputStream is = cl.getResourceAsStream(path);
+        if (is == null)
+        {
+            log.info("Unknown resource: " + path);
+            return null;
+        }
+        byte[] bytes = StreamCopier.readByteArray(is);
+        log.info("Returning " + bytes.length + " bytes for class " + name);
+        return new ClassBytes(name,bytes);
     }
 }

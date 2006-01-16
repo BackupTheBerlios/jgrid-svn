@@ -1,6 +1,7 @@
 package org.jgrid;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Client side interface to a job running on the grid.
@@ -13,14 +14,19 @@ public interface Job
      * Begin asynchronously executing the service class with the input on the grid.
      * @param input the input to the service
      */
-    void execute(Serializable input);
-
+    void start(Serializable input);
 
     /**
-     * Wait forever for the result and take ownership of the result when it
+     * Wait for the result and take ownership of the result when it
      * arrives.
      * @return the result of the execution.
-     * @param timeout
+     * @param timeout (-1 to wait forever)
      */
-    Serializable takeResult(long timeout);
+    Serializable join(long timeout);
+
+    /**
+     * Start the service on all inputs in the list in parallel.
+     * @param inputList
+     */
+    void startParallel(List inputList);
 }

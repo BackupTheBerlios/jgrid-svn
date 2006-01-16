@@ -115,9 +115,9 @@ public class GridTest extends TestCase
 
             ClientSession session = config.getClientSession();
             Job job = session.createJob(MyService.class);
-            // Make sure we can execute the job once.
-            job.execute("test");
-            Object result = job.takeResult(5000);
+            // Make sure we can start the job once.
+            job.start("test");
+            Object result = job.join(5000);
             assertEquals("executed test",result);
         }
         finally

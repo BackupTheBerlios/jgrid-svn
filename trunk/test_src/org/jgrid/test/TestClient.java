@@ -26,8 +26,8 @@ public class TestClient
         GridConfiguration config = new GridConfiguration();
         ClientSession session = config.getClientSession();
         Job job = session.createJob(MyService.class);
-        job.execute("first job");
-        Object result = job.takeResult(5000);
+        job.start("first job");
+        Object result = job.join(5000);
         System.out.println("result = " + result);
     }
 }

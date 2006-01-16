@@ -149,7 +149,7 @@ public class GridBusImpl implements GridBus, MessageConstants
             localAddress = channel.getLocalAddress().toString();
             peersImpl = new PeersImpl(this);                        // Handles membership messages.
             listener = new GridListener(this);                      // Handles state change messages.
-            handler = new GridRpcTarget(this);                 // Handles RPCs from the MessageDispatcher.
+            handler = new GridRpcTarget(this);                      // Handles RPCs from the MessageDispatcher.
             // Start a message pump thread.  Pass state messages through to the listener
             pump = new MessagePump(channel, listener);
             dispatcher = new GridRpcDispatcher(pump,
@@ -314,5 +314,9 @@ public class GridBusImpl implements GridBus, MessageConstants
     public GridListener getGridListener()
     {
         return listener;
+    }
+
+    public String getGridName() {
+        return config.getGridName();
     }
 }

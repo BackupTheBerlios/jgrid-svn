@@ -2,6 +2,9 @@ package org.jgrid.impl;
 
 import org.jgroups.blocks.RpcDispatcher;
 import org.jgrid.util.SerializationUtil;
+import org.apache.log4j.Logger;
+
+import java.io.IOException;
 
 /**
  * RPC marshaller.
@@ -10,6 +13,8 @@ import org.jgrid.util.SerializationUtil;
  */
 public class GridMarshaller implements RpcDispatcher.Marshaller
 {
+    private static Logger log = Logger.getLogger(GridMarshaller.class);
+
     public byte[] objectToByteBuffer(Object obj) throws Exception
     {
         return SerializationUtil.objectToByteArray(obj);
@@ -17,6 +22,11 @@ public class GridMarshaller implements RpcDispatcher.Marshaller
 
     public Object objectFromByteBuffer(byte[] buf) throws Exception
     {
-        return SerializationUtil.byteArrayToObject(buf);
+        try {
+            return SerializationUtil.byteArrayToObject(buf);
+        } catch (Exception e) {
+            log.error(e,e);
+            throw e;
+        }
     }
 }

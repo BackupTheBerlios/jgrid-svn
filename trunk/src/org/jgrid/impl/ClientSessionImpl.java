@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.io.Serializable;
+import java.io.IOException;
 
 /**
  * The client aspect of a grid node.
@@ -27,6 +28,7 @@ public class ClientSessionImpl extends GridComponent implements ClientSession
     private static Logger log = Logger.getLogger(ClientSessionImpl.class);
 
     private Map jobsByRequestId = new HashMap();
+    private static final int ACCEPT_TIMEOUT = 30000;
 
     public ClientSessionImpl(GridConfiguration config, GridBusImpl gridBus)
     {
@@ -38,14 +40,14 @@ public class ClientSessionImpl extends GridComponent implements ClientSession
         return new JobImpl(this, aClass);
     }
 
-    NodeStateImpl[] getServers()
+    List getServers()
     {
         connect();
 
-        // Find a node to execute the job on.
+        // Find a node to start the job on.
         GridStateImpl gridState = getGridBus().getGridState();
         if (gridState == null)
-            throw new GridException("Cannot execute: grid state is not available.");
+            throw new GridException("Cannot start: grid state is not available.");
 
         Collection nodeStates = gridState.getAllNodes();
         List serverList = new ArrayList(nodeStates.size());
@@ -57,7 +59,7 @@ public class ClientSessionImpl extends GridComponent implements ClientSession
                 continue;
             serverList.add(n);
         }
-        return (NodeStateImpl[]) serverList.toArray(new NodeStateImpl[serverList.size()]);
+        return serverList;
     }
 
     private void connect()
@@ -72,17 +74,19 @@ public class ClientSessionImpl extends GridComponent implements ClientSession
         return "jobreq" + getGridBus().getNextId();
     }
 
-    public Object completed(JobResponse response)
-    {
+    public Object completed(JobResponse response) {
         String requestId = response.getRequestId();
         JobImpl job = removeJob(requestId);
         if (job == null)
             throw new GridException("Unepected response: " + response + "\nJob not found");
-        return job.setResponse(response);
+        try {
+            return job.setResponse(response);
+        } catch (Exception e) {
+            throw new GridException(e);
+        }
     }
 
-    public JobRequest createJobRequest(Class serviceClass, Serializable input)
-    {
+    JobRequest createJobRequest(Class serviceClass, Serializable input) throws IOException {
         return new JobRequest(
                 nextRequestId(),
                 serviceClass.getName(),
@@ -104,7 +108,8 @@ public class ClientSessionImpl extends GridComponent implements ClientSession
             // We must add the job to the map here, because the server might call completed()
             // *before* we figure out what to do with the 'accept' response.
             addJob(requestId, job);
-            Object response = dispatcher.callRemoteMethod(nodeAddress, "_accept", request, GroupRequest.GET_ALL, 1000);
+            Object response = dispatcher.callRemoteMethod(nodeAddress, "_accept", request,
+                    GroupRequest.GET_ALL, ACCEPT_TIMEOUT);
             log.info(nodeAddress + " " + response);
             if (response != null && response instanceof JobAccepted)
             {
@@ -156,4 +161,7 @@ public class ClientSessionImpl extends GridComponent implements ClientSession
         }
     }
 
+    public String getGridName() {
+        return getGridBus().getConfig().getGridName();
+    }
 }

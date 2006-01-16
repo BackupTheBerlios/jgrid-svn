@@ -39,5 +39,12 @@
         <title>License</title>
         <p></p>
     </section>
+      <section id="dependencies">
+        <title>Dependencies</title>
+        <ul>
+           <li><strong>JGroups</strong> - http://www.jgroups.org</li>
+           <li><strong>RngPack</strong> - http://www.honeylocust.com/RngPack</li>
+        </ul>
+      </section>
   </body>
 </document>
