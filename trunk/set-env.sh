@@ -11,6 +11,10 @@ case `uname` in
            ;;
 esac
 
+if [ -z "$ANT_HOME" ] ; then
+    export ANT_HOME=/usr/local/apache-ant
+fi
+
 if [ -z "$FORREST_HOME" ] ; then
     export FORREST_HOME=/usr/local/apache-forrest-0.7
 fi
@@ -24,7 +28,7 @@ if [ ! -d "$JAVA_HOME" ] ; then
     exit -1
 fi
 
-export PATH=$JAVA_HOME/bin:$FORREST_HOME/bin:$PATH
+export PATH=$JAVA_HOME/bin:$ANT_HOME/bin:$FORREST_HOME/bin:$PATH
 
 # Cygwin-ify the home directory environment variables.
 if [ "$cygwin" = "true" ] ; then
