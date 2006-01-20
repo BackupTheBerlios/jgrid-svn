@@ -66,8 +66,8 @@ which will be used to configure the chosen Forrest skin.
 
   <!-- mandatory project logo
        default skin: renders it at the top -->
-  <project-name>EnterGrid</project-name>
-  <project-description>EnterGrid - Enterprise Grid computing for Java.</project-description>
+  <project-name>JEGrid</project-name>
+  <project-description>JEGrid - Enterprise Grid computing for Java.</project-description>
   <project-url>http://jgrid.berlios.de/</project-url>
   <project-logo>images/project.png</project-logo>
   <!-- Alternative static image:

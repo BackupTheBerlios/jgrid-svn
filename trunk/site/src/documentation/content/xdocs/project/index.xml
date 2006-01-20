@@ -23,20 +23,13 @@
   <body> 
     <section id="background">
       <title>Background</title>
-      <p>The Java Enterprise (J2EE) framework is designed applications that require the server to process lots of
-      very small requests, typically with database transactions.
-      While this is <strong>great</strong> for OLTP and web based applications, which most applications are, it
-      doesn't provide much help for applications that have compute-bound, long running processes.   These
-      are more suited for traditional 'batch processing' systems.   EnterGrid is designed for this special case.
-      It provides 'batch processing' services that can be scaled economically using COTS hardware and isolates
-      the hardware from the software design.
+      <p>This project was started to fulfill a need for a simple, lightweight framework for making a
+      back-end 'compute farm' for a web service that offers it's shared computational power to customers.
+      This particular application already had a J2EE-based front end which is great for all the OLTP, web UI and
+      SOAP tasks, but it was very clear that J2EE was not intended to handle long running, compute-bound
+      tasks that require lots of memory and CPU.   So, a grid framework was designed to allow the J2EE application
+      to serve as a front end for the compute farm.
       </p>
-      <p>For example, financial applications often require this type of compte-bound processing for simulations and
-      risk calculations.   A J2EE server is a great front end OLTP for entering data, but running the number-crunching
-      code on the same hardware as the OLTP / web UI will definitely cause performance degradation.   In this situation,
-      EnterGrid can be used to build a back end layer that will provide batch processing and parallel processing on
-      a separate group of machines dedicated for this type of task.  This separation allows the OLTP/web UI system
-      to be respond rapidly to requests while the compute grid is operating relatively un-interrupted.</p>
     </section>
   </body>
 </document>

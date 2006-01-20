@@ -24,12 +24,13 @@
     <section id="intro">
       <title>Introduction</title>
       <p>
-      JEGrid is an <strong>enterprise grid framework for Java</strong>.   With EnterGrid, application developers
-          can write computationally intensive code that can be scaled out using
-          COTS (Commodity, Off-The-Shelf) machines without any change to the sofware.  Developers
-          can also take advantage of coarse-grained parallel processing available in network of
-          COTS machines.
-        </p>
+      JEGrid is a light weight <strong>enterprise grid framework for Java</strong> that provides
+      <strong>federation</strong> (clustering), <strong>coarse-grained parallelism</strong>, and
+      <strong>load balancing</strong>.
+      Using the coarse-grained parallelism features, super-computer performance can be realized with
+      COTS (Commodity, Off The Shelf) hardware which is more economical, more scaleable, and
+      more familiar to IT personell.
+      </p>
     </section>
     <section id="features">
         <title>Features</title>
