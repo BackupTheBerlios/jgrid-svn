@@ -34,10 +34,9 @@ import java.util.Iterator;
  */
 public class MessagePump extends PullPushAdapter {
     private static Log log = LogFactory.getLog(MessagePump.class);
-    private ClassLoader oldClassLoader;
 
     public MessagePump(Transport transport, GridListener listener) {
-        super(transport,listener);
+        super(transport, listener);
     }
 
     public void start() {
@@ -61,73 +60,48 @@ public class MessagePump extends PullPushAdapter {
             log.debug("run() : ENTER");
         Object obj;
         Thread thread = Thread.currentThread();
-        try {
-            setClassLoaderOnRecieverThread();
-            while (receiver_thread != null && thread.equals(receiver_thread)) {
-                try {
-                    obj = transport.receive(0);
-                    if (obj == null)
-                        continue;
-
-                    if (obj instanceof Message) {
-                        handleMessage((Message) obj);
-                    } else if (obj instanceof GetStateEvent) {
-                        handleGetState();
-                    } else if (obj instanceof SetStateEvent) {
-                        handleSetState(obj);
-                    } else if (obj instanceof View) {
-                        notifyViewChange((View) obj);
-                    } else if (obj instanceof SuspectEvent) {
-                        notifySuspect((Address) ((SuspectEvent) obj).getMember());
-                    } else if (obj instanceof BlockEvent) {
-                        notifyBlock();
-                    }
-                }
-                catch (ChannelNotConnectedException conn) {
-                    Address local_addr = ((Channel) transport).getLocalAddress();
-                    if (log.isWarnEnabled()) log.warn('[' + getAddressString(local_addr) +
-                            "] channel not connected, exception is " + conn);
-                    Util.sleep(1000);   // why?
-                    receiver_thread = null;
-                    break;
-                }
-                catch (ChannelClosedException closed_ex) {
-                    Address local_addr = ((Channel) transport).getLocalAddress();
-                    if (receiver_thread == null)
-                        log.info("Channel closed, thread stopped.");
-                    else if (log.isWarnEnabled()) log.warn('[' + getAddressString(local_addr) +
-                            "] channel closed, exception is " + closed_ex);
-                    receiver_thread = null;
-                    break;
-                }
-                catch (Throwable e) {
-                    log.error("Unexpected exception: " + e.getMessage(), e);
+        while (receiver_thread != null && thread.equals(receiver_thread)) {
+            try {
+                obj = transport.receive(0);
+                if (obj == null)
+                    continue;
+                if (obj instanceof Message) {
+                    handleMessage((Message) obj);
+                } else if (obj instanceof GetStateEvent) {
+                    handleGetState();
+                } else if (obj instanceof SetStateEvent) {
+                    handleSetState(obj);
+                } else if (obj instanceof View) {
+                    notifyViewChange((View) obj);
+                } else if (obj instanceof SuspectEvent) {
+                    notifySuspect((Address) ((SuspectEvent) obj).getMember());
+                } else if (obj instanceof BlockEvent) {
+                    notifyBlock();
                 }
             }
-        } finally {
-            // Restore the original class loader.
-            restoreClassLoaderOnReceiverThread();
-        }
+            catch (ChannelNotConnectedException conn) {
+                Address local_addr = ((Channel) transport).getLocalAddress();
+                if (log.isWarnEnabled()) log.warn('[' + getAddressString(local_addr) +
+                        "] channel not connected, exception is " + conn);
+                Util.sleep(1000);   // why?
+                receiver_thread = null;
+                break;
+            }
+            catch (ChannelClosedException closed_ex) {
+                Address local_addr = ((Channel) transport).getLocalAddress();
+                if (receiver_thread == null)
+                    log.info("Channel closed, thread stopped.");
+                else if (log.isWarnEnabled()) log.warn('[' + getAddressString(local_addr) +
+                        "] channel closed, exception is " + closed_ex);
+                receiver_thread = null;
+                break;
+            }
+            catch (Throwable e) {
+                log.error("Unexpected exception: " + e.getMessage(), e);
+            }
+        } // while
         log.info("run() : Message pump stopped.");
     }
-
-    private void restoreClassLoaderOnReceiverThread() {
-        if (oldClassLoader != null)
-            receiver_thread.setContextClassLoader(oldClassLoader);
-    }
-
-    private void setClassLoaderOnRecieverThread() {
-        // Downcast the listener, because it's the only thing we know will be set for sure before the thread is started
-        // because PushPullAdapter starts the thread inside the constructor!  :P
-        GridBusImpl gridBusImpl = ((GridListener)listener).gridBus;
-        oldClassLoader = receiver_thread.getContextClassLoader();
-        GridClassLoader gridClassLoader = new GridClassLoader(oldClassLoader,
-                        null,
-                        gridBusImpl);
-        receiver_thread.setContextClassLoader(gridClassLoader);
-        log.info("Grid class loader set for reciever thread.");
-    }
-
 
     private String getAddressString(Address local_addr) {
         return (local_addr == null ? "<null>" : local_addr.toString());

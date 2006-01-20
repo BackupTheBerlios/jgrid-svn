@@ -40,6 +40,10 @@ public class ClientSessionImpl extends GridComponent implements ClientSession
         return new JobImpl(this, aClass);
     }
 
+    /**
+     * Returns the list of all known servers on the grid as a List of NodeStateImpl.
+     * @return a list of NodeStateImpl, one for each server on the grid.
+     */
     List getServers()
     {
         connect();
@@ -74,6 +78,11 @@ public class ClientSessionImpl extends GridComponent implements ClientSession
         return "jobreq" + getGridBus().getNextId();
     }
 
+    /**
+     * Invoked by the server when a job is completed.
+     * @param response The response from the job execution.
+     * @return an ACK to the server, if successful.
+     */
     public Object completed(JobResponse response) {
         String requestId = response.getRequestId();
         JobImpl job = removeJob(requestId);
@@ -94,6 +103,13 @@ public class ClientSessionImpl extends GridComponent implements ClientSession
         );
     }
 
+    /**
+     * Ask a server if it can accept a job.
+     * @param nodeAddress The server that will be asked to accept the job.
+     * @param job The job to accept
+     * @param request The job request
+     * @return true if the job was accepted, false if not.
+     */
     public boolean accept(Address nodeAddress, JobImpl job, JobRequest request)
     {
         String requestId = request.getRequestId();
