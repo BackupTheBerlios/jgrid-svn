@@ -12,11 +12,21 @@ case `uname` in
 esac
 
 if [ -z "$ANT_HOME" ] ; then
-    export ANT_HOME=/usr/local/apache-ant
+    if [ -d /usr/local/apache-ant ] ; then
+        export ANT_HOME=/usr/local/apache-ant
+    else
+        echo "ERROR: Unable to locate ANT. Please set ANT_HOME."
+        exit -1
+    fi
 fi
 
 if [ -z "$FORREST_HOME" ] ; then
-    export FORREST_HOME=/usr/local/apache-forrest-0.7
+    if [ -d /usr/local/apache-forrest-0.7 ] ; then
+        export FORREST_HOME=/usr/local/apache-forrest-0.7
+    else
+        echo "ERROR: Unable to locate FORREST. Please set FORREST_HOME."
+        exit -1
+    fi
 fi
 
 if [ -z "$JAVA_HOME" ] ; then
@@ -34,4 +44,5 @@ export PATH=$JAVA_HOME/bin:$ANT_HOME/bin:$FORREST_HOME/bin:$PATH
 if [ "$cygwin" = "true" ] ; then
   export FORREST_HOME=`cygpath --mixed "$FORREST_HOME"`
   export JAVA_HOME=`cygpath --mixed "$JAVA_HOME"`
+  export ANT_HOME=`cygpath --mixed "$ANT_HOME"`
 fi

@@ -6,10 +6,10 @@
 	<classpathentry kind="src" path="test_src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/commons-logging-1.0.4.jar"/>
-	<classpathentry kind="lib" path="lib/concurrent.jar"/>
-	<classpathentry kind="lib" path="lib/jgroups-all-2.2.8.jar"/>
+	<classpathentry sourcepath="lib/concurrent-src.zip" kind="lib" path="lib/concurrent.jar"/>
+	<classpathentry sourcepath="lib/jgroups-src-2.2.8.zip" kind="lib" path="lib/jgroups-all-2.2.8.jar"/>
 	<classpathentry kind="lib" path="lib/junit-3.8.1.jar"/>
 	<classpathentry kind="lib" path="lib/log4j-1.2.9.jar"/>
-	<classpathentry kind="lib" path="lib/picocontainer-1.1.jar"/>
+	<classpathentry sourcepath="lib/picocontainer-src-1.1.zip" kind="lib" path="lib/picocontainer-1.1.jar"/>
 	<classpathentry kind="output" path="eclipse-out"/>
 </classpath>
