@@ -2,6 +2,7 @@
 
 # Find the real path where this script lives.
 whoami=`basename $0`
+#trick to resolve symlinks
 whereami=`echo $0 | sed -e "s#^[^/]#\`pwd\`/&#"`
 whereami=`dirname $whereami`
 source $whereami/set-env.sh
