@@ -2,7 +2,7 @@
 package org.jgrid;
 
 /**
- * TODO: Add class javadoc
+ * Application exception. Wrapper over RuntimException
  *
  * @author josh Jan 5, 2005 7:01:51 AM
  */

@@ -34,6 +34,13 @@
         </javac>
     </target>
 
+	<target name="javadoc" description="Builds javadoc of src and test_src tree">
+		<mkdir dir="${build.dir}/javadoc"/>
+		<javadoc destdir="${build.dir}/javadoc" author="true" version="true" use="true" windowtitle="Source tree">
+			<packageset dir="${checkout.dir}/src"/>
+		</javadoc>
+	</target>
+
     <target name="test">
         <!-- TODO: Run the unit tests here -->
     </target>

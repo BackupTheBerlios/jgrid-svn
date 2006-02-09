@@ -12,6 +12,7 @@ import java.io.IOException;
 
 /**
  * Manages the grid state.
+ *
  * <br>User: Joshua Davis
  * <br>Date: Oct 24, 2005 Time: 6:54:00 AM
  */

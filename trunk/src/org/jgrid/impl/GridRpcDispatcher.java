@@ -33,20 +33,14 @@ public class GridRpcDispatcher extends RpcDispatcher
         setMarshaller(new GridMarshaller());
     }
 
-    public boolean isReady()
+    public synchronized boolean isReady()
     {
-        synchronized (this)
-        {
-            return ready;
-        }
+        return ready;
     }
 
-    public void setReady(boolean ready)
+    public synchronized void setReady(boolean ready)
     {
-        synchronized (this)
-        {
-            this.ready = ready;
-        }
+        this.ready = ready;
     }
 
     public Object callRemoteMethod(Address dest, String methodName, Object arg,

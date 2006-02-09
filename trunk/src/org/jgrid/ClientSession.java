@@ -2,7 +2,8 @@
 package org.jgrid;
 
 /**
- * TODO: Add class javadoc
+ * Client's entry point into the grid. JobFactory of sorts...
+ *
  * @author josh Jan 29, 2005 9:56:22 AM
  */
 public interface ClientSession

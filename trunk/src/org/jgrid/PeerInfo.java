@@ -1,6 +1,8 @@
 package org.jgrid;
 
 /**
+ * Information about one node / peer in a grid.
+ *
  * <br>User: Joshua Davis
  * <br>Date: Oct 2, 2005 Time: 8:56:27 AM
  */

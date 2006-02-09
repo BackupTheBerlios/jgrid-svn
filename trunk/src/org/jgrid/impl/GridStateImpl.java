@@ -8,6 +8,12 @@ import java.util.Map;
 import java.util.Collection;
 
 /**
+ * Maintains a lost of all Nodes of the grid. Does so by
+ * maintaining a Map of NodeStateImpl to its Address.
+ *
+ * @see org.jgrid.impl.NodeStateImpl
+ * @see org.jgroups.Address
+ *
  * User: Joshua Davis<br>
  * Date: Oct 2, 2005<br>
  * Time: 10:07:40 AM<br>

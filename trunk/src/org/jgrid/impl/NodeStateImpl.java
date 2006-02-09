@@ -6,6 +6,8 @@ import org.jgrid.PeerInfo;
 import java.io.Serializable;
 
 /**
+ * Status of a grid's node.
+ *
  * <br>User: Joshua Davis
  * <br>Date: Oct 2, 2005 Time: 10:09:39 AM
  */

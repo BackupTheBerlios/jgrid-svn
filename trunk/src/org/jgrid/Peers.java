@@ -1,7 +1,6 @@
 // $Id:                                                                    $
 package org.jgrid;
 
-import java.util.Iterator;
 import java.util.List;
 
 
@@ -13,7 +12,6 @@ import java.util.List;
 public interface Peers
 {
     /**
-     * Returns the number of nodes in the grid, not including the local node.
      * @return the number of nodes in the grid, not including the local node.
      */
     int size();

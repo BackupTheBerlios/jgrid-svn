@@ -1,6 +1,7 @@
 // $Id:                                                                    $
 package org.jgrid;
 
+import org.apache.log4j.Logger;
 import org.jgrid.util.MicroContainer;
 import org.jgrid.util.NetworkUtil;
 import org.jgrid.util.ResourceUtil;
@@ -11,12 +12,15 @@ import java.net.InetAddress;
 import java.util.Properties;
 
 /**
- * TODO: Add class javadoc
+ * Application wide factory / configuration object<br>
+ * Loads properties from grid.properties file. Create objects (Servers, Containers) per properties.
  *
  * @author josh Jan 4, 2005 9:46:55 PM
  */
 public class GridConfiguration implements MicroContainer.Initializer
 {
+    private static Logger log = Logger.getLogger(GridConfiguration.class);
+
     public static final String RESOURCE_NAME = "grid.properties";
     public static final String DEFAULT_MCAST_ADDR = "224.0.0.35";
     public static final int DEFAULT_MCAST_PORT = 45566;
@@ -49,12 +53,23 @@ public class GridConfiguration implements MicroContainer.Initializer
                 gridName = props.getProperty("grid.name");
                 mcastAddress = props.getProperty("grid.mcast.addr");
                 mcastPort = Integer.parseInt(props.getProperty("grid.mcast.port"));
+                if (log.isDebugEnabled())
+                {
+                    log.debug("Values read from configuration: gridName=" + gridName
+                             + ", mcastAddress=" + mcastAddress
+                             + ", mcastPort=" + mcastPort);
+                }
+            }
+            else
+            {
+                log.error("loadProperties failed to load " + RESOURCE_NAME);
             }
         }
         catch (IOException e)
         {
             throw new GridException("Unable to load 'grid.properties' due to: " + e.getMessage(),e);
         }
+        validate();
     }
 
     public GridBus getGridBus()

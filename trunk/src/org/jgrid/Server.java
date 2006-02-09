@@ -1,8 +1,6 @@
 // $Id:                                                                    $
 package org.jgrid;
 
-import org.jgroups.Message;
-
 /**
  * TODO: Add class javadoc
  *
