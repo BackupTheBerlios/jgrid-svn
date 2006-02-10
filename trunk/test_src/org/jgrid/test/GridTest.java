@@ -5,9 +5,7 @@ package org.jgrid.test;
 import junit.framework.TestCase;
 import org.jgrid.*;
 import org.jgrid.util.JavaProcess;
-import org.jgroups.util.Util;
 
-import java.io.IOException;
 import java.io.Serializable;
 
 /**
@@ -30,16 +28,15 @@ public class GridTest extends TestCase
     {
         super.setUp();
         config = new GridConfiguration();
-
     }
 
     public void testFederation() throws Exception
     {
-        GridBus gridBus = connect();
+        GridBus gridBus = GridSetupHelper.connect(config);
 
         Peers peers = gridBus.getPeers();
 
-        JavaProcess[] p = startServers();
+        JavaProcess[] p = GridSetupHelper.startServers(4);
 
         try
         {
@@ -48,65 +45,17 @@ public class GridTest extends TestCase
         }
         finally
         {
-            stopServers(gridBus, p);
+            GridSetupHelper.stopServers(gridBus, p);
         }
-    }
-
-    private void stopServers(GridBus gridBus, JavaProcess[] p)
-    {
-        System.out.println("##### STOP #####");
-        gridBus.broadcastStop();
-        System.out.println("##### Waiting for processes #####");
-        // Start a thread that will interrupt in a few seconds.
-        final Thread interrupted = Thread.currentThread();
-        Thread interrupter = new Thread(new Runnable() {
-            public void run()
-            {
-                Util.sleep(10000);
-                System.out.println("Interrupting...");
-                interrupted.interrupt();
-            }
-        });
-        interrupter.setDaemon(true);
-        interrupter.start();
-        boolean[] stopped = new boolean[p.length];
-        for (int i = 0; i < stopped.length; i++)
-            stopped[i] = false;
-
-        for (int i = 0; i < p.length; i++)
-        {
-            JavaProcess javaProcess = p[i];
-            try
-            {
-                javaProcess.waitFor();
-            }
-            catch (InterruptedException e)
-            {
-                System.out.println("Interrupted while waiting for processes.");
-                break;
-            }
-            stopped[i] = true;
-        }
-
-        for (int i = 0; i < p.length; i++)
-        {
-            if (stopped[i])
-                continue;
-            JavaProcess javaProcess = p[i];
-            System.out.println("Killing " + javaProcess + ", it didn't stop by itself.");
-            javaProcess.kill();
-        }
-
-        System.out.println("##### GRID STOPPED #####");
     }
 
     public void testLoadBalancing() throws Exception
     {
-        GridBus gridBus = connect();
+        GridBus gridBus = GridSetupHelper.connect(config);
 
         Peers peers = gridBus.getPeers();
 
-        JavaProcess[] p = startServers();
+        JavaProcess[] p = GridSetupHelper.startServers(4);
 
         try
         {
@@ -122,33 +71,8 @@ public class GridTest extends TestCase
         }
         finally
         {
-            stopServers(gridBus, p);
+            GridSetupHelper.stopServers(gridBus, p);
         }
-    }
-
-    private GridBus connect()
-    {
-        GridBus gridBus = config.getGridBus();
-        gridBus.connect();
-        return gridBus;
-    }
-
-    private JavaProcess[] startServers()
-            throws IOException
-    {
-        // Start a few JVMS.
-        JavaProcess[] p = new JavaProcess[] {
-            new JavaProcess("org.jgrid.ServerMain"),
-            new JavaProcess("org.jgrid.ServerMain"),
-            new JavaProcess("org.jgrid.ServerMain"),
-            new JavaProcess("org.jgrid.ServerMain"),
-        };
-        for (int i = 0; i < p.length; i++)
-        {
-            JavaProcess javaProcess = p[i];
-            javaProcess.start();
-        }
-        return p;
     }
 
     public static class MyService implements Service

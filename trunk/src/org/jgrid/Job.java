@@ -20,7 +20,7 @@ public interface Job
      * Wait for the result and take ownership of the result when it
      * arrives.
      * @return the result of the execution.
-     * @param timeout (-1 to wait forever)
+     * @param timeout value in milliseconds (-1 to wait forever)
      */
     Serializable join(long timeout);
 
