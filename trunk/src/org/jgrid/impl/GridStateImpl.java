@@ -1,11 +1,13 @@
 package org.jgrid.impl;
 
+import EDU.oswego.cs.dl.util.concurrent.WaitableInt;
 import org.jgroups.Address;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * Maintains a lost of all Nodes of the grid. Does so by
@@ -21,10 +23,14 @@ import java.util.Collection;
 class GridStateImpl implements Serializable
 {
     private Map nodeStateByAddress = new HashMap();
+    private transient WaitableInt numberOfServers;
 
     NodeStateImpl getNodeState(Address address)
     {
-        return (NodeStateImpl) nodeStateByAddress.get(address);
+        synchronized (this)
+        {
+            return (NodeStateImpl) nodeStateByAddress.get(address);
+        }
     }
 
     public String toString()
@@ -41,9 +47,33 @@ class GridStateImpl implements Serializable
 
     private void add(NodeStateImpl state)
     {
+        NodeStateImpl old = null;
         synchronized(this)
         {
-            nodeStateByAddress.put(state.getNodeAddress(),state);
+            Address key = state.getNodeAddress();
+            if (nodeStateByAddress.containsKey(key))
+                old = (NodeStateImpl) nodeStateByAddress.remove(key);
+            nodeStateByAddress.put(key,state);
+            if (numberOfServers == null)
+            {
+                int servers = 0;
+                for (Iterator iterator = nodeStateByAddress.values().iterator(); iterator.hasNext();)
+                {
+                    NodeStateImpl n = (NodeStateImpl) iterator.next();
+                    if (n.isServer())
+                        servers++;
+                }
+                numberOfServers = new WaitableInt(servers);
+            }
+            else
+            {
+                // New server nodes, or existing nodes that have become servers.
+                if (state.isServer() && (old == null || !old.isServer()))
+                    numberOfServers.increment();
+                // The node used to be a server, but now it's not.
+                else if (!state.isServer() && old != null && old.isServer())
+                    numberOfServers.decrement();
+            }
         }
     }
 
@@ -54,6 +84,14 @@ class GridStateImpl implements Serializable
 
     public Collection getAllNodes()
     {
-        return nodeStateByAddress.values();
+        synchronized(this)
+        {
+            return nodeStateByAddress.values();
+        }
+    }
+
+    public void waitForServers() throws InterruptedException
+    {
+        numberOfServers.whenGreater(0,null);
     }
 }

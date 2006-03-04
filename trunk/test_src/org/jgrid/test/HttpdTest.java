@@ -4,7 +4,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.log4j.Logger;
-import org.jgrid.httpd.WebServer;
+import org.jgrid.httpd.HTTPDaemon;
 import org.jgrid.util.Copier;
 
 import java.io.InputStream;
@@ -25,8 +25,8 @@ public class HttpdTest extends TestCase {
     }
 
     public void testWebServer() throws Exception {
-        WebServer server = new WebServer(8666);
-        Thread serverThread = new Thread(server, "WebServer");
+        HTTPDaemon server = new HTTPDaemon(8666);
+        Thread serverThread = new Thread(server, "HttpDaemon");
         try {
             serverThread.start();
             HttpURLConnection con = (HttpURLConnection) new URL("http://localhost:8666").openConnection();

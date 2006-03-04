@@ -2,8 +2,7 @@
 package org.jgrid;
 
 /**
- * TODO: Add class javadoc
- *
+ * The connectivity for the grid.   Peers provides federation information about the group of nodes.
  * @author josh Jan 19, 2005 7:27:19 AM
  */
 public interface GridBus
@@ -27,4 +26,8 @@ public interface GridBus
     GridConfiguration getConfig();
 
     void startServer();
+
+    void setChannel(Object jgroupsChannel);
+
+    Object getChannel();
 }

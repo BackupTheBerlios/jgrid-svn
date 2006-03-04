@@ -22,7 +22,7 @@ import java.util.Map;
 public class ServerImpl extends GridComponent implements Server
 {
     private static final Logger log = Logger.getLogger(ServerImpl.class);
-    private ServerThreadPool threadPool;
+    private WorkerThreadPool threadPool;
     private Map classLoadersByServiceClass;
     private static final long SEND_COMPLETED_TIMEOUT = 10000;
     private boolean running = false;
@@ -31,7 +31,7 @@ public class ServerImpl extends GridComponent implements Server
     {
         super(config,gridBus);
         classLoadersByServiceClass = new HashMap();
-        threadPool = new ServerThreadPool(this,config.getServerThreadPoolSize());
+        threadPool = new WorkerThreadPool(this,config.getServerThreadPoolSize());
     }
 
     public void run()
@@ -67,8 +67,8 @@ public class ServerImpl extends GridComponent implements Server
         state.setServer(isRunning());
         state.updateRuntimeStats(rt);
         state.setFreeThreads(getFreeThreads());
-        if (log.isDebugEnabled())
-            log.debug("updateNodeStatistics() : Broadcasting updated node statistics...");
+        if (log.isTraceEnabled())
+            log.trace("updateNodeStatistics() : Broadcasting updated node statistics...");
         getGridBus().broadcastNodeStateChange();
     }
 

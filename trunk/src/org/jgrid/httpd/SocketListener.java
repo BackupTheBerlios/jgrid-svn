@@ -90,6 +90,14 @@ public abstract class SocketListener implements Runnable {
         initialize(new ServerSocket(port), port);
     }
 
+    public void initialize(ServerSocket socket, int port) {
+        this.socket = socket;
+        this.port = port;
+    }
+    
+    public SocketListener() {
+    }
+
     /**
      * Returns the port number this server is listening on.
      *
@@ -424,10 +432,4 @@ public abstract class SocketListener implements Runnable {
             clientConnections.notifyAll();
         }
     }
-
-    private void initialize(ServerSocket socket, int port) {
-        this.socket = socket;
-        this.port = port;
-    }
-
 }

@@ -12,11 +12,11 @@ import java.net.Socket;
  * Date: Jan 17, 2006
  * Time: 8:31:37 AM
  */
-public class WebServer extends SocketListener {
+public class HTTPDaemon extends SocketListener {
     /**
      * A logger for this class. *
      */
-    private static Logger log = Logger.getLogger(WebServer.class);
+    private static Logger log = Logger.getLogger(HTTPDaemon.class);
 
     /**
      * The default server socket timeout for HTTPConstants servers.
@@ -32,12 +32,20 @@ public class WebServer extends SocketListener {
     /**
      * Creates a Web server at the specified port number.
      */
-    public WebServer(int port) throws IOException {
+    public HTTPDaemon(int port) throws IOException {
         super(port);
         setConnectionTimeout(DEFAULT_HTTP_TIMEOUT);
         setMaxConnections(DEFAULT_HTTP_CONNECTIONS);
     }
 
+    /**
+     * Creates a Web server at the specified port number.
+     */
+    public HTTPDaemon() throws IOException {
+        super();
+        setConnectionTimeout(DEFAULT_HTTP_TIMEOUT);
+        setMaxConnections(DEFAULT_HTTP_CONNECTIONS);
+    }
     /**
      * Accept the incoming connection and create a client connection object.
      *

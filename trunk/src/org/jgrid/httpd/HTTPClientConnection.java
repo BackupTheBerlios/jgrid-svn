@@ -62,7 +62,7 @@ public class HTTPClientConnection extends ClientConnection implements Runnable {
     /**
      * A pointer back to the web server that is managing this connection *
      */
-    private WebServer server;
+    private HTTPDaemon server;
     /**
      * True if this connection is in 'keep-alive' mode. *
      */
@@ -70,7 +70,7 @@ public class HTTPClientConnection extends ClientConnection implements Runnable {
 
     private static final byte[] BAD_REQUEST = " 400 Bad Request\r\n".getBytes();
 
-    public HTTPClientConnection(WebServer server, Socket socket)
+    public HTTPClientConnection(HTTPDaemon server, Socket socket)
             throws IOException {
         super(server, socket);
         this.server = server;

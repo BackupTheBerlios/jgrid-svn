@@ -1,6 +1,8 @@
 // $Id:                                                                    $
 package org.jgrid.util;
 
+import org.apache.log4j.Logger;
+
 import java.io.IOException;
 
 /**
@@ -10,6 +12,8 @@ import java.io.IOException;
  */
 public class JavaProcess
 {
+    private static Logger log = Logger.getLogger(JavaProcess.class);
+
     private Process process;
     private String classpath;
     private String mainClass;
@@ -45,6 +49,7 @@ public class JavaProcess
         errThread.start();
         Thread outThread = new Thread(stdout);
         outThread.start();
+        log.info("Process started.");
     }
 
     public void kill()

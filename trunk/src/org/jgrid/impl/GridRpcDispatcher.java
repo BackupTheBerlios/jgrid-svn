@@ -60,7 +60,14 @@ public class GridRpcDispatcher extends RpcDispatcher
         {
             // Set the actual message in a thread local.
             GridRpcTarget.setLocalMessage(req);
-            rv = super.handle(req);
+            try
+            {
+                rv = super.handle(req);
+            }
+            catch (Exception e)
+            {
+                log.error(e,e);
+            }
             GridRpcTarget.setLocalMessage(null);
         }
         else

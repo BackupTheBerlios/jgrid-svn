@@ -56,8 +56,8 @@ public class GridConfiguration implements MicroContainer.Initializer
                 if (log.isDebugEnabled())
                 {
                     log.debug("Values read from configuration: gridName=" + gridName
-                             + ", mcastAddress=" + mcastAddress
-                             + ", mcastPort=" + mcastPort);
+                            + ", mcastAddress=" + mcastAddress
+                            + ", mcastPort=" + mcastPort);
                 }
             }
             else
@@ -67,24 +67,32 @@ public class GridConfiguration implements MicroContainer.Initializer
         }
         catch (IOException e)
         {
-            throw new GridException("Unable to load 'grid.properties' due to: " + e.getMessage(),e);
+            throw new GridException("Unable to load 'grid.properties' due to: " + e.getMessage(), e);
         }
         validate();
     }
 
     public GridBus getGridBus()
     {
-        return (GridBus)getContainer().getComponentInstance(GridBus.class);
+        return (GridBus) getContainer().getComponentInstance(GridBus.class);
+    }
+
+    public GridBus getGridBus(Object jgroupsChannel)
+    {
+
+        GridBus gridBus = getGridBus();
+        gridBus.setChannel(jgroupsChannel);
+        return gridBus;
     }
 
     public ClientSession getClientSession()
     {
-        return (ClientSession)getContainer().getComponentInstance(ClientSession.class);
+        return (ClientSession) getContainer().getComponentInstance(ClientSession.class);
     }
 
     public Server getServer()
     {
-        return (Server)getContainer().getComponentInstance(Server.class);
+        return (Server) getContainer().getComponentInstance(Server.class);
     }
 
     public MicroContainer getContainer()
@@ -112,12 +120,12 @@ public class GridConfiguration implements MicroContainer.Initializer
     {
         InetAddress bindAddr = NetworkUtil.findNonLoopbackAddress();
         String protocol = "UDP(mcast_addr=" + mcastAddress +
-                    ";mcast_port=" + mcastPort +
-                    (bindAddr != null ? ";bind_addr=" + bindAddr.getCanonicalHostName() : "" ) +
-                    ";ip_ttl=32" +
-                    ";mcast_send_buf_size=64000;mcast_recv_buf_size=64000" +
-                    ";ucast_recv_buf_size=64000;ucast_send_buf_size=32000" +
-                    ")";
+                ";mcast_port=" + mcastPort +
+                (bindAddr != null ? ";bind_addr=" + bindAddr.getCanonicalHostName() : "") +
+                ";ip_ttl=32" +
+                ";mcast_send_buf_size=64000;mcast_recv_buf_size=64000" +
+                ";ucast_recv_buf_size=64000;ucast_send_buf_size=32000" +
+                ")";
 
         // Use TCP sockets for failure detection.  Ping based FD can yeild false failures when
         // a node is too busy to ping.
@@ -129,7 +137,7 @@ public class GridConfiguration implements MicroContainer.Initializer
                 "down_thread=false;" +
                 "join_retry_timeout=2000;" +
                 "shun=true;" +
-                "print_local_addr="+ printGmsAddr + "):";
+                "print_local_addr=" + printGmsAddr + "):";
 
         return protocol + ":" +
                 "PING(timeout=2000;down_thread=false;num_initial_members=3):" +
@@ -159,17 +167,16 @@ public class GridConfiguration implements MicroContainer.Initializer
             return;
         try
         {
-            // Only one instance of GridBus per configuration.
+            // Singlegons
             microContainer.registerSingleton(GridBus.class, "org.jgrid.impl.GridBusImpl");
-            // Only one instance of ClientSession per configuration.
             microContainer.registerSingleton(ClientSession.class, "org.jgrid.impl.ClientSessionImpl");
-            // Only one instance of Server per configuration.
             microContainer.registerSingleton(Server.class, "org.jgrid.impl.ServerImpl");
+            microContainer.registerSingleton(WebServer.class,"org.jgrid.impl.WebServerImpl");
             initialized = true;
         }
         catch (Throwable e)
         {
-            throw new GridException("Initialization failed: " + e.getMessage(),e);
+            throw new GridException("Initialization failed: " + e.getMessage(), e);
         }
     }
 

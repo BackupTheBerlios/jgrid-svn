@@ -1,24 +1,15 @@
 /* Created on Feb 10, 2006 by agautam */
 package org.jgrid.test;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
+import junit.framework.TestCase;
 import org.apache.log4j.Logger;
-import org.jgrid.ClientSession;
-import org.jgrid.GridBus;
-import org.jgrid.GridConfiguration;
-import org.jgrid.Job;
-import org.jgrid.Peers;
+import org.jgrid.*;
+import org.jgrid.test.jobs.MonteCarloPi;
+import org.jgrid.test.jobs.MonteCarloPiInput;
 import org.jgrid.util.JavaProcess;
 
-import eg.MonteCarloPi;
-import eg.mcpi.Input;
-
-import junit.framework.TestCase;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -38,14 +29,9 @@ public class ParallelTaskTest extends TestCase
     private int serverCount = 5;
     private int monteCarloIterations = 1000;
     private int utestTimeoutMS = 10 * 60 * 1000; // 10 mins in milliseconds
-    /**
-     * Constructor.
-     *
-     * @param arg0
-     */
+
     public ParallelTaskTest(String arg0)
     {
-        //TODO Auto-generated constructor stub
         super(arg0);
     }
 
@@ -57,6 +43,7 @@ public class ParallelTaskTest extends TestCase
         log.debug("Starting parallel test");
         GridConfiguration config = new GridConfiguration();
         GridBus bus = config.getGridBus();
+        bus.connect();  // Connect first.
         JavaProcess[] servers = null;
         try
         {
@@ -71,7 +58,7 @@ public class ParallelTaskTest extends TestCase
             List inputList = new ArrayList();
             for (int i = 0; i < getJobCount(); i++)
             {
-                inputList.add(new Input(i + 1, getMonteCarloIterations()));
+                inputList.add(new MonteCarloPiInput(i + 1, getMonteCarloIterations()));
             }
             job.startParallel(inputList);
             job.join(getUtestTimeoutMS());

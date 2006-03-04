@@ -65,10 +65,15 @@ class JobResponse extends JobMessage
         return "JobResponse{" +
                 "requestId='" + getRequestId() + '\'' +
                 ", serviceClassName='" + getServiceClassName() + '\'' +
-                ", outputBytes.length=" + outputBytes.length +
+                ", outputBytes.length=" + ((outputBytes == null) ? "<null>" : Integer.toString(outputBytes.length)) +
                 ", throwable=" + throwable +
                 ", startTime=" + startTime +
                 ", endTime=" + endTime +
                 '}';
+    }
+
+    public void clear()
+    {
+        outputBytes = null;
     }
 }

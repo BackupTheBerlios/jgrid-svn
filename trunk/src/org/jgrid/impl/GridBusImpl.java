@@ -14,10 +14,10 @@ import org.jgroups.util.Util;
 
 /**
  * The communications backplane of the grid.
+ *
  * @author josh Jan 5, 2005 7:29:56 AM
  */
-public class GridBusImpl implements GridBus, MessageConstants
-{
+public class GridBusImpl implements GridBus, MessageConstants {
     private static final Logger log = Logger.getLogger(GridBusImpl.class);
 
     private GridConfiguration config;
@@ -51,80 +51,62 @@ public class GridBusImpl implements GridBus, MessageConstants
 
     private long idCounter;
 
-    public GridBusImpl(GridConfiguration config)
-    {
+    public GridBusImpl(GridConfiguration config) {
         this.config = config;
         notifier = new Notifier(this);
     }
 
-    Object getComponentInstance(Object key)
-    {
+    Object getComponentInstance(Object key) {
         return config.getContainer().getComponentInstance(key);
     }
 
-    GridRpcDispatcher getDispatcher()
-    {
+    GridRpcDispatcher getDispatcher() {
         return dispatcher;
     }
 
-    Notifier getNotifier()
-    {
+    Notifier getNotifier() {
         return notifier;
     }
 
-    public void addEventListener(GridEventListener listener)
-    {
+    public void addEventListener(GridEventListener listener) {
         notifier.addEventListener(listener);
     }
 
-    public void removeEventListener(GridEventListener listener)
-    {
+    public void removeEventListener(GridEventListener listener) {
         notifier.removeEventListener(listener);
     }
 
-    ServerImpl getServer()
-    {
-        synchronized (this)
-        {
+    ServerImpl getServer() {
+        synchronized (this) {
             if (server == null)
                 server = (ServerImpl) getComponentInstance(Server.class);
             return server;
         }
     }
 
-    ClientSessionImpl getClient()
-    {
-        synchronized (this)
-        {
+    ClientSessionImpl getClient() {
+        synchronized (this) {
             if (client == null)
                 client = (ClientSessionImpl) getComponentInstance(ClientSession.class);
             return client;
         }
     }
 
-    public String getLocalAddress()
-    {
+    public String getLocalAddress() {
         return localAddress;
     }
 
-    Address getMyAddress()
-    {
+    Address getMyAddress() {
         return channel.getLocalAddress();
     }
 
-    GridRpcTarget getHandler()
-    {
+    GridRpcTarget getHandler() {
         return handler;
     }
 
-    public void connect()
-    {
-        synchronized (this)
-        {
-            if (running)
-            {
-                if (log.isDebugEnabled())
-                    log.debug("connect() : already connected.");
+    public void connect() {
+        synchronized (this) {
+            if (running) {
                 return;
             }
             log.info("Connecting...");
@@ -136,11 +118,10 @@ public class GridBusImpl implements GridBus, MessageConstants
         }
     }
 
-    private void doConnect()
-    {
-        try
-        {
-            channel = new JChannel(config.getChannelProperties());
+    private void doConnect() {
+        try {
+            if (channel == null)
+                channel = new JChannel(config.getChannelProperties());
             channel.setOpt(Channel.VIEW, Boolean.TRUE);
             channel.setOpt(Channel.GET_STATE_EVENTS, Boolean.TRUE);
             channel.connect(config.getGridName());
@@ -166,41 +147,34 @@ public class GridBusImpl implements GridBus, MessageConstants
             myState.setStatus(PeerInfo.STATUS_SELF);
             // Ask the coordinator for the state.  This will replace gridState.
             boolean rc = channel.getState(null, config.getGridStateTimeout());
-            if (rc)
-            {
+            if (rc) {
                 log.info(channel.getLocalAddress() + " Waiting for state...");
                 listener.waitForGridState();
                 log.info(channel.getLocalAddress() + " State received.");
                 broadcastNodeStateChange();     // Broadcast a change for myself.
-            }
-            else
-            {
+            } else {
                 log.info(channel.getLocalAddress() + " *** State was not retrieved (therefore I am the coordinator)");
                 listener.setCoordinator(myState);
             }
             dispatcher.setReady(true);
         }
-        catch (ChannelException e)
-        {
+        catch (ChannelException e) {
             disconnect();
             throw new GridException(e);
         }
-        catch (GridException e)
-        {
+        catch (GridException e) {
             disconnect();
             throw e;
         }
     }
 
-    void broadcastNodeStateChange()
-    {
-        dispatcher.gridInvoke(null,"_nodeUpdate",myState,
+    void broadcastNodeStateChange() {
+        dispatcher.gridInvoke(null, "_nodeUpdate", myState,
                 GroupRequest.GET_NONE,  // Fire and forget.
                 STATE_UPDATE_TIMEOUT);
     }
 
-    void stop()
-    {
+    void stop() {
         if (pump != null)
             pump.stop();
         if (dispatcher != null)
@@ -209,10 +183,8 @@ public class GridBusImpl implements GridBus, MessageConstants
             peersImpl.stop();
     }
 
-    public void disconnect()
-    {
-        synchronized (this)
-        {
+    public void disconnect() {
+        synchronized (this) {
             if (!running)
                 return;
             String localAddress = getLocalAddress();
@@ -220,11 +192,9 @@ public class GridBusImpl implements GridBus, MessageConstants
             stop();
             pump = null;
             dispatcher = null;
-            peersImpl = null;
 
             // Close the channel.
-            if (channel != null)
-            {
+            if (channel != null) {
                 channel.close();
                 channel = null;
             }
@@ -235,75 +205,79 @@ public class GridBusImpl implements GridBus, MessageConstants
         }
     }
 
-    public Peers getPeers()
-    {
+    public Peers getPeers() {
+        if (peersImpl == null)
+            throw new GridException("Not connected.");
         return peersImpl;
     }
 
-    public void broadcastStop()
-    {
+    public void broadcastStop() {
         int i = 0;
-        int peers = peersImpl.size();
-        MethodCall method = new MethodCall("_stop",new Object[0],new Class[0]);
-        while (peers > 0)
-        {
-            RspList list = dispatcher.callRemoteMethods(null,method,GroupRequest.GET_ALL,15000);
+        int peers = getNumberOfPeers();
+        MethodCall method = new MethodCall("_stop", new Object[0], new Class[0]);
+        while (peers > 0) {
+            RspList list = dispatcher.callRemoteMethods(null, method, GroupRequest.GET_ALL, 15000);
             i++;
             log.info("Attempt #" + i + " STOP responses:\n" + list.toString());
-            if (peers > 1)
-            {
+            if (peers > 1) {
                 log.info("Waiting for " + peers + " peers to disconnect...");
                 Util.sleep(1000);
             }
-            synchronized (this)
-            {
-                peers = (peersImpl == null) ? 0 : peersImpl.size();
-            }
+            peers = getNumberOfPeers();
         }
     }
 
-    public boolean isRunning()
+    private int getNumberOfPeers()
     {
         synchronized (this)
         {
+            return (peersImpl == null) ? 0 : peersImpl.size();
+        }
+    }
+
+    public boolean isRunning() {
+        synchronized (this) {
             return running;
         }
     }
 
-    public GridConfiguration getConfig()
-    {
+    public GridConfiguration getConfig() {
         return config;
     }
 
 
-    boolean isLocal(Address sender)
-    {
+    boolean isLocal(Address sender) {
         Address localAddress = (channel == null) ? null : channel.getLocalAddress();
         return sender.compareTo(localAddress) == 0;
     }
 
-    public GridStateImpl getGridState()
-    {
+    public GridStateImpl getGridState() {
         return listener.getGridState();
     }
 
-    public NodeStateImpl getMyState()
-    {
+    public NodeStateImpl getMyState() {
         return myState;
     }
 
-    public void startServer()
-    {
+    public void startServer() {
         Server server = config.getServer();
         Thread thread = new Thread(server);
         thread.start();
     }
 
-    public String getNextId()
-    {
+    public void setChannel(Object jgroupsChannel) {
+        channel = (Channel) jgroupsChannel;
+    }
+
+    public Object getChannel() {
+        return channel;
+    }
+
+    public String getNextId() {
         long id;
-        synchronized (this)
-        {
+        synchronized (this) {
+            if (!running)
+                throw new GridException("GridBus is not running!");
             id = idCounter++;
         }
         StringBuffer buf = new StringBuffer();
@@ -311,8 +285,7 @@ public class GridBusImpl implements GridBus, MessageConstants
         return buf.toString();
     }
 
-    public GridListener getGridListener()
-    {
+    public GridListener getGridListener() {
         return listener;
     }
 

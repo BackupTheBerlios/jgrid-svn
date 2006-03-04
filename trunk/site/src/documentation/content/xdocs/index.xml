@@ -42,8 +42,10 @@
     </section>
       <section id="dependencies">
         <title>Dependencies</title>
+        <p>Thanks to the following projects for making JEGrid possible</p>
         <ul>
            <li><strong>JGroups</strong> - http://www.jgroups.org</li>
+           <li><strong>Pico Container</strong> - http://www.picocontainer.org</li>
            <li><strong>RngPack</strong> - http://www.honeylocust.com/RngPack</li>
         </ul>
       </section>

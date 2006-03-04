@@ -104,6 +104,7 @@ See http://forrest.apache.org/docs/linking.html for more info
     </forrest>
     <cocoon href="http://cocoon.apache.org/"/>
     <xml.apache.org href="http://xml.apache.org/"/>
+    <project href="http://developer.berlios.de/projects/jgrid"/>
   </external-refs>
 
 </site>

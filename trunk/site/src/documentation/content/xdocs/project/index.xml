@@ -31,5 +31,12 @@
       to serve as a front end for the compute farm.
       </p>
     </section>
+    <section id="links">
+	    <title>Project Links</title>
+	    <ul>
+		    <li><a href="ext:project">Project Summary</a></li>
+	    </ul>
+	    
+    </section>
   </body>
 </document>

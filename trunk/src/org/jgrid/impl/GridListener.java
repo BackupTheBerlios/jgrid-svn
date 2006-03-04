@@ -112,10 +112,6 @@ class GridListener extends GridComponent implements MessageListener
                     throw new GridException("Grid state unavailable due to: " + throwable.getMessage(), throwable);
                 }
             }
-            if (o instanceof GridException)
-            {
-                throw (GridException) o;
-            }
             setGridState((GridStateImpl) o);
         }
         catch (TimeoutException e)
@@ -133,7 +129,6 @@ class GridListener extends GridComponent implements MessageListener
 
     public Object handleNodeUpdate(NodeStateImpl state)
     {
-        boolean updateApplied = false;
         synchronized (this)
         {
             // No state yet, so there is nothing to apply the message to.
@@ -145,20 +140,12 @@ class GridListener extends GridComponent implements MessageListener
             if (state != null)
             {
                 gridState.handleUpdate(state);
-                updateApplied = true;
             }
             else
                 throw new GridException("NodeState was null!");
         }
         // We don't need a lock on the state to do this, so do it after the synchronized block.
-        if (updateApplied)
-        {
-            gridBus.getNotifier().notifyPeersUpdated();
-            return MessageConstants.ACK;
-        }
-        else
-        {
-            return "NACK: did not apply update.";
-        }
+        gridBus.getNotifier().notifyPeersUpdated();
+        return MessageConstants.ACK;
     }
 }

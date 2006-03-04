@@ -24,4 +24,9 @@ class JobRequest extends JobMessage
     public Serializable getInput() throws IOException, ClassNotFoundException {
         return (Serializable) SerializationUtil.byteArrayToObject(inputBytes);
     }
+
+    public void clear()
+    {
+        inputBytes = null;        
+    }
 }

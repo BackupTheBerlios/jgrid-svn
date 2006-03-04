@@ -32,13 +32,6 @@ public class GridSetupHelper
         {
             p[i] = new JavaProcess("org.jgrid.ServerMain");
             p[i].start();
-            // TODO: delete the following code, after making sure that all whats done above is
-               // equivilant to whats done below.
-//        }
-//        for (int i = 0; i < p.length; i++)
-//        {
-//            JavaProcess javaProcess = p[i];
-//            javaProcess.start();
         }
         return p;
     }

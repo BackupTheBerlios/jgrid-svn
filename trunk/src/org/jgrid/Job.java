@@ -10,6 +10,10 @@ import java.util.List;
  */
 public interface Job
 {
+    int STATUS_CREATED = 0;
+    int STATUS_STARTED = 1;
+    int STATUS_FINISHED = 2;
+
     /**
      * Begin asynchronously executing the service class with the input on the grid.
      * @param input the input to the service

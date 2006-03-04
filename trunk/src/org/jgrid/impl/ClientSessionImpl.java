@@ -18,6 +18,8 @@ import java.util.Map;
 import java.io.Serializable;
 import java.io.IOException;
 
+import EDU.oswego.cs.dl.util.concurrent.LinkedQueue;
+
 /**
  * The client aspect of a grid node.
  *
@@ -27,12 +29,33 @@ public class ClientSessionImpl extends GridComponent implements ClientSession
 {
     private static Logger log = Logger.getLogger(ClientSessionImpl.class);
 
-    private Map jobsByRequestId = new HashMap();
     private static final int ACCEPT_TIMEOUT = 30000;
+
+    /**
+     * The queue of job requests that have not been accepted yet. *
+     */
+    private LoadBalancer loadBalancer;
+    private Thread loadBalancerThread;
 
     public ClientSessionImpl(GridConfiguration config, GridBusImpl gridBus)
     {
         super(config, gridBus);
+    }
+
+    private LoadBalancer getLoadBalancer()
+    {
+        synchronized (this)
+        {
+            if (loadBalancer == null)
+            {
+                loadBalancer = new LoadBalancer(getGridBus());
+                loadBalancerThread = new Thread(loadBalancer, "LoadBalancer");
+                loadBalancerThread.setDaemon(true);
+                loadBalancerThread.start();
+                log.info("Load balancer started.");
+            }
+        }
+        return loadBalancer;
     }
 
     public Job createJob(Class aClass)
@@ -40,144 +63,40 @@ public class ClientSessionImpl extends GridComponent implements ClientSession
         return new JobImpl(this, aClass);
     }
 
-    /**
-     * Returns the list of all known servers on the grid as a List of NodeStateImpl.
-     * @return a list of NodeStateImpl, one for each server on the grid.
-     */
-    List getServers()
-    {
-        connect();
-
-        // Find a node to start the job on.
-        GridStateImpl gridState = getGridBus().getGridState();
-        if (gridState == null)
-            throw new GridException("Cannot start: grid state is not available.");
-
-        Collection nodeStates = gridState.getAllNodes();
-        List serverList = new ArrayList(nodeStates.size());
-        for (Iterator iterator = nodeStates.iterator(); iterator.hasNext();)
-        {
-            NodeStateImpl n = (NodeStateImpl) iterator.next();
-            // Skip nodes with no available threads.
-            if (n.getFreeThreads() == 0 || !n.isServer())
-                continue;
-            serverList.add(n);
-        }
-        return serverList;
-    }
-
-    private void connect()
-    {
-        if (!getGridBus().isRunning())
-            getGridBus().connect();
-    }
-
     String nextRequestId()
     {
-        connect();
         return "jobreq" + getGridBus().getNextId();
     }
 
-    /**
-     * Invoked by the server when a job is completed.
-     * @param response The response from the job execution.
-     * @return an ACK to the server, if successful.
-     */
-    public Object completed(JobResponse response) {
-        String requestId = response.getRequestId();
-        JobImpl job = removeJob(requestId);
-        if (job == null)
-            throw new GridException("Unepected response: " + response + "\nJob not found");
-        try {
-            return job.setResponse(response);
-        } catch (Exception e) {
-            throw new GridException(e);
-        }
-    }
-
-    JobRequest createJobRequest(Class serviceClass, Serializable input) throws IOException {
-        return new JobRequest(
-                nextRequestId(),
-                serviceClass.getName(),
-                input
-        );
-    }
-
-    /**
-     * Ask a server if it can accept a job.
-     * @param nodeAddress The server that will be asked to accept the job.
-     * @param job The job to accept
-     * @param request The job request
-     * @return true if the job was accepted, false if not.
-     */
-    public boolean accept(Address nodeAddress, JobImpl job, JobRequest request)
+    public String getGridName()
     {
-        String requestId = request.getRequestId();
-        if (lookupJob(requestId) != null)
-            throw new GridException("Request " + request.getRequestId() + " was already accepted.");
-        GridRpcDispatcher dispatcher = getGridBus().getDispatcher();
-        try
-        {
-            if (log.isDebugEnabled())
-                log.debug("accept() : Invoking _accept on " + nodeAddress + "...");
-            // Tricky stuff...
-            // We must add the job to the map here, because the server might call completed()
-            // *before* we figure out what to do with the 'accept' response.
-            addJob(requestId, job);
-            Object response = dispatcher.callRemoteMethod(nodeAddress, "_accept", request,
-                    GroupRequest.GET_ALL, ACCEPT_TIMEOUT);
-            log.info(nodeAddress + " " + response);
-            if (response != null && response instanceof JobAccepted)
-            {
-                JobAccepted jobAccepted = (JobAccepted) response;
-                if (jobAccepted.getRequestId().equals(requestId))
-                {
-                    job.setAccepted(jobAccepted, nodeAddress);
-                    log.info("accept() : request " + requestId + " accepted by " + nodeAddress);
-                    return true;
-                }
-                else
-                {
-                    throw new GridException("Response from server didn't contain the right request id!\n"
-                        + "request = " + request + "\nresponse = " + jobAccepted);
-                }
-            }
-            // The server didn't accept the job.  Remove it.
-            removeJob(requestId);
-        }
-        catch (Exception e)
-        {
-            log.error(e, e);
-            removeJob(request.getRequestId());
-        }
-        return false;
-    }
-
-    private void addJob(String requestId, JobImpl job)
-    {
-        synchronized (this)
-        {
-            jobsByRequestId.put(requestId, job);
-        }
-    }
-
-    private Object lookupJob(String requestId)
-    {
-        synchronized (this)
-        {
-            return jobsByRequestId.get(requestId);
-        }
-    }
-
-    private JobImpl removeJob(String requestId)
-    {
-        synchronized (this)
-        {
-            return (JobImpl) jobsByRequestId.remove(requestId);
-        }
-    }
-
-    public String getGridName() {
         return getGridBus().getConfig().getGridName();
+    }
+
+    public void putRequest(RequestState state) throws InterruptedException
+    {
+        // If the load balancer thread has not started yet, start it.
+        getLoadBalancer().putRequest(state);
+    }
+
+    /**
+     * Invoked by the receiver thread (message pump) when a job has completed.
+     * @param response The message with the details about the completion.
+     * @return The response (e.g. ACK).
+     */
+    public Object completed(JobResponse response)
+    {
+        synchronized(this)
+        {
+            if (loadBalancer == null)
+            {
+                log.error("No load balancer exists to recieve " + response);
+                return MessageConstants.NACK;
+            }
+            else
+            {
+                return loadBalancer.completed(response);
+            }
+        }
     }
 }
