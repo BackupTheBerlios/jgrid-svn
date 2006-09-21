@@ -198,6 +198,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/examples/examples.iml" filepath="$PROJECT_DIR$/examples/examples.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jegrid/jegrid.iml" filepath="$PROJECT_DIR$/jegrid/jegrid.iml" />
       <module fileurl="file://$PROJECT_DIR$/jgrid.iml" filepath="$PROJECT_DIR$/jgrid.iml" />
       <module fileurl="file://$PROJECT_DIR$/rngpack/rngpack.iml" filepath="$PROJECT_DIR$/rngpack/rngpack.iml" />
     </modules>
