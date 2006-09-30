@@ -10,7 +10,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="jgroups-2.2.8" level="project" />
+    <orderEntry type="library" name="jgroups" level="project" />
     <orderEntry type="library" name="junit-3.8.1" level="project" />
     <orderEntry type="library" name="log4j-1.2.13" level="project" />
     <orderEntry type="library" name="picocontainer-1.1" level="project" />

@@ -221,13 +221,13 @@
         <root url="jar://$PROJECT_DIR$/lib/concurrent-src.zip!/" />
       </SOURCES>
     </library>
-    <library name="jgroups-2.2.8">
+    <library name="jgroups">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/jgroups-all-2.2.8.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/jgroups-all-2.2.9.4.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
-        <root url="jar://$PROJECT_DIR$/lib/jgroups-src-2.2.8.zip!/" />
+        <root url="jar://$PROJECT_DIR$/lib/jgroups-src-2.2.9.4.zip!/" />
       </SOURCES>
     </library>
     <library name="junit-3.8.1">
