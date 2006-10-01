@@ -33,7 +33,20 @@ public interface Grid
      */
     Server getServer();
 
+    /**
+     * Connects to the grid.
+     */
     void connect();
 
+
+    /**
+     * Disconnect from the grid.
+     */
     void disconnect();
+
+    /**
+     * Returns the address of the local node.
+     * @return the address of the local node.
+     */
+    NodeAddress getLocalAddress();
 }

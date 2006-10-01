@@ -49,4 +49,9 @@ public class GridImpl implements GridImplementor
     {
         getBus().disconnect();
     }
+
+    public NodeAddress getLocalAddress()
+    {
+        return getBus().getAddress();
+    }
 }

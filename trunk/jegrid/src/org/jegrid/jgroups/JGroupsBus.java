@@ -4,9 +4,8 @@ import org.apache.log4j.Logger;
 import org.jegrid.GridConfiguration;
 import org.jegrid.GridException;
 import org.jegrid.Bus;
-import org.jgroups.Channel;
-import org.jgroups.ChannelException;
-import org.jgroups.JChannel;
+import org.jegrid.NodeAddress;
+import org.jgroups.*;
 
 /**
  * JGroups implementation of the messaging layer.
@@ -21,33 +20,35 @@ public class JGroupsBus implements Bus
     private boolean running = false;
     private Channel channel;
     private GridConfiguration config;
-    private String localAddress;
+    private Address address;
+    private JGroupsAddress localAddress;
+    private JGroupsListener listener;
 
     public JGroupsBus(GridConfiguration config)
     {
         this.config = config;
     }
 
-    public void connect() {
-        synchronized (this) {
-            if (running) {
+    public void connect()
+    {
+        synchronized (this)
+        {
+            if (running)
+            {
                 return;
             }
             log.info("Connecting...");
             doConnect();
             running = true;
             notify();
-            log.info(getLocalAddress() + " connected.");
+            log.info(getAddress() + " connected.");
         }
     }
 
-    public String getLocalAddress()
+    private void doConnect()
     {
-        return localAddress;
-    }
-
-    private void doConnect() {
-        try {
+        try
+        {
             if (channel == null)
             {
                 if (config.getBusConfiguration() == null)
@@ -59,36 +60,55 @@ public class JGroupsBus implements Bus
             channel.setOpt(Channel.GET_STATE_EVENTS, Boolean.TRUE);
             if (config.getGridName() == null || config.getGridName().length() == 0)
                 throw new GridException("No grid name.  Please provide a grid name so the grid can federate.");
+            // Before we connect, set up the listener.
+            listener = new JGroupsListener(this);
+            channel.addChannelListener(listener);
+            channel.setReceiver(listener);
             channel.connect(config.getGridName());
             if (log.isDebugEnabled())
                 log.debug("doConnect() : channel connected.");
-            localAddress = channel.getLocalAddress().toString();
+            address = channel.getLocalAddress();
+            localAddress = new JGroupsAddress(address);
+            Message m = new Message(null, address, "hello!".getBytes());
+            channel.send(m);                                
         }
-        catch (ChannelException e) {
+        catch (ChannelException e)
+        {
             disconnect();
             throw new GridException(e);
         }
-        catch (GridException e) {
+        catch (GridException e)
+        {
             disconnect();
             throw e;
         }
     }
 
-    public void disconnect() {
-        synchronized (this) {
+    public void disconnect()
+    {
+        synchronized (this)
+        {
             if (!running)
                 return;
-            String localAddress = getLocalAddress();
+            String localAddress = getAddress().toString();
 
             // Close the channel.
-            if (channel != null) {
+            if (channel != null)
+            {
                 channel.close();
                 channel = null;
             }
+            listener = null;
+            address = null;
             running = false;
             notify();
             log.info(localAddress + " disconnected.");
         }
+    }
+
+    public NodeAddress getAddress()
+    {
+        return localAddress;
     }
 
 }

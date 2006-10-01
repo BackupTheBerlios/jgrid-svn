@@ -11,4 +11,6 @@ public interface Bus
     void connect();
 
     void disconnect();
+
+    NodeAddress getAddress();
 }

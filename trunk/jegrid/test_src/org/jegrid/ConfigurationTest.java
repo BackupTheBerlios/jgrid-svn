@@ -27,6 +27,7 @@ public class ConfigurationTest extends TestCase
         assertNotNull(grid.getClient());
         assertNotNull(grid.getServer());
         grid.connect();
+        assertNotNull(grid.getLocalAddress());
         grid.disconnect();
     }
 
