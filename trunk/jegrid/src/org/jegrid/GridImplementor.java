@@ -1,6 +1,6 @@
 package org.jegrid;
 
-import org.jegrid.util.MicroContainer;
+import java.util.Set;
 
 /**
  * Internal interface for the main grid session.
@@ -10,4 +10,6 @@ import org.jegrid.util.MicroContainer;
  */
 public interface GridImplementor extends Grid
 {
+    // Callback methods for grid membership invoked by the bus listener.
+    void onMembershipChange(Set joined, Set left);
 }

@@ -1,10 +1,7 @@
 package org.jegrid.jgroups;
 
 import org.apache.log4j.Logger;
-import org.jegrid.GridConfiguration;
-import org.jegrid.GridException;
-import org.jegrid.Bus;
-import org.jegrid.NodeAddress;
+import org.jegrid.*;
 import org.jgroups.*;
 
 /**
@@ -23,10 +20,12 @@ public class JGroupsBus implements Bus
     private Address address;
     private JGroupsAddress localAddress;
     private JGroupsListener listener;
+    private GridImplementor grid;
 
-    public JGroupsBus(GridConfiguration config)
+    public JGroupsBus(GridConfiguration config, GridImplementor gridImpl)
     {
         this.config = config;
+        this.grid = gridImpl;
     }
 
     public void connect()
@@ -61,7 +60,7 @@ public class JGroupsBus implements Bus
             if (config.getGridName() == null || config.getGridName().length() == 0)
                 throw new GridException("No grid name.  Please provide a grid name so the grid can federate.");
             // Before we connect, set up the listener.
-            listener = new JGroupsListener(this);
+            listener = new JGroupsListener(this,grid);
             channel.addChannelListener(listener);
             channel.setReceiver(listener);
             channel.connect(config.getGridName());
