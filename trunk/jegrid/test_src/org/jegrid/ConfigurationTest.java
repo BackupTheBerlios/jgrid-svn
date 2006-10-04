@@ -31,6 +31,21 @@ public class ConfigurationTest extends TestCase
         grid.disconnect();
     }
 
+    public void test2Servers() throws Exception
+    {
+        GridConfiguration config = new GridConfiguration();
+        config.setType(Grid.TYPE_SERVER);
+        config.setGridName("test");
+        Grid grid1 = config.configure();
+        Grid grid2 = config.configure();
+        grid1.connect();
+        assertNotNull(grid1.getLocalAddress());
+        grid2.connect();
+        assertNotNull(grid2.getLocalAddress());
+        grid1.disconnect();
+        grid2.disconnect();
+    }
+
     private void assertNoClient(Grid grid)
     {
         GridException ge = null;

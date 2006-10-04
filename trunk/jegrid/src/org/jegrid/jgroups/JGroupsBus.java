@@ -74,6 +74,7 @@ public class JGroupsBus implements Bus
         catch (ChannelException e)
         {
             disconnect();
+            log.error(e,e);
             throw new GridException(e);
         }
         catch (GridException e)
