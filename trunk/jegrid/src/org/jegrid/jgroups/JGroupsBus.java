@@ -28,6 +28,11 @@ public class JGroupsBus implements Bus
         this.grid = gridImpl;
     }
 
+    Channel getChannel()
+    {
+        return channel;
+    }
+
     public void connect()
     {
         synchronized (this)
@@ -61,9 +66,8 @@ public class JGroupsBus implements Bus
                 throw new GridException("No grid name.  Please provide a grid name so the grid can federate.");
             // Before we connect, set up the listener.
             listener = new JGroupsListener(this,grid);
-            channel.addChannelListener(listener);
-            channel.setReceiver(listener);
-            channel.connect(config.getGridName());
+            channel.addChannelListener(listener);       // Listens for connect/disconnect events.
+            channel.connect(config.getGridName());      // Okay, connect the channel.
             if (log.isDebugEnabled())
                 log.debug("doConnect() : channel connected.");
             address = channel.getLocalAddress();
@@ -110,5 +114,4 @@ public class JGroupsBus implements Bus
     {
         return localAddress;
     }
-
 }

@@ -1,10 +1,12 @@
 package org.jegrid.jgroups;
 
 import org.jgroups.*;
+import org.jgroups.blocks.PullPushAdapter;
 import org.apache.log4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jegrid.GridImplementor;
 
-import java.util.Vector;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,11 +17,12 @@ import java.util.Iterator;
  * Date: Sep 30, 2006
  * Time: 9:35:11 PM
  */
-public class JGroupsListener implements ChannelListener, Receiver
+public class JGroupsListener implements ChannelListener, MessageListener, MembershipListener
 {
     private static Logger log = Logger.getLogger(JGroupsListener.class);
     private JGroupsBus bus;
     private GridImplementor grid;
+    private PullPushAdapter pump;
     private View currentView;
 
     public JGroupsListener(JGroupsBus jGroupsBus, GridImplementor grid)
@@ -30,17 +33,22 @@ public class JGroupsListener implements ChannelListener, Receiver
 
     public void channelConnected(Channel channel)
     {
-        log.info("channelConnected() " + channel);
+        // Start the addapter when the channel connects.
+        if (pump == null)
+        {
+            log.info("channelConnected() " + channel.getLocalAddress() + ", starting PullPushAdapter...");
+            // PullPushAdapter will automatically restart on reconnect when used with a Channel.
+            pump = new PullPushAdapter(channel, this, this);
+        }
     }
 
     public void channelDisconnected(Channel channel)
     {
-        log.info("channelDisconnected() " + channel);
+        log.info("channelDisconnected() " + channel.getLocalAddress());
     }
 
     public void channelClosed(Channel channel)
     {
-        log.info("channelClosed() " + channel);
     }
 
     public void channelShunned()
@@ -50,7 +58,6 @@ public class JGroupsListener implements ChannelListener, Receiver
     public void channelReconnected(Address addr)
     {
         log.info("channelReconnected() " + addr);
-        // Maybe we have a new address?
     }
 
     public void receive(Message msg)
@@ -71,11 +78,11 @@ public class JGroupsListener implements ChannelListener, Receiver
     {
         log.info("viewAccepted " + newView);
         // Diff the views.
-        ViewDiff diff = new ViewDiff(currentView,newView);
+        ViewDiff diff = new ViewDiff(currentView, newView);
         // Create a set of JGroupsAddresses for the diff.
         Set joined = toNodeAddresses(diff.getJoined());
         Set left = toNodeAddresses(diff.getLeft());
-        grid.onMembershipChange(joined,left);
+        grid.onMembershipChange(joined, left);
         currentView = newView;
     }
 
