@@ -15,4 +15,7 @@ public interface Bus
     void disconnect();
 
     NodeAddress getAddress();
+
+    AssignResponse[] assign(NodeAddress[] servers, TaskInfo taskInfo)
+            ;
 }

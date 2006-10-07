@@ -8,4 +8,7 @@ package org.jegrid.impl;
  */
 public interface Server
 {
+    AssignResponse onAssign(TaskInfo task);
+
+    ;
 }

@@ -28,7 +28,7 @@ class WorkerThreadPool extends PooledExecutor implements PooledExecutor.BlockedE
 
     public boolean blockedAction(Runnable command)
     {
-        throw new GridException("Server thread pool is busy!");
+        throw new ServerBusyException("Server thread pool is busy!");
     }
 
     public void execute(Runnable command) throws InterruptedException

@@ -18,7 +18,6 @@ public class GridConfiguration
     private static final String BUS_IMPL = "org.jegrid.jgroups.JGroupsBus";
     private static final String CLIENT_IMPL = "org.jegrid.impl.ClientImpl";
     private static final String SERVER_IMPL = "org.jegrid.impl.ServerImpl";
-    private static final String THREAD_POOL_IMPL = "org.jegrid.impl.WorkerThreadPool";
 
     private static final int DEFAULT_THREAD_POOL_SIZE = 2;
 
@@ -40,6 +39,7 @@ public class GridConfiguration
     /**
      * Returns the name of the grid.  All nodes on the same network with the same grid name will federate
      * into the same grid.
+     *
      * @return the name of the grid
      */
     public String getGridName()
@@ -66,21 +66,22 @@ public class GridConfiguration
      * Creates the main Grid implementation.  Use this object to observe or submit jobs to the grid.  Each
      * call will create a new instance, so be careful.  Usually an application will want to have only one instance
      * of Grid per JVM.
+     *
      * @return the main Grid implementation
      */
     public Grid configure() throws ClassNotFoundException
     {
         MicroContainer mc = new MicroContainer();
         // Register the implementation class names with the container.
-        mc.registerSingleton(Grid.class,gridImplClass);
-        mc.registerSingleton(Bus.class,busImplClass);
+        mc.registerSingleton(Grid.class, gridImplClass);
+        mc.registerSingleton(Bus.class, busImplClass);
         // Depending on the configuration type, we register the client and server implementations.
         switch (type)
         {
             case Grid.TYPE_SERVER:
-                mc.registerSingleton(Server.class,serverImplClass);
+                mc.registerSingleton(Server.class, serverImplClass);
             case Grid.TYPE_CLIENT:
-                mc.registerSingleton(Client.class,clientImplClass);
+                mc.registerSingleton(Client.class, clientImplClass);
         }
         // Register this configuration with the container.
         mc.registerComponentInstance(this);

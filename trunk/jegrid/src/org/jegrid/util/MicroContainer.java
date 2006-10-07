@@ -1,9 +1,8 @@
 package org.jegrid.util;
 
 import org.picocontainer.MutablePicoContainer;
-import org.picocontainer.defaults.CachingComponentAdapter;
-import org.picocontainer.defaults.ConstructorInjectionComponentAdapter;
-import org.picocontainer.defaults.DefaultPicoContainer;
+import org.picocontainer.PicoContainer;
+import org.picocontainer.defaults.*;
 
 /**
  * Wrapper around PicoContainer.
@@ -13,15 +12,9 @@ import org.picocontainer.defaults.DefaultPicoContainer;
 public class MicroContainer
 {
     private MutablePicoContainer pico;
-    private Initializer initializer;
 
     public MicroContainer()
     {
-    }
-
-    public MicroContainer(Initializer initializer)
-    {
-        this.initializer = initializer;
     }
 
     public Object getComponentInstance(Object key)
@@ -41,18 +34,14 @@ public class MicroContainer
         // ConstructorInjectionComponentAdapter.
         getPico().registerComponent(
                 new CachingComponentAdapter(
-                    new ConstructorInjectionComponentAdapter(
-                            key,implementation) ) );
+                        new ConstructorInjectionComponentAdapter(
+                                key, implementation)));
     }
 
     private MutablePicoContainer getPico()
     {
         if (pico == null)
-        {
             pico = new DefaultPicoContainer();
-            if (initializer != null)
-                initializer.initialize(this);
-        }
         return pico;
     }
 
@@ -65,11 +54,30 @@ public class MicroContainer
     public void registerSingleton(Object key, String implementationName) throws ClassNotFoundException
     {
         Class implementationClass = loadImplementation(implementationName);
-        registerSingleton(key,implementationClass);
+        registerSingleton(key, implementationClass);
+    }
+
+    public void registerEmptySingleton(Object key)
+    {
+        getPico().registerComponent(new EmptyComponentAdapter(key));
     }
 
     public interface Initializer
     {
         void initialize(MicroContainer microContainer);
+    }
+
+    private class EmptyComponentAdapter extends InstanceComponentAdapter
+    {
+
+        public EmptyComponentAdapter(Object componentKey) throws AssignabilityRegistrationException, NotConcreteRegistrationException
+        {
+            super(componentKey, "");
+        }
+
+        public Object getComponentInstance(PicoContainer container)
+        {
+            return null;
+        }
     }
 }

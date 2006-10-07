@@ -1,6 +1,7 @@
 package org.jegrid.impl;
 
 import org.jegrid.TaskRunnable;
+import org.jegrid.NodeAddress;
 import org.jegrid.impl.TaskData;
 
 import java.io.Serializable;
@@ -14,9 +15,9 @@ import java.io.Serializable;
 public class Worker implements Runnable
 {
     private ServerImpl server;
-    private ServerTask task;
+    private TaskInfo task;
 
-    public Worker(ServerImpl server, ServerTask task)
+    public Worker(ServerImpl server, TaskInfo task)
     {
         this.server = server;
         this.task = task;
@@ -25,16 +26,18 @@ public class Worker implements Runnable
     public void run()
     {
         // Get the next input from the client's queue of inputs for the task.
-        TaskData input = server.getNextInput(task);
+        NodeAddress client = task.getClient();
+        int taskId = task.getTaskId();
+        TaskData input = server.getNextInput(client, taskId);
         TaskRunnable taskInstance = null;
         while (input != null)
         {
             if (taskInstance == null)
-                taskInstance = server.instantiateTaskRunnable(task.getTaskClass());
-            int id = input.getInputId();
-            Serializable data = taskInstance.run(id,input.getData());
-            TaskData output = new TaskData(id,data);
-            server.putOutput(task,output);
+                taskInstance = server.instantiateTaskRunnable(task.getTaskClassName());
+            int inputId = input.getInputId();
+            Serializable data = taskInstance.run(inputId, input.getData());
+            TaskData output = new TaskData(inputId, data);
+            server.putOutput(client, taskId, inputId, output);
         }
     }
 }

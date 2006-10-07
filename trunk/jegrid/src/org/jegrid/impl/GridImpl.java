@@ -23,7 +23,7 @@ public class GridImpl implements GridImplementor
     public GridImpl(GridConfiguration config, MicroContainer mc)
     {
         this.config = config;
-        this.mc = mc;
+        this.mc = mc;   // Lazily access the other components to avoid circular dependency.
         membership = new Membership(this);
     }
 
@@ -37,16 +37,9 @@ public class GridImpl implements GridImplementor
 
     public Server getServer()
     {
-        Server server = (Server) mc.getComponentInstance(Server.class);
-        if (server == null)
-            throw new GridException("This configuration is not a server");
-        return server;
+        return (Server) mc.getComponentInstance(Server.class);
     }
 
-    private Bus getBus()
-    {
-        return (Bus)mc.getComponentInstance(Bus.class);
-    }
     public void connect()
     {
         getBus().connect();
@@ -72,16 +65,22 @@ public class GridImpl implements GridImplementor
         return membership.nextMembershipChange();
     }
 
-    public void waitForMembershipChange(int mark,long timeout)
+    public void waitForMembershipChange(int mark, long timeout)
     {
-        membership.waitForMembershipChange(mark,timeout);
+        membership.waitForMembershipChange(mark, timeout);
     }
-
 
     // Callback methods for grid membership invoked by the bus listener.
 
     public void onMembershipChange(Set joined, Set left)
     {
-        membership.onMembershipChange(joined,left);
+        membership.onMembershipChange(joined, left);
+    }
+
+    private Bus getBus()
+    {
+        // This allows us to have gridImpl and the bus in the same container.
+        // Otherwise, we'd have circular dependency.
+        return (Bus) mc.getComponentInstance(Bus.class);
     }
 }

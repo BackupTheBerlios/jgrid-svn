@@ -2,6 +2,7 @@ package org.jegrid.jgroups;
 
 import org.jgroups.*;
 import org.jgroups.blocks.PullPushAdapter;
+import org.jgroups.blocks.RequestHandler;
 import org.apache.log4j.Logger;
 import org.jegrid.impl.GridImplementor;
 
@@ -21,7 +22,6 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
     private static Logger log = Logger.getLogger(JGroupsListener.class);
     private JGroupsBus bus;
     private GridImplementor grid;
-    private PullPushAdapter pump;
     private View currentView;
 
     public JGroupsListener(JGroupsBus jGroupsBus, GridImplementor grid)
@@ -32,13 +32,7 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
 
     public void channelConnected(Channel channel)
     {
-        // Start the addapter when the channel connects.
-        if (pump == null)
-        {
-            log.info("channelConnected() " + channel.getLocalAddress() + ", starting PullPushAdapter...");
-            // PullPushAdapter will automatically restart on reconnect when used with a Channel.
-            pump = new PullPushAdapter(channel, this, this);
-        }
+        log.info("channelConnected() " + channel.getLocalAddress());
     }
 
     public void channelDisconnected(Channel channel)

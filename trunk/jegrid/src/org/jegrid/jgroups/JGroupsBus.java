@@ -2,16 +2,19 @@ package org.jegrid.jgroups;
 
 import org.apache.log4j.Logger;
 import org.jegrid.*;
-import org.jegrid.impl.GridImplementor;
-import org.jegrid.impl.Bus;
+import org.jegrid.util.MicroContainer;
+import org.jegrid.impl.*;
 import org.jgroups.*;
 import org.jgroups.util.RspList;
+import org.jgroups.util.Rsp;
 import org.jgroups.blocks.MessageDispatcher;
 import org.jgroups.blocks.GroupRequest;
+import org.jgroups.blocks.RpcDispatcher;
 
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.Vector;
+import java.util.List;
 
 /**
  * JGroups implementation of the messaging layer.
@@ -30,7 +33,8 @@ public class JGroupsBus implements Bus
     private JGroupsAddress localAddress;
     private JGroupsListener listener;
     private GridImplementor grid;
-    private MessageDispatcher dispatcher;
+    private RpcDispatcher dispatcher;
+    private static final long ASSIGN_TIMEOUT = 1000;
 
     public JGroupsBus(GridConfiguration config, GridImplementor gridImpl)
     {
@@ -78,16 +82,15 @@ public class JGroupsBus implements Bus
                 throw new GridException("No grid name.  Please provide a grid name so the grid can federate.");
             // Before we connect, set up the listener.
             listener = new JGroupsListener(this, grid);
-            dispatcher = new MessageDispatcher(channel,listener,listener);
+            RpcHandler handler = new RpcHandler(grid.getServer());
+            dispatcher = new RpcDispatcher(channel, listener, listener, handler);
             channel.addChannelListener(listener);       // Listens for connect/disconnect events.
             channel.connect(config.getGridName());      // Okay, connect the channel.
             if (log.isDebugEnabled())
                 log.debug("doConnect() : channel connected.");
             address = channel.getLocalAddress();
             localAddress = new JGroupsAddress(address);
-            Message m = createMessage();
-            RspList list = dispatcher.castMessage(null,m, GroupRequest.GET_ALL,5000);
-            log.info(list.toString());
+            sayHello();
         }
         catch (ChannelException e)
         {
@@ -125,18 +128,15 @@ public class JGroupsBus implements Bus
         }
     }
 
-    Message createMessage()
-    {
-        return new Message(null, address, "hello!".getBytes());
-    }
-
     public void disconnect()
     {
         synchronized (this)
         {
             if (!running)
                 return;
+
             String localAddress = getAddress().toString();
+            sayGoodbye();
 
             // Close the channel.
             if (channel != null)
@@ -155,5 +155,58 @@ public class JGroupsBus implements Bus
     public NodeAddress getAddress()
     {
         return localAddress;
+    }
+
+    public void sayHello()
+    {
+        RspList responses = broadcast("_hello");
+        if (log.isDebugEnabled())
+        {
+            log.debug("Hello responses:\n" + responses);
+        }
+    }
+
+    public void sayGoodbye()
+    {
+        RspList responses = broadcast("_goodbye");
+        if (log.isDebugEnabled())
+        {
+            log.debug("Goodbye responses:\n" + responses);
+        }
+    }
+
+    private RspList broadcast(String methodName)
+    {
+        return dispatcher.callRemoteMethods(
+                null, methodName, new Object[0], new Class[0], GroupRequest.GET_ALL, 500);
+    }
+
+    /**
+     * Send assign messages to the specified addresses and wait for the responses.
+     *
+     * @param servers  the addresses of the servers to send the message to.
+     * @param taskInfo the task to assign.
+     * @return The responses.
+     */
+    public AssignResponse[] assign(NodeAddress[] servers, TaskInfo taskInfo)
+    {
+        Vector dests = new Vector();
+        for (int i = 0; i < servers.length; i++)
+        {
+            JGroupsAddress address = (JGroupsAddress) servers[i];
+            dests.add(address);
+        }
+        RspList responses = dispatcher.callRemoteMethods(dests, "_assign",
+                new Object[]{taskInfo},
+                new Class[]{taskInfo.getClass()},
+                GroupRequest.GET_ALL,
+                ASSIGN_TIMEOUT);
+        AssignResponse[] rv = new AssignResponse[responses.size()];
+        for (int i = 0; i < rv.length; i++)
+        {
+            Rsp rsp = (Rsp) responses.elementAt(i);
+            rv[i] = (AssignResponse) rsp.getValue();
+        }
+        return rv;
     }
 }
