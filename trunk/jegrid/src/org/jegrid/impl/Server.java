@@ -1,4 +1,4 @@
-package org.jegrid;
+package org.jegrid.impl;
 
 /**
  * TODO: Add class level javadoc

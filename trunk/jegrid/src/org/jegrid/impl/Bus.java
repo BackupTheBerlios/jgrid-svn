@@ -1,4 +1,6 @@
-package org.jegrid;
+package org.jegrid.impl;
+
+import org.jegrid.NodeAddress;
 
 /**
  * TODO: Add class level comments.

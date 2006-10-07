@@ -3,10 +3,9 @@ package org.jegrid.jgroups;
 import org.jgroups.*;
 import org.jgroups.blocks.PullPushAdapter;
 import org.apache.log4j.Logger;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.jegrid.GridImplementor;
+import org.jegrid.impl.GridImplementor;
 
+import java.util.Vector;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;

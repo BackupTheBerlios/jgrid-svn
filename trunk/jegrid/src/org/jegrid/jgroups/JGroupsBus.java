@@ -2,7 +2,16 @@ package org.jegrid.jgroups;
 
 import org.apache.log4j.Logger;
 import org.jegrid.*;
+import org.jegrid.impl.GridImplementor;
+import org.jegrid.impl.Bus;
 import org.jgroups.*;
+import org.jgroups.util.RspList;
+import org.jgroups.blocks.MessageDispatcher;
+import org.jgroups.blocks.GroupRequest;
+
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.util.Vector;
 
 /**
  * JGroups implementation of the messaging layer.
@@ -13,7 +22,7 @@ import org.jgroups.*;
 public class JGroupsBus implements Bus
 {
     private static Logger log = Logger.getLogger(JGroupsBus.class);
-    private static final String DEFAULT_PROPS = "default.xml";
+    private static final String DEFAULT_PROPS = "org/jegrid/jgroups/default.xml";
     private boolean running = false;
     private Channel channel;
     private GridConfiguration config;
@@ -21,6 +30,7 @@ public class JGroupsBus implements Bus
     private JGroupsAddress localAddress;
     private JGroupsListener listener;
     private GridImplementor grid;
+    private MessageDispatcher dispatcher;
 
     public JGroupsBus(GridConfiguration config, GridImplementor gridImpl)
     {
@@ -55,6 +65,8 @@ public class JGroupsBus implements Bus
         {
             if (channel == null)
             {
+                // Before we create the JChannel, make sure UDP is working.
+                checkUDP();
                 if (config.getBusConfiguration() == null)
                     channel = new JChannel(DEFAULT_PROPS);
                 else
@@ -65,20 +77,22 @@ public class JGroupsBus implements Bus
             if (config.getGridName() == null || config.getGridName().length() == 0)
                 throw new GridException("No grid name.  Please provide a grid name so the grid can federate.");
             // Before we connect, set up the listener.
-            listener = new JGroupsListener(this,grid);
+            listener = new JGroupsListener(this, grid);
+            dispatcher = new MessageDispatcher(channel,listener,listener);
             channel.addChannelListener(listener);       // Listens for connect/disconnect events.
             channel.connect(config.getGridName());      // Okay, connect the channel.
             if (log.isDebugEnabled())
                 log.debug("doConnect() : channel connected.");
             address = channel.getLocalAddress();
             localAddress = new JGroupsAddress(address);
-            Message m = new Message(null, address, "hello!".getBytes());
-            channel.send(m);                                
+            Message m = createMessage();
+            RspList list = dispatcher.castMessage(null,m, GroupRequest.GET_ALL,5000);
+            log.info(list.toString());
         }
         catch (ChannelException e)
         {
             disconnect();
-            log.error(e,e);
+            log.error(e, e);
             throw new GridException(e);
         }
         catch (GridException e)
@@ -86,6 +100,34 @@ public class JGroupsBus implements Bus
             disconnect();
             throw e;
         }
+    }
+
+    private void checkUDP()
+    {
+        DatagramSocket sock = null;
+        try
+        {
+            sock = new DatagramSocket();
+            InetAddress local = InetAddress.getLocalHost();
+            if (log.isDebugEnabled())
+                log.debug("Local address is: " + local);
+        }
+        catch (Exception ex)
+        {
+            String msg = "Unable to create a DatagramSocket: " + ex;
+            log.error(msg, ex);
+            throw new GridException(msg, ex);
+        }
+        finally
+        {
+            if (sock != null)
+                sock.close();
+        }
+    }
+
+    Message createMessage()
+    {
+        return new Message(null, address, "hello!".getBytes());
     }
 
     public void disconnect()

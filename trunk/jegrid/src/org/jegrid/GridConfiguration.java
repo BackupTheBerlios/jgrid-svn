@@ -1,9 +1,9 @@
 package org.jegrid;
 
 import org.jegrid.util.MicroContainer;
+import org.jegrid.impl.Bus;
+import org.jegrid.impl.Server;
 import org.w3c.dom.Element;
-
-import java.lang.reflect.InvocationTargetException;
 
 /**
  * Holds configuration properties for JEGrid.<br>
@@ -18,6 +18,9 @@ public class GridConfiguration
     private static final String BUS_IMPL = "org.jegrid.jgroups.JGroupsBus";
     private static final String CLIENT_IMPL = "org.jegrid.impl.ClientImpl";
     private static final String SERVER_IMPL = "org.jegrid.impl.ServerImpl";
+    private static final String THREAD_POOL_IMPL = "org.jegrid.impl.WorkerThreadPool";
+
+    private static final int DEFAULT_THREAD_POOL_SIZE = 2;
 
     private String gridImplClass = GRID_IMPL;
     private String busImplClass = BUS_IMPL;
@@ -26,6 +29,7 @@ public class GridConfiguration
 
     private String gridName;
     private int type = Grid.TYPE_OBSERVER;
+    private int threadPoolSize = DEFAULT_THREAD_POOL_SIZE;
 
     public Element getBusConfiguration()
     {
@@ -87,4 +91,8 @@ public class GridConfiguration
         return (Grid) mc.getComponentInstance(Grid.class);
     }
 
+    public int getThreadPoolSize()
+    {
+        return threadPoolSize;
+    }
 }

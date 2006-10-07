@@ -30,6 +30,7 @@ public class WorkerThreadPool extends PooledExecutor implements PooledExecutor.B
 
     public boolean blockedAction(Runnable command)
     {
+        log.warn("Thread pool is busy!");
         throw new ServerBusyException("Server thread pool is busy!");
     }
 

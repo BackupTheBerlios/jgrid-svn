@@ -4,10 +4,7 @@ import org.jegrid.*;
 import org.jegrid.util.MicroContainer;
 import org.apache.log4j.Logger;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * Implements a connection to the grid based on the Bus abstraction, manages
@@ -21,12 +18,13 @@ public class GridImpl implements GridImplementor
     private static Logger log = Logger.getLogger(GridImpl.class);
     private GridConfiguration config;
     private MicroContainer mc;
-    private Map allNodesByAddress = new HashMap();
+    private Membership membership;
 
     public GridImpl(GridConfiguration config, MicroContainer mc)
     {
         this.config = config;
         this.mc = mc;
+        membership = new Membership(this);
     }
 
     public Client getClient()
@@ -64,39 +62,26 @@ public class GridImpl implements GridImplementor
         return getBus().getAddress();
     }
 
+    public Collection getNodeStatus()
+    {
+        return membership.getNodeStatus();
+    }
+
+    public int nextMembershipChange()
+    {
+        return membership.nextMembershipChange();
+    }
+
+    public void waitForMembershipChange(int mark,long timeout)
+    {
+        membership.waitForMembershipChange(mark,timeout);
+    }
+
+
     // Callback methods for grid membership invoked by the bus listener.
 
     public void onMembershipChange(Set joined, Set left)
     {
-        synchronized (allNodesByAddress)
-        {
-            for (Iterator iterator = joined.iterator(); iterator.hasNext();)
-            {
-                NodeAddress address = (NodeAddress) iterator.next();
-                if (allNodesByAddress.containsKey(address))
-                {
-                    log.info("Node list already contains " + address);
-                }
-                else
-                {
-                    NodeStateImpl node = new NodeStateImpl(address);
-                    allNodesByAddress.put(address,node);
-                    log.info("Node " + node + " added.");
-                }
-            } // for
-            for (Iterator iterator = left.iterator(); iterator.hasNext();)
-            {
-                NodeAddress address = (NodeAddress) iterator.next();
-                if (allNodesByAddress.containsKey(address))
-                {
-                    allNodesByAddress.remove(address);
-                    log.info("Removed " + address);
-                }
-                else
-                {
-                    log.info("Address " + address + " not found.");
-                }
-            } // for
-        } // sync
+        membership.onMembershipChange(joined,left);
     }
 }
