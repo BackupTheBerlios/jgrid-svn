@@ -3,6 +3,9 @@ package org.jegrid;
 import junit.framework.TestCase;
 import org.jegrid.impl.GridImplementor;
 
+import java.util.Collection;
+import java.util.Iterator;
+
 /**
  * Tests basic create/connect methods.
  * <br>User: jdavis
@@ -11,9 +14,24 @@ import org.jegrid.impl.GridImplementor;
  */
 public class ConfigurationTest extends TestCase
 {
+    public void testMissingConfiguration() throws Exception
+    {
+        GridException ge = null;
+        try
+        {
+            Grid grid = new GridConfiguration().setBusConfiguration("does-not-exist.xml").configure();
+            grid.connect();
+        }
+        catch (GridException e)
+        {
+            ge = e;
+        }
+        assertNotNull(ge);
+    }
+
     public void testConfigure() throws Exception
     {
-        GridConfiguration config = new GridConfiguration();
+        GridConfiguration config = getConfiguration();
         Grid grid = config.configure();
         assertNoClient(grid);
 
@@ -22,7 +40,6 @@ public class ConfigurationTest extends TestCase
         assertNotNull(grid.getClient());
 
         config.setType(Grid.TYPE_SERVER);
-        config.setGridName("test");
         grid = config.configure();
         assertNotNull(grid.getClient());
         try
@@ -36,11 +53,17 @@ public class ConfigurationTest extends TestCase
         }
     }
 
+    public static GridConfiguration getConfiguration()
+    {
+        GridConfiguration config = new GridConfiguration().setBusConfiguration("org/jegrid/jgroups/unit-test.xml");
+        config.setGridName("test");
+        return config;
+    }
+
     public void test2Servers() throws Exception
     {
-        GridConfiguration config = new GridConfiguration();
+        GridConfiguration config = getConfiguration();
         config.setType(Grid.TYPE_SERVER);
-        config.setGridName("test");
         // We use the internal GridImplementor interface because we need access
         // to some methods for testing.
         GridImplementor grid1 = (GridImplementor) config.configure();
@@ -50,23 +73,34 @@ public class ConfigurationTest extends TestCase
             grid1.connect();
             assertNotNull(grid1.getLocalAddress());
             // Assert that there is exactly one server node.
-            assertEquals(1,grid1.getNodeStatus().size());
+            assertEquals(1,grid1.getGridStatus(true).getNumberOfNodes());
             // Mark the grid membership as of this time, because we want to wait
             // for a membership change beyond this one.
             int mark = grid1.nextMembershipChange();
             grid2.connect();
             assertNotNull(grid2.getLocalAddress());
             // Assert that there are exactly two server nodes, according to both grid interfaces.
-            assertEquals(2,grid2.getNodeStatus().size());
+            assertEquals(2,grid2.getGridStatus(true).getNumberOfNodes());
+            checkServerNodes(grid2.getGridStatus(false));
             // However, it might take grid1 a while to figure out that grid2 has joined (membership
             // updates are async!).
             grid1.waitForMembershipChange(mark,5000);
-            assertEquals(2,grid1.getNodeStatus().size());
+            assertEquals(2,grid1.getGridStatus(true).getNumberOfNodes());
         }
         finally
         {
             disconnect(grid1);
             disconnect(grid2);
+        }
+    }
+
+    private void checkServerNodes(GridStatus status)
+    {
+        assertEquals(2, status.getNumberOfNodes());
+        for (Iterator iterator = status.iterator(); iterator.hasNext();)
+        {
+            NodeStatus node = (NodeStatus) iterator.next();
+            assertEquals(Grid.TYPE_SERVER,node.getType());
         }
     }
 
@@ -84,15 +118,6 @@ public class ConfigurationTest extends TestCase
 
     private void assertNoClient(Grid grid)
     {
-        GridException ge = null;
-        try
-        {
-            grid.getClient();
-        }
-        catch (GridException e)
-        {
-            ge = e;
-        }
-        assertNotNull(ge);
+        assertNull(grid.getClient());
     }
 }

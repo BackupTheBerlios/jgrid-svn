@@ -7,6 +7,8 @@ import java.util.*;
 
 import org.jegrid.GridException;
 import org.jegrid.NodeAddress;
+import org.jegrid.NodeStatus;
+import org.jegrid.GridStatus;
 import org.apache.log4j.Logger;
 
 /**
@@ -15,16 +17,17 @@ import org.apache.log4j.Logger;
  * Date: Oct 7, 2006
  * Time: 9:01:21 AM
  */
-class Membership
+class Membership implements GridStatus
 {
     private static Logger log = Logger.getLogger(Membership.class);
 
+    private static final long TIMEOUT_FOR_FIRST_MEMBERSHIP_CHANGE = 10000;
+    
     private int numberOfMembershipChanges;
     private Mutex membershipMutex;
     private CondVar membershipChanged;
     private Map allNodesByAddress = new HashMap();
     private GridImpl grid;
-    private static final long TIMEOUT_FOR_FIRST_MEMBERSHIP_CHANGE = 10000;
 
     public Membership(GridImpl grid)
     {
@@ -151,5 +154,72 @@ class Membership
         {
             throw new GridException(e);
         }
+    }
+
+    public void onHello(NodeStatus from)
+    {
+        acquireMutex();
+        try
+        {
+            updateStatus(from);
+        }
+        finally
+        {
+            releaseMutex();
+        }
+    }
+
+    public void refreshStatus(NodeStatus[] ns)
+    {
+        acquireMutex();
+        try
+        {
+            for (int i = 0; i < ns.length; i++)
+                updateStatus(ns[i]);
+        }
+        finally
+        {
+            releaseMutex();
+        }
+    }
+
+    private void updateStatus(NodeStatus nodeStatus)
+    {
+        NodeAddress address = nodeStatus.getNodeAddress();
+        if (allNodesByAddress.containsKey(address))
+            allNodesByAddress.put(address, nodeStatus);
+        else
+            log.warn("Status from non-member? " + nodeStatus);
+    }
+
+
+    public int getNumberOfNodes()
+    {
+        acquireMutex();
+        try
+        {
+            return allNodesByAddress.size();
+        }
+        finally
+        {
+            releaseMutex();
+        }
+    }
+
+    public Iterator iterator()
+    {
+        // Copy the node statuses into a list and use that for the iterator to avoid
+        // concurrent modification exceptions, etc.
+        List list = new LinkedList();
+        acquireMutex();
+        try
+        {
+            list.addAll(allNodesByAddress.values());
+        }
+        finally
+        {
+            releaseMutex();
+        }
+        return list.iterator();
     }
 }

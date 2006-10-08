@@ -17,47 +17,89 @@ public class GridImpl implements GridImplementor
 {
     private static Logger log = Logger.getLogger(GridImpl.class);
     private GridConfiguration config;
-    private MicroContainer mc;
     private Membership membership;
+    private Bus bus;
+    private Server server;
+    private ClientImplementor client;
+    private NodeStatusImpl localStatus;
 
-    public GridImpl(GridConfiguration config, MicroContainer mc)
+    public GridImpl(GridConfiguration config)
     {
         this.config = config;
-        this.mc = mc;   // Lazily access the other components to avoid circular dependency.
         membership = new Membership(this);
+    }
+
+    public void initialize(MicroContainer mc)
+    {
+        // These objects need the GridImplementor in the micro-container, so
+        // we ask the container to construct them now to avoid circular dependency.
+        bus = (Bus) mc.getComponentInstance(Bus.class);
+        switch (config.getType())
+        {
+            case TYPE_SERVER:
+                server = (Server) mc.getComponentInstance(Server.class);
+            case TYPE_CLIENT:
+                client = (ClientImplementor) mc.getComponentInstance(Client.class);
+            default:
+                break;
+        }
     }
 
     public Client getClient()
     {
-        Client client = (Client) mc.getComponentInstance(Client.class);
-        if (client == null)
-            throw new GridException("This configuration is not a client.");
         return client;
     }
 
     public Server getServer()
     {
-        return (Server) mc.getComponentInstance(Server.class);
+        return server;
     }
 
     public void connect()
     {
-        getBus().connect();
+        bus.connect();
     }
 
     public void disconnect()
     {
-        getBus().disconnect();
+        bus.disconnect();
     }
 
     public NodeAddress getLocalAddress()
     {
-        return getBus().getAddress();
+        return bus.getAddress();
     }
 
-    public Collection getNodeStatus()
+    public NodeStatus getLocalStatus()
     {
-        return membership.getNodeStatus();
+        Runtime rt = Runtime.getRuntime();
+        int freeThreads = (server == null) ? 0 : server.freeThreads();
+        int totalThreads = (server == null) ? 0 : server.totalThreads();
+        return new NodeStatusImpl(
+                bus.getAddress(),
+                config.getType(),
+                rt.freeMemory(),
+                rt.totalMemory(),
+                freeThreads,
+                totalThreads
+        );
+    }
+
+    public GridStatus getGridStatus(boolean cached)
+    {
+        if (!cached)
+        {
+            NodeStatus[] ns = bus.getGridStatus();
+            membership.refreshStatus(ns);
+        }
+        return membership;
+    }
+
+    public void runServer()
+    {
+        if (server == null)
+            throw new GridException("This node is not configured as a server.");
+        server.run();
     }
 
     public int nextMembershipChange()
@@ -75,12 +117,12 @@ public class GridImpl implements GridImplementor
     public void onMembershipChange(Set joined, Set left)
     {
         membership.onMembershipChange(joined, left);
+        if (client != null)
+            client.onMembershipChange(joined,left);
     }
 
-    private Bus getBus()
+    public void onHello(NodeStatus from)
     {
-        // This allows us to have gridImpl and the bus in the same container.
-        // Otherwise, we'd have circular dependency.
-        return (Bus) mc.getComponentInstance(Bus.class);
+        membership.onHello(from);
     }
 }

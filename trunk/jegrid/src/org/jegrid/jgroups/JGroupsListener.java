@@ -1,15 +1,12 @@
 package org.jegrid.jgroups;
 
-import org.jgroups.*;
-import org.jgroups.blocks.PullPushAdapter;
-import org.jgroups.blocks.RequestHandler;
 import org.apache.log4j.Logger;
 import org.jegrid.impl.GridImplementor;
+import org.jgroups.*;
 
-import java.util.Vector;
-import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Translates JGroups messages into grid callbacks.
@@ -20,13 +17,11 @@ import java.util.Iterator;
 public class JGroupsListener implements ChannelListener, MessageListener, MembershipListener
 {
     private static Logger log = Logger.getLogger(JGroupsListener.class);
-    private JGroupsBus bus;
     private GridImplementor grid;
     private View currentView;
 
-    public JGroupsListener(JGroupsBus jGroupsBus, GridImplementor grid)
+    public JGroupsListener(GridImplementor grid)
     {
-        this.bus = jGroupsBus;
         this.grid = grid;
     }
 

@@ -20,4 +20,14 @@ public class AssignResponse implements Serializable
         this.server = server;
         this.threadsRemaining = freeThreads;
     }
+
+    public int getThreadsRemaining()
+    {
+        return threadsRemaining;
+    }
+
+    public NodeAddress getServer()
+    {
+        return server;
+    }
 }

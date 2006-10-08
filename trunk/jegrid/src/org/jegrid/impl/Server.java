@@ -11,4 +11,13 @@ public interface Server
     AssignResponse onAssign(TaskInfo task);
 
     ;
+
+    void run()
+            ;
+
+    int freeThreads()
+            ;
+
+    int totalThreads()
+            ;
 }

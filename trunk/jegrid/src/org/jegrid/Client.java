@@ -8,4 +8,5 @@ package org.jegrid;
  */
 public interface Client
 {
+    Task createTask(Class taskClass);
 }

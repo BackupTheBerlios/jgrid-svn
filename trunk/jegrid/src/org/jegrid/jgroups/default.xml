@@ -6,7 +6,7 @@
         mcast_port="45566"
         ucast_recv_buf_size="64000"
         mcast_addr="228.8.8.8"
-        receive_on_all_interfaces="true"
+        receive_on_all_interfaces="false"
         loopback="true"
         mcast_recv_buf_size="64000"
         max_bundle_size="60000"

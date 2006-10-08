@@ -1,9 +1,9 @@
 package org.jegrid;
 
-import org.jegrid.util.MicroContainer;
 import org.jegrid.impl.Bus;
+import org.jegrid.impl.GridImplementor;
 import org.jegrid.impl.Server;
-import org.w3c.dom.Element;
+import org.jegrid.util.MicroContainer;
 
 /**
  * Holds configuration properties for JEGrid.<br>
@@ -13,27 +13,30 @@ import org.w3c.dom.Element;
  */
 public class GridConfiguration
 {
-
+    // Implementations
     private static final String GRID_IMPL = "org.jegrid.impl.GridImpl";
     private static final String BUS_IMPL = "org.jegrid.jgroups.JGroupsBus";
     private static final String CLIENT_IMPL = "org.jegrid.impl.ClientImpl";
     private static final String SERVER_IMPL = "org.jegrid.impl.ServerImpl";
-
-    private static final int DEFAULT_THREAD_POOL_SIZE = 2;
 
     private String gridImplClass = GRID_IMPL;
     private String busImplClass = BUS_IMPL;
     private String clientImplClass = CLIENT_IMPL;
     private String serverImplClass = SERVER_IMPL;
 
+    // Properties
+
+    private static final int DEFAULT_THREAD_POOL_SIZE = 2;
+    private static final String DEFAULT_BUS_CONFIG = "org/jegrid/jgroups/default.xml";
+
     private String gridName;
     private int type = Grid.TYPE_OBSERVER;
     private int threadPoolSize = DEFAULT_THREAD_POOL_SIZE;
+    private String busConfiguration = DEFAULT_BUS_CONFIG;
 
-    public Element getBusConfiguration()
+    public String getBusConfiguration()
     {
-
-        return null;
+        return busConfiguration;
     }
 
     /**
@@ -75,25 +78,25 @@ public class GridConfiguration
         // Register the implementation class names with the container.
         mc.registerSingleton(Grid.class, gridImplClass);
         mc.registerSingleton(Bus.class, busImplClass);
-        // Depending on the configuration type, we register the client and server implementations.
-        switch (type)
-        {
-            case Grid.TYPE_SERVER:
-                mc.registerSingleton(Server.class, serverImplClass);
-            case Grid.TYPE_CLIENT:
-                mc.registerSingleton(Client.class, clientImplClass);
-        }
+        mc.registerSingleton(Server.class, serverImplClass);
+        mc.registerSingleton(Client.class, clientImplClass);
         // Register this configuration with the container.
         mc.registerComponentInstance(this);
-        // Register the microcontainer in itself (I know... wierd, but it makes sense because
-        // this allows the microcontainer to resolve the constructors.
-        mc.registerComponentInstance(mc);
         // This will perform the constructor dependency injection.
-        return (Grid) mc.getComponentInstance(Grid.class);
+        GridImplementor grid = (GridImplementor) mc.getComponentInstance(Grid.class);
+        // Perform the rest of the initialization that cannot be done with DI.
+        grid.initialize(mc);
+        return grid;
     }
 
     public int getThreadPoolSize()
     {
         return threadPoolSize;
+    }
+
+    public GridConfiguration setBusConfiguration(String busConfiguration)
+    {
+        this.busConfiguration = busConfiguration;
+        return this;
     }
 }

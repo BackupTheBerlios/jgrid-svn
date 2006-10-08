@@ -3,13 +3,15 @@ package org.jegrid.jgroups;
 import org.jegrid.NodeAddress;
 import org.jgroups.Address;
 
+import java.io.Serializable;
+
 /**
  * JGroups version of a node address.
  * <br> User: jdavis
  * Date: Sep 30, 2006
  * Time: 9:21:13 PM
  */
-public class JGroupsAddress implements NodeAddress
+public class JGroupsAddress implements NodeAddress, Serializable
 {
     private Address address;
 
@@ -37,5 +39,10 @@ public class JGroupsAddress implements NodeAddress
         return "JGroupsAddress{" +
                 "address=" + address +
                 '}';
+    }
+
+    Address getAddress()
+    {
+        return address;
     }
 }

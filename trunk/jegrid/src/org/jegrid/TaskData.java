@@ -1,4 +1,4 @@
-package org.jegrid.impl;
+package org.jegrid;
 
 import java.io.Serializable;
 

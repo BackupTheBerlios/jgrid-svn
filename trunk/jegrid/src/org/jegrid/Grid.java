@@ -1,9 +1,5 @@
 package org.jegrid;
 
-import org.jegrid.impl.Server;
-
-import java.util.Collection;
-
 /**
  * Represents a connection to the grid.
  * <br>User: jdavis
@@ -57,10 +53,24 @@ public interface Grid
     NodeAddress getLocalAddress();
 
     /**
-     * Returns an unmodifiable collection of NodeStatus, one for very member of the grid.
+     * Returns the status of the local node.
      *
-     * @return an an unmodifiable collection of NodeStatus, one for very member of the grid.
+     * @return the status of the local node
      */
-    Collection getNodeStatus();
+    NodeStatus getLocalStatus();
 
+    /**
+     * Returns an unmodifiable collection of NodeStatus, one for very member of the grid.  This
+     * will be the cached status that is on this grid node.
+     * @return an an unmodifiable collection of NodeStatus, one for very member of the grid.
+     * @param cached If true, the locally cached status will be used.  Otherwise, a
+     * broadcast message will be sent out and the cache will be refreshed with the responses.
+     */
+    GridStatus getGridStatus(boolean cached);
+
+    /**
+     * Run the server loop on the current thread.  This will not return until the grid is
+     * shut down.
+     */
+    void runServer();
 }

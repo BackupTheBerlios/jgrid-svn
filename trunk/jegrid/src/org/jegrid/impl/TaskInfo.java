@@ -2,13 +2,15 @@ package org.jegrid.impl;
 
 import org.jegrid.NodeAddress;
 
+import java.io.Serializable;
+
 /**
- * TODO: Add class level javadoc
+ * Information about a task that is going to be assigned.
  * <br> User: jdavis
  * Date: Oct 7, 2006
  * Time: 10:10:21 AM
  */
-public class TaskInfo
+public class TaskInfo implements Serializable
 {
     private NodeAddress client;
     private int taskId;

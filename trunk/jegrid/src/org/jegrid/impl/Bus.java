@@ -1,6 +1,11 @@
 package org.jegrid.impl;
 
 import org.jegrid.NodeAddress;
+import org.jegrid.NodeStatus;
+import org.jegrid.TaskData;
+import org.jegrid.GridException;
+
+import java.util.Collection;
 
 /**
  * TODO: Add class level comments.
@@ -17,5 +22,20 @@ public interface Bus
     NodeAddress getAddress();
 
     AssignResponse[] assign(NodeAddress[] servers, TaskInfo taskInfo)
+            ;
+
+    NodeStatus[] getGridStatus()
+            ;
+
+    void sayHello()
+            ;
+
+    TaskData getNextInput(NodeAddress client, int taskId)
+            ;
+
+    void putOutput(NodeAddress client, int taskId, TaskData output)
+            ;
+
+    void taskFailed(NodeAddress client, int taskId, GridException ge)
             ;
 }

@@ -19,4 +19,13 @@ public interface NodeStatus
      * @return the type of node (See Grid.TYPE_XXX)
      */
     int getType();
+
+    int getFreeThreads()
+            ;
+
+    int getTotalThreads()
+            ;
+
+    long getFreeMemory()
+            ;
 }

@@ -2,7 +2,8 @@ package org.jegrid.impl;
 
 import org.jegrid.TaskRunnable;
 import org.jegrid.NodeAddress;
-import org.jegrid.impl.TaskData;
+import org.jegrid.TaskData;
+import org.jegrid.GridException;
 
 import java.io.Serializable;
 
@@ -16,11 +17,13 @@ public class Worker implements Runnable
 {
     private ServerImpl server;
     private TaskInfo task;
+    private Bus bus;
 
-    public Worker(ServerImpl server, TaskInfo task)
+    public Worker(ServerImpl server, TaskInfo task, Bus bus)
     {
         this.server = server;
         this.task = task;
+        this.bus = bus;
     }
 
     public void run()
@@ -28,16 +31,29 @@ public class Worker implements Runnable
         // Get the next input from the client's queue of inputs for the task.
         NodeAddress client = task.getClient();
         int taskId = task.getTaskId();
-        TaskData input = server.getNextInput(client, taskId);
-        TaskRunnable taskInstance = null;
-        while (input != null)
+        try
         {
-            if (taskInstance == null)
-                taskInstance = server.instantiateTaskRunnable(task.getTaskClassName());
-            int inputId = input.getInputId();
-            Serializable data = taskInstance.run(inputId, input.getData());
-            TaskData output = new TaskData(inputId, data);
-            server.putOutput(client, taskId, inputId, output);
+            TaskData input = bus.getNextInput(client, taskId);
+            TaskRunnable taskInstance = server.instantiateTaskRunnable(task.getTaskClassName());
+            while (input != null)
+            {
+                int inputId = input.getInputId();
+                Serializable data = taskInstance.run(inputId, input.getData());
+                TaskData output = new TaskData(inputId, data);
+                bus.putOutput(client, taskId, output);
+                input = bus.getNextInput(client, taskId);
+            }
+        }
+        catch (Exception e)
+        {
+            //noinspection EmptyCatchBlock
+            try
+            {
+                bus.taskFailed(client,taskId,new GridException(e));
+            }
+            catch (Exception ignore)
+            {
+            }
         }
     }
 }
