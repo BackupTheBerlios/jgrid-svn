@@ -3,6 +3,7 @@ package org.jegrid.impl;
 import org.jegrid.Client;
 import org.jegrid.TaskData;
 import org.jegrid.GridException;
+import org.jegrid.NodeAddress;
 
 import java.util.Set;
 
@@ -14,7 +15,7 @@ import java.util.Set;
  */
 public interface ClientImplementor extends Client
 {
-    TaskData getNextInput(int taskId)
+    TaskData getNextInput(int taskId, NodeAddress server)
             ;
 
     void putOutput(int taskId, TaskData output)

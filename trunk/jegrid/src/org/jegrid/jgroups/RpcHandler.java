@@ -5,6 +5,7 @@ import org.jegrid.impl.*;
 import org.jegrid.NodeStatus;
 import org.jegrid.TaskData;
 import org.jegrid.GridException;
+import org.jegrid.NodeAddress;
 
 /**
  * Handles RPCs from the RpcDispatcher in the JGroupsBus.
@@ -65,7 +66,7 @@ public class RpcHandler
 
     // === Client messages ===
 
-    public TaskData _nextInput(Integer taskId)
+    public TaskData _nextInput(Integer taskId, NodeAddress server)
     {
         if (log.isDebugEnabled())
             log.debug("_nextInput");
@@ -76,7 +77,7 @@ public class RpcHandler
             return null;
         }
         else
-            return client.getNextInput(taskId.intValue());
+            return client.getNextInput(taskId.intValue(), server);
     }
 
     public void _putOutput(Integer taskId, TaskData output)

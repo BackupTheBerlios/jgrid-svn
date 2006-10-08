@@ -16,15 +16,20 @@ import EDU.oswego.cs.dl.util.concurrent.CondVar;
  */
 public class TaskImpl implements Task
 {
+    private static final int DEFAULT_MAX_RETRIES = 3;
+
     private ClientImpl client;
     private TaskInfo info;
     private Mutex mutex;
     private CondVar finished;
-    private List queue;
-    private Set unfinished;
-    private Set serverAddresses;
+    private List queue;             // A queue of InputStatus - ready to be taken by servers
+    private Set unfinished;         // The set of unfinished input, by input id.
+    private Set serverAddresses;    // The server addresses from the assignment.
+    private Map inprogress;         // InputStatus by inputId - input that has been taken by a server.
     private Aggregator aggregator;
     private GridException failure;
+    private int maxWorkers;
+    private int maxRetries = DEFAULT_MAX_RETRIES;
 
     public TaskImpl(ClientImpl client, int taskId, String taskClass)
     {
@@ -32,8 +37,9 @@ public class TaskImpl implements Task
         finished = new CondVar(mutex);
         this.client = client;
         this.info = new TaskInfo(client.getBus().getAddress(), taskId, taskClass);
-        this.queue = new LinkedList();
-        this.unfinished = new HashSet();
+        this.queue = new LinkedList();      // Queue of TaskData for workers. 
+        this.unfinished = new HashSet();    // Input ids that are queued, or in progress.
+        this.inprogress = new HashMap();    // TaskData input in progress, but inputId.
         this.serverAddresses = new HashSet();
     }
 
@@ -48,9 +54,10 @@ public class TaskImpl implements Task
         try
         {
             int inputId = queue.size();
-            TaskData data = new TaskData(inputId,input);
-            queue.add(data);
-            unfinished.add(new Integer(inputId));
+            TaskData data = new TaskData(inputId, input);
+            InputStatus is = new InputStatus(data);
+            queue.add(is);
+            unfinished.add(is.getInputId());
         }
         finally
         {
@@ -58,7 +65,7 @@ public class TaskImpl implements Task
         }
     }
 
-    public TaskData getNextInput()
+    public TaskData getNextInput(NodeAddress server)
     {
         acquireMutex();
         try
@@ -66,19 +73,30 @@ public class TaskImpl implements Task
             if (queue.size() == 0)
                 return null;
             else
-                return (TaskData) queue.remove(0);
+            {
+                if (!serverAddresses.contains(server))
+                    throw new GridException("Unassigned server " + server + " asking for input.");
+                InputStatus is = (InputStatus) queue.remove(0);
+                is.setServer(server);
+                // Remember the input status in the map in case we have a failure
+                // during processing.  It can then be put back on the queue.
+                inprogress.put(is.getInputId(),is);
+                return is.getInput();
+            }
         }
-        finally{
+        finally
+        {
             mutex.release();
         }
     }
-    
+
     public void onComplete(TaskData output)
     {
         acquireMutex();
         try
         {
             Integer key = new Integer(output.getInputId());
+            inprogress.remove(key);
             if (unfinished.remove(key))
             {
                 if (aggregator != null)
@@ -92,30 +110,21 @@ public class TaskImpl implements Task
             mutex.release();
         }
     }
-    
+
     public void run(Aggregator aggregator, int maxWorkers)
     {
-        int serverCount = Math.min(maxWorkers,getNumberOfInputs());
-        NodeAddress[] servers = client.getSeverAddresses(serverCount);
-        if (servers == null || servers.length == 0)
-            throw new GridException("No workers available.");
-        // Send the assign message to all servers.
-        Bus bus = client.getBus();
         this.aggregator = aggregator;
+        this.maxWorkers = maxWorkers;
         failure = null;
-        AssignResponse[] responses = bus.assign(servers,info);
+
+        assign();
+
+        // Wait for the last result to be posted or a failure.
         acquireMutex();
         try
         {
-            // Remember all the servers that responded.
-            for (int i = 0; i < responses.length; i++)
-            {
-                AssignResponse response = responses[i];
-                if (response != null)
-                    serverAddresses.add(response.getServer());
-            }
-            // Wait for the last result to be posted.
-            finished.await();
+            while (unfinished.size() > 0 && failure == null)
+                finished.await();
             if (failure != null)
                 throw failure;
         }
@@ -123,7 +132,36 @@ public class TaskImpl implements Task
         {
             throw new GridException(e);
         }
-        finally{
+        finally
+        {
+            mutex.release();
+        }
+    }
+
+    void assign()
+    {
+        int serverCount = Math.min(maxWorkers, getNumberOfInputs());
+        NodeAddress[] servers = client.getSeverAddresses(serverCount);
+        if (servers == null || servers.length == 0)
+            throw new GridException("No workers available.");
+        // Send the assign message to all servers.
+        Bus bus = client.getBus();
+        acquireMutex();
+        try
+        {
+            // Send the assign message while we have the mutex so
+            // nobody can get input until we've processed the responses.
+            AssignResponse[] responses = bus.assign(servers, info);
+            // Remember all the servers that responded.
+            for (int i = 0; i < responses.length; i++)
+            {
+                AssignResponse response = responses[i];
+                if (response != null)
+                    serverAddresses.add(response.getServer());
+            }
+        }
+        finally
+        {
             mutex.release();
         }
     }
@@ -179,10 +217,7 @@ public class TaskImpl implements Task
             {
                 NodeAddress nodeAddress = (NodeAddress) iterator.next();
                 if (serverAddresses.contains(nodeAddress))
-                {
-                    failure = new GridException("Server " + nodeAddress + " left the grid!");
-                    finished.broadcast();
-                }
+                    handleServerFailure(nodeAddress);
             }
         }
         finally
@@ -190,4 +225,84 @@ public class TaskImpl implements Task
             mutex.release();
         }
     }
+
+    private void handleServerFailure(NodeAddress server)
+    {
+        // Find all inputs that were sent to the server
+        for (Iterator inputs = inprogress.values().iterator(); inputs.hasNext();)
+        {
+            InputStatus is = (InputStatus) inputs.next();
+            if (server.equals(is.getServer()))
+            {
+                is.incrementRetries();
+                // If maximum retries has been exeeded, fail.
+                if (is.getRetries() > maxRetries)
+                {
+                    GridException exception = new GridException("Server " + server
+                            + " left the grid, max retries exceeded!");
+                    fail(exception);
+                    return;
+                }
+                // Otherwise, remove the input from the in progress map and
+                // put it in the queue.
+                inputs.remove();
+                queue.add(is);
+            }
+        }
+    }
+
+    private void fail(GridException e)
+    {
+        failure = e;
+        finished.broadcast();
+    }
+
+    /**
+     * The input id, the input data, and the server that it went to for processing.
+     */
+    private class InputStatus
+    {
+        private NodeAddress server;
+        private TaskData input;
+        private Integer inputId;
+        private int retries;
+
+        public InputStatus(TaskData data)
+        {
+            input = data;
+            inputId = new Integer(data.getInputId());
+            retries = 0;
+        }
+
+        public NodeAddress getServer()
+        {
+            return server;
+        }
+
+        public void setServer(NodeAddress server)
+        {
+            this.server = server;
+        }
+
+        public TaskData getInput()
+        {
+            return input;
+        }
+
+        public Integer getInputId()
+        {
+            return inputId;
+        }
+
+        public int getRetries()
+        {
+            return retries;
+        }
+
+        public void incrementRetries()
+        {
+            retries++;
+        }
+    }
+
 }

@@ -180,8 +180,8 @@ public class JGroupsBus implements Bus
         try
         {
             Object o = dispatcher.callRemoteMethod(address,"_nextInput",
-                    new Object[] { new Integer(taskId) },
-                    new Class[] { Integer.class },
+                    new Object[] { new Integer(taskId), localAddress },
+                    new Class[] { Integer.class, NodeAddress.class },
                     GroupRequest.GET_ALL,
                     10000);
             return (TaskData) o;

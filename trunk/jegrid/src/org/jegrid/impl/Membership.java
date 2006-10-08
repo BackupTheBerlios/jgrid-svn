@@ -185,6 +185,8 @@ class Membership implements GridStatus
 
     private void updateStatus(NodeStatus nodeStatus)
     {
+        if (nodeStatus == null)
+            return;
         NodeAddress address = nodeStatus.getNodeAddress();
         if (allNodesByAddress.containsKey(address))
             allNodesByAddress.put(address, nodeStatus);

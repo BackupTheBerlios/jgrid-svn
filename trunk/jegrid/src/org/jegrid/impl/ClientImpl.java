@@ -78,10 +78,10 @@ public class ClientImpl implements ClientImplementor
         return task;
     }
 
-    public TaskData getNextInput(int taskId)
+    public TaskData getNextInput(int taskId, NodeAddress server)
     {
         TaskImpl task = findTask(taskId);
-        return task.getNextInput();
+        return task.getNextInput(server);
     }
 
     private TaskImpl findTask(int taskId)
