@@ -1,6 +1,7 @@
 package org.jegrid.impl;
 
 import org.jegrid.*;
+import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.util.*;
@@ -17,6 +18,9 @@ import EDU.oswego.cs.dl.util.concurrent.CondVar;
 public class TaskImpl implements Task
 {
     private static final int DEFAULT_MAX_RETRIES = 3;
+
+
+    private Logger log = Logger.getLogger(TaskImpl.class);
 
     private ClientImpl client;
     private TaskInfo info;
@@ -80,7 +84,7 @@ public class TaskImpl implements Task
                 is.setServer(server);
                 // Remember the input status in the map in case we have a failure
                 // during processing.  It can then be put back on the queue.
-                inprogress.put(is.getInputId(),is);
+                inprogress.put(is.getInputId(), is);
                 return is.getInput();
             }
         }
@@ -157,7 +161,11 @@ public class TaskImpl implements Task
             {
                 AssignResponse response = responses[i];
                 if (response != null)
+                {
+                    if (log.isDebugEnabled())
+                        log.debug("#" + i + " " + responses[i].getServer().toString());
                     serverAddresses.add(response.getServer());
+                }
             }
         }
         finally

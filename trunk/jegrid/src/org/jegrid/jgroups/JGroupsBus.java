@@ -7,6 +7,7 @@ import org.jegrid.impl.Bus;
 import org.jegrid.impl.GridImplementor;
 import org.jegrid.impl.TaskInfo;
 import org.jgroups.*;
+import org.jgroups.protocols.AUTOCONF;
 import org.jgroups.blocks.GroupRequest;
 import org.jgroups.blocks.RpcDispatcher;
 import org.jgroups.util.Rsp;
@@ -38,7 +39,7 @@ public class JGroupsBus implements Bus
     private static final Object[] NO_ARGS = new Object[0];
     private static final Class[] NO_TYPES = new Class[0];
 
-    public JGroupsBus(GridConfiguration config,GridImplementor grid)
+    public JGroupsBus(GridConfiguration config, GridImplementor grid)
     {
         this.config = config;
         this.grid = grid;
@@ -107,7 +108,7 @@ public class JGroupsBus implements Bus
         catch (Exception e)
         {
             disconnect();
-            log.error("Unexpected exception: " + e,e);
+            log.error("Unexpected exception: " + e, e);
             throw new GridException(e);
         }
     }
@@ -124,9 +125,18 @@ public class JGroupsBus implements Bus
                 NetworkInterface i = (NetworkInterface) en.nextElement();
                 buf.append(i.toString());
             }
-            InetAddress local = InetAddress.getLocalHost();
-            buf.append("Local address is ").append(local.toString());
+            InetAddress[] addresses = InetAddress.getAllByName(null);
+            for (int i = 0; i < addresses.length; i++)
+            {
+                if (i > 0)
+                    buf.append("\n");
+                buf.append("address[").append(i).append("]=");
+                buf.append(addresses[i].toString());
+            }
             log.debug(buf.toString());
+            log.info("Auto detecting fragment size...");
+            int size = AUTOCONF.senseMaxFragSizeStatic();
+            log.info("maxFragSize=" + size);
         }
         catch (Exception ex)
         {
@@ -170,7 +180,7 @@ public class JGroupsBus implements Bus
         NodeStatus localStatus = grid.getLocalStatus();
         dispatcher.callRemoteMethods(
                 null, "_hello",
-                new Object[] { localStatus }, new Class[] { NodeStatus.class },
+                new Object[]{localStatus}, new Class[]{NodeStatus.class},
                 GroupRequest.GET_NONE, 0);
     }
 
@@ -179,9 +189,9 @@ public class JGroupsBus implements Bus
         Address address = toAddress(client);
         try
         {
-            Object o = dispatcher.callRemoteMethod(address,"_nextInput",
-                    new Object[] { new Integer(taskId), localAddress },
-                    new Class[] { Integer.class, NodeAddress.class },
+            Object o = dispatcher.callRemoteMethod(address, "_nextInput",
+                    new Object[]{new Integer(taskId), localAddress},
+                    new Class[]{Integer.class, NodeAddress.class},
                     GroupRequest.GET_ALL,
                     10000);
             return (TaskData) o;
@@ -197,9 +207,9 @@ public class JGroupsBus implements Bus
         Address address = toAddress(client);
         try
         {
-            dispatcher.callRemoteMethod(address,"_putOutput",
-                    new Object[] { new Integer(taskId) , output },
-                    new Class[] { Integer.class , TaskData.class },
+            dispatcher.callRemoteMethod(address, "_putOutput",
+                    new Object[]{new Integer(taskId), output},
+                    new Class[]{Integer.class, TaskData.class},
                     GroupRequest.GET_ALL,
                     10000);
         }
@@ -215,9 +225,9 @@ public class JGroupsBus implements Bus
         try
         {
             log.warn("Task " + taskId + " failed with " + ge, ge);
-            dispatcher.callRemoteMethod(address,"_taskFailed",
-                    new Object[] { new Integer(taskId) , ge},
-                    new Class[] { Integer.class , GridException.class },
+            dispatcher.callRemoteMethod(address, "_taskFailed",
+                    new Object[]{new Integer(taskId), ge},
+                    new Class[]{Integer.class, GridException.class},
                     GroupRequest.GET_ALL,
                     10000);
         }
@@ -245,7 +255,7 @@ public class JGroupsBus implements Bus
         Vector dests = new Vector();
         for (int i = 0; i < servers.length; i++)
             dests.add(toAddress(servers[i]));
-        
+
         RspList responses = dispatcher.callRemoteMethods(dests, "_assign",
                 new Object[]{taskInfo},
                 new Class[]{taskInfo.getClass()},
