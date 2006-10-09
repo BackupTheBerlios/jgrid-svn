@@ -79,7 +79,11 @@ public class TaskImpl implements Task
             else
             {
                 if (!serverAddresses.contains(server))
-                    throw new GridException("Unassigned server " + server + " asking for input.");
+                {
+                    log.warn("Unassigned server " + server + " asking for input, adding to the list.");
+                    // TODO: Figure out why assign doesn't always return all responses.
+                    serverAddresses.add(server);
+                }
                 TaskInput is = (TaskInput) queue.remove(0);
                 is.setServer(server);
                 // Remember the input status in the map in case we have a failure

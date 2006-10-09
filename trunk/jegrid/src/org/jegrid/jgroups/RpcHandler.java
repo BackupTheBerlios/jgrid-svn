@@ -61,7 +61,12 @@ public class RpcHandler
         }
         // Otherwise, dispatch the method call to the server.
         else
-            return server.onAssign(task);
+        {
+            AssignResponse response = server.onAssign(task);
+            if (log.isDebugEnabled())
+                log.debug("_assign returning : " + response.toString());
+            return response;
+        }
     }
 
     // === Client messages ===
@@ -83,14 +88,14 @@ public class RpcHandler
     public void _putOutput(Integer taskId, TaskData output)
     {
         if (log.isDebugEnabled())
-            log.debug("_putOutput");        
+            log.debug("_putOutput");
         ClientImplementor client = (ClientImplementor) grid.getClient();
         if (client == null)
         {
             log.warn("No client here.");
         }
         else
-            client.putOutput(taskId.intValue(),output);
+            client.putOutput(taskId.intValue(), output);
     }
 
     public void _taskFailed(Integer taskId, GridException t)
@@ -103,6 +108,6 @@ public class RpcHandler
             log.warn("No client here.");
         }
         else
-            client.taskFailed(taskId.intValue(),t);
+            client.taskFailed(taskId.intValue(), t);
     }
 }
