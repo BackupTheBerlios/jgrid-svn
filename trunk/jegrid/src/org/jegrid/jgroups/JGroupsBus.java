@@ -194,12 +194,24 @@ public class JGroupsBus implements Bus
                     new Class[]{Integer.class, NodeAddress.class},
                     GroupRequest.GET_ALL,
                     10000);
+            checkForException(o);
             return (TaskData) o;
+        }
+        catch (GridException ge)
+        {
+            throw ge;
         }
         catch (Exception e)
         {
             throw new GridException(e);
         }
+    }
+
+    private void checkForException(Object o)
+            throws Exception
+    {
+        if (o instanceof Exception)
+            throw (Exception) o;
     }
 
     public void putOutput(NodeAddress client, int taskId, TaskData output)
@@ -212,6 +224,10 @@ public class JGroupsBus implements Bus
                     new Class[]{Integer.class, TaskData.class},
                     GroupRequest.GET_ALL,
                     10000);
+        }
+        catch (GridException ge)
+        {
+            throw ge;
         }
         catch (Exception e)
         {
@@ -230,6 +246,10 @@ public class JGroupsBus implements Bus
                     new Class[]{Integer.class, GridException.class},
                     GroupRequest.GET_ALL,
                     10000);
+        }
+        catch (GridException g)
+        {
+            throw g;
         }
         catch (Exception e)
         {
@@ -265,6 +285,8 @@ public class JGroupsBus implements Bus
         for (int i = 0; i < rv.length; i++)
         {
             Rsp rsp = (Rsp) responses.elementAt(i);
+            if (log.isDebugEnabled())
+               log.debug("assign() : Rsp #" + i + " " + rsp.toString());
             rv[i] = (AssignResponse) rsp.getValue();
         }
         return rv;
@@ -278,6 +300,18 @@ public class JGroupsBus implements Bus
         for (int i = 0; i < rv.length; i++)
         {
             Rsp rsp = (Rsp) responses.elementAt(i);
+            try
+            {
+                checkForException(rv[i]);
+            }
+            catch (GridException g)
+            {
+                throw g;
+            }
+            catch (Exception e)
+            {
+                throw new GridException(e);
+            }
             rv[i] = (NodeStatus) rsp.getValue();
         }
         return rv;

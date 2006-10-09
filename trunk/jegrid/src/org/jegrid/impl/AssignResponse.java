@@ -32,4 +32,12 @@ public class AssignResponse implements Serializable
     {
         return server;
     }
+
+    public String toString()
+    {
+        return "AssignResponse{" +
+                "threadsRemaining=" + threadsRemaining +
+                ", server=" + server +
+                '}';
+    }
 }
