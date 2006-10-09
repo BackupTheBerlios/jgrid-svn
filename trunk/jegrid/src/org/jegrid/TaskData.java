@@ -10,6 +10,8 @@ import java.io.Serializable;
  */
 public class TaskData implements Serializable
 {
+    private static final long serialVersionUID = -2681038030949504077L;
+    
     private int inputId;
     private Serializable data;
 

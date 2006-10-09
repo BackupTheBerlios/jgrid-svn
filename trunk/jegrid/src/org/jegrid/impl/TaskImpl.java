@@ -26,7 +26,7 @@ public class TaskImpl implements Task
     private Set unfinished;         // The set of unfinished input, by input id.
     private Set serverAddresses;    // The server addresses from the assignment.
     private Map inprogress;         // InputStatus by inputId - input that has been taken by a server.
-    private Aggregator aggregator;
+    private Aggregator aggregator;  // The thing that is aggregating the results.
     private GridException failure;
     private int maxWorkers;
     private int maxRetries = DEFAULT_MAX_RETRIES;
@@ -55,7 +55,7 @@ public class TaskImpl implements Task
         {
             int inputId = queue.size();
             TaskData data = new TaskData(inputId, input);
-            InputStatus is = new InputStatus(data);
+            TaskInput is = new TaskInput(data);
             queue.add(is);
             unfinished.add(is.getInputId());
         }
@@ -76,7 +76,7 @@ public class TaskImpl implements Task
             {
                 if (!serverAddresses.contains(server))
                     throw new GridException("Unassigned server " + server + " asking for input.");
-                InputStatus is = (InputStatus) queue.remove(0);
+                TaskInput is = (TaskInput) queue.remove(0);
                 is.setServer(server);
                 // Remember the input status in the map in case we have a failure
                 // during processing.  It can then be put back on the queue.
@@ -231,7 +231,7 @@ public class TaskImpl implements Task
         // Find all inputs that were sent to the server
         for (Iterator inputs = inprogress.values().iterator(); inputs.hasNext();)
         {
-            InputStatus is = (InputStatus) inputs.next();
+            TaskInput is = (TaskInput) inputs.next();
             if (server.equals(is.getServer()))
             {
                 is.incrementRetries();
@@ -255,54 +255,6 @@ public class TaskImpl implements Task
     {
         failure = e;
         finished.broadcast();
-    }
-
-    /**
-     * The input id, the input data, and the server that it went to for processing.
-     */
-    private class InputStatus
-    {
-        private NodeAddress server;
-        private TaskData input;
-        private Integer inputId;
-        private int retries;
-
-        public InputStatus(TaskData data)
-        {
-            input = data;
-            inputId = new Integer(data.getInputId());
-            retries = 0;
-        }
-
-        public NodeAddress getServer()
-        {
-            return server;
-        }
-
-        public void setServer(NodeAddress server)
-        {
-            this.server = server;
-        }
-
-        public TaskData getInput()
-        {
-            return input;
-        }
-
-        public Integer getInputId()
-        {
-            return inputId;
-        }
-
-        public int getRetries()
-        {
-            return retries;
-        }
-
-        public void incrementRetries()
-        {
-            retries++;
-        }
     }
 
 }

@@ -5,6 +5,8 @@ import org.jegrid.impl.GridImplementor;
 import org.jegrid.impl.Server;
 import org.jegrid.util.MicroContainer;
 
+import java.util.Hashtable;
+
 /**
  * Holds configuration properties for JEGrid.<br>
  * <br>User: jdavis
@@ -98,5 +100,25 @@ public class GridConfiguration
     {
         this.busConfiguration = busConfiguration;
         return this;
+    }
+
+    public Hashtable getInitialContextEnvironment()
+    {
+        return null;
+    }
+
+    public String getJmsConnectionFactoryName()
+    {
+        return "jms/ConnectionFactory";
+    }
+
+    public String getJmsDestinationName()
+    {
+        return "";
+    }
+
+    public long getJmsReceiveTimeout()
+    {
+        return 0;
     }
 }

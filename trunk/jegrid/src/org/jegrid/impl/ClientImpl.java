@@ -70,6 +70,11 @@ public class ClientImpl implements ClientImplementor
     public Task createTask(Class taskClass)
     {
         String taskClassName = taskClass.getName();
+        return createTask(taskClassName);
+    }
+
+    public Task createTask(String taskClassName)
+    {
         TaskImpl task = new TaskImpl(this, nextTaskId(), taskClassName);
         synchronized(tasksById)
         {

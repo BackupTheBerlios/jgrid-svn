@@ -12,6 +12,8 @@ import java.io.Serializable;
  */
 public class AssignResponse implements Serializable
 {
+    private static final long serialVersionUID = -7748290096805543623L;
+    
     private int threadsRemaining;
     private NodeAddress server;
 

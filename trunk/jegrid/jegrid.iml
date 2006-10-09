@@ -16,6 +16,17 @@
     <orderEntry type="library" name="log4j-1.2.13" level="project" />
     <orderEntry type="library" name="picocontainer-1.1" level="project" />
     <orderEntry type="library" name="junit-3.8.1" level="project" />
+    <orderEntry type="library" name="jms" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/jms.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="JBoss 4.0.4RC1" level="application_server_libraries" />
     <orderEntryProperties />
   </component>
 </module>

@@ -95,6 +95,7 @@ public class ServerImpl implements Server
     public TaskRunnable instantiateTaskRunnable(String taskClass)
             throws IllegalAccessException, InstantiationException, ClassNotFoundException
     {
+        
         Class aClass = Thread.currentThread().getContextClassLoader().loadClass(taskClass);
         return (TaskRunnable) aClass.newInstance();
     }

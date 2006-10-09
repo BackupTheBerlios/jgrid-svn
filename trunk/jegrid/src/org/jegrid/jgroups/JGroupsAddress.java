@@ -13,6 +13,8 @@ import java.io.Serializable;
  */
 public class JGroupsAddress implements NodeAddress, Serializable
 {
+    private static final long serialVersionUID = 4218752161405881705L;
+
     private Address address;
 
     public JGroupsAddress(Address address)

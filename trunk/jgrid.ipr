@@ -347,6 +347,15 @@
         <root url="jar://$PROJECT_DIR$/lib/log4j-1.2.13-src.zip!/" />
       </SOURCES>
     </library>
+    <library name="jms">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/jms.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$PROJECT_DIR$/lib/jms-src.zip!/" />
+      </SOURCES>
+    </library>
   </component>
   <component name="uidesigner-configuration">
     <option name="INSTRUMENT_CLASSES" value="true" />

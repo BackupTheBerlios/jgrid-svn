@@ -14,6 +14,8 @@ import java.io.Serializable;
  */
 public class NodeStatusImpl implements NodeStatus, Serializable
 {
+    private static final long serialVersionUID = -8698235516175764007L;
+    
     private NodeAddress address;
     private int type = Grid.TYPE_UNKNOWN;
     private long freeMemory;
