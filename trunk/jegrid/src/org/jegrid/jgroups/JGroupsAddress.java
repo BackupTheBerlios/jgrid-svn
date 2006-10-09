@@ -38,9 +38,7 @@ public class JGroupsAddress implements NodeAddress, Serializable
 
     public String toString()
     {
-        return "JGroupsAddress{" +
-                "address=" + address +
-                '}';
+        return (address == null) ? "null" : address.toString();
     }
 
     Address getAddress()

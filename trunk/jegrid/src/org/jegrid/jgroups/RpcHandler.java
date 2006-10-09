@@ -78,7 +78,7 @@ public class RpcHandler
         ClientImplementor client = (ClientImplementor) grid.getClient();
         if (client == null)
         {
-            log.warn("No client here.");
+            log.warn("No client here, sorry.");
             return null;
         }
         else

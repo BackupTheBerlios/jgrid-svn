@@ -33,7 +33,9 @@ public class Worker implements Runnable
         int taskId = task.getTaskId();
         try
         {
-            TaskData input = bus.getNextInput(client, taskId);
+            TaskData input = null;
+            // TODO: Wait for the 'go' message from the client.
+            input = bus.getNextInput(client, taskId);
             TaskRunnable taskInstance = server.instantiateTaskRunnable(task.getTaskClassName());
             while (input != null)
             {

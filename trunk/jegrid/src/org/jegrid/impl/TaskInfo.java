@@ -37,5 +37,4 @@ public class TaskInfo implements Serializable
     {
         return taskClassName;
     }
-
 }

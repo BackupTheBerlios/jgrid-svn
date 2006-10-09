@@ -2,10 +2,7 @@ package org.jegrid.jgroups;
 
 import org.apache.log4j.Logger;
 import org.jegrid.*;
-import org.jegrid.impl.AssignResponse;
-import org.jegrid.impl.Bus;
-import org.jegrid.impl.GridImplementor;
-import org.jegrid.impl.TaskInfo;
+import org.jegrid.impl.*;
 import org.jgroups.*;
 import org.jgroups.protocols.AUTOCONF;
 import org.jgroups.blocks.GroupRequest;
@@ -35,9 +32,10 @@ public class JGroupsBus implements Bus
     private JGroupsListener listener;
     private GridImplementor grid;
     private RpcDispatcher dispatcher;
-    private static final long ASSIGN_TIMEOUT = 1000;
+    private static final long TIMEOUT = 10000;
     private static final Object[] NO_ARGS = new Object[0];
     private static final Class[] NO_TYPES = new Class[0];
+    private static final long NEXT_INPUT_TIMEOUT = TIMEOUT * 3;
 
     public JGroupsBus(GridConfiguration config, GridImplementor grid)
     {
@@ -184,7 +182,7 @@ public class JGroupsBus implements Bus
                 GroupRequest.GET_NONE, 0);
     }
 
-    public TaskData getNextInput(NodeAddress client, int taskId)
+    public TaskData getNextInput(NodeAddress client, int taskId) throws RpcTimeoutException
     {
         Address address = toAddress(client);
         try
@@ -193,13 +191,19 @@ public class JGroupsBus implements Bus
                     new Object[]{new Integer(taskId), localAddress},
                     new Class[]{Integer.class, NodeAddress.class},
                     GroupRequest.GET_ALL,
-                    10000);
+                    NEXT_INPUT_TIMEOUT);   // Wait a little longer for this, sometimes the client is slow.
             checkForException(o);
             return (TaskData) o;
         }
         catch (GridException ge)
         {
             throw ge;
+        }
+        catch (TimeoutException e)
+        {
+            // NOTE: If this call times out it may mean that the client has already
+            // given the server the input.
+            throw new RpcTimeoutException(e);
         }
         catch (Exception e)
         {
@@ -211,7 +215,7 @@ public class JGroupsBus implements Bus
             throws Exception
     {
         if (o instanceof Exception)
-            throw (Exception) o;
+            throw(Exception) o;
     }
 
     public void putOutput(NodeAddress client, int taskId, TaskData output)
@@ -223,7 +227,7 @@ public class JGroupsBus implements Bus
                     new Object[]{new Integer(taskId), output},
                     new Class[]{Integer.class, TaskData.class},
                     GroupRequest.GET_ALL,
-                    10000);
+                    TIMEOUT);
         }
         catch (GridException ge)
         {
@@ -245,7 +249,7 @@ public class JGroupsBus implements Bus
                     new Object[]{new Integer(taskId), ge},
                     new Class[]{Integer.class, GridException.class},
                     GroupRequest.GET_ALL,
-                    10000);
+                    TIMEOUT);
         }
         catch (GridException g)
         {
@@ -280,13 +284,13 @@ public class JGroupsBus implements Bus
                 new Object[]{taskInfo},
                 new Class[]{taskInfo.getClass()},
                 GroupRequest.GET_ALL,
-                ASSIGN_TIMEOUT);
+                TIMEOUT);
         AssignResponse[] rv = new AssignResponse[responses.size()];
         for (int i = 0; i < rv.length; i++)
         {
             Rsp rsp = (Rsp) responses.elementAt(i);
             if (log.isDebugEnabled())
-               log.debug("assign() : Rsp #" + i + " " + rsp.toString());
+                log.debug("assign() : Rsp #" + i + " " + rsp.toString());
             rv[i] = (AssignResponse) rsp.getValue();
         }
         return rv;
@@ -295,7 +299,7 @@ public class JGroupsBus implements Bus
     public NodeStatus[] getGridStatus()
     {
         RspList responses = dispatcher.callRemoteMethods(
-                null, "_localStatus", NO_ARGS, NO_TYPES, GroupRequest.GET_ALL, 100);
+                null, "_localStatus", NO_ARGS, NO_TYPES, GroupRequest.GET_ALL, TIMEOUT);
         NodeStatus[] rv = new NodeStatus[responses.size()];
         for (int i = 0; i < rv.length; i++)
         {

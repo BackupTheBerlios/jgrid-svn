@@ -5,8 +5,6 @@ import org.jegrid.NodeStatus;
 import org.jegrid.TaskData;
 import org.jegrid.GridException;
 
-import java.util.Collection;
-
 /**
  * TODO: Add class level comments.
  * <br>User: jdavis
@@ -30,7 +28,7 @@ public interface Bus
     void sayHello()
             ;
 
-    TaskData getNextInput(NodeAddress client, int taskId)
+    TaskData getNextInput(NodeAddress client, int taskId) throws RpcTimeoutException
             ;
 
     void putOutput(NodeAddress client, int taskId, TaskData output)

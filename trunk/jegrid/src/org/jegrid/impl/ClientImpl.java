@@ -1,6 +1,8 @@
 package org.jegrid.impl;
 
 import org.jegrid.*;
+import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 
 import java.util.*;
 
@@ -17,6 +19,7 @@ public class ClientImpl implements ClientImplementor
     private Bus bus;
     private GridImplementor grid;
     private Comparator serverComparator;
+    private static Logger log = Logger.getLogger(ClientImpl.class);
 
     public ClientImpl(Bus bus,GridImplementor grid)
     {
@@ -86,6 +89,12 @@ public class ClientImpl implements ClientImplementor
     public TaskData getNextInput(int taskId, NodeAddress server)
     {
         TaskImpl task = findTask(taskId);
+        if (task == null)
+        {
+            if (log.isDebugEnabled())
+               log.debug("getNextInput() : No task " + taskId);
+            return null;
+        }
         return task.getNextInput(server);
     }
 

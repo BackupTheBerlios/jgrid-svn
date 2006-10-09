@@ -27,7 +27,7 @@ public class TaskImpl implements Task
     private Mutex mutex;
     private CondVar finished;
     private List queue;             // A queue of InputStatus - ready to be taken by servers
-    private Set unfinished;         // The set of unfinished input, by input id.
+    private Set unfinishedInputIds;         // The set of unfinishedInputIds input, by input id.
     private Set serverAddresses;    // The server addresses from the assignment.
     private Map inprogress;         // InputStatus by inputId - input that has been taken by a server.
     private Aggregator aggregator;  // The thing that is aggregating the results.
@@ -42,7 +42,7 @@ public class TaskImpl implements Task
         this.client = client;
         this.info = new TaskInfo(client.getBus().getAddress(), taskId, taskClass);
         this.queue = new LinkedList();      // Queue of TaskData for workers. 
-        this.unfinished = new HashSet();    // Input ids that are queued, or in progress.
+        this.unfinishedInputIds = new HashSet();    // Input ids that are queued, or in progress.
         this.inprogress = new HashMap();    // TaskData input in progress, but inputId.
         this.serverAddresses = new HashSet();
     }
@@ -61,7 +61,7 @@ public class TaskImpl implements Task
             TaskData data = new TaskData(inputId, input);
             TaskInput is = new TaskInput(data);
             queue.add(is);
-            unfinished.add(is.getInputId());
+            unfinishedInputIds.add(is.getInputId());
         }
         finally
         {
@@ -74,14 +74,23 @@ public class TaskImpl implements Task
         acquireMutex();
         try
         {
+            // TODO: Retry unfinishedInputIds work
+            // If the worker is asking for more input and it hasn't completed the last one we gave it
+            // then give it the same input once again.  Perhaps it wasn't received last time.
+            
             if (queue.size() == 0)
+            {
+                if (log.isDebugEnabled())
+                    log.debug("Telling " + server + " that there is no more input.");
                 return null;
+            }
             else
             {
                 if (!serverAddresses.contains(server))
                 {
+                    // This simply means that some servers didn't respond before they started
+                    // asking for input.  That's okay, we'll let them have it.
                     log.warn("Unassigned server " + server + " asking for input, adding to the list.");
-                    // TODO: Figure out why assign doesn't always return all responses.
                     serverAddresses.add(server);
                 }
                 TaskInput is = (TaskInput) queue.remove(0);
@@ -89,6 +98,8 @@ public class TaskImpl implements Task
                 // Remember the input status in the map in case we have a failure
                 // during processing.  It can then be put back on the queue.
                 inprogress.put(is.getInputId(), is);
+                if (log.isDebugEnabled())
+                    log.debug("Input id " + is.getInputId() + " given to server " + server + ", " + queue.size() + " remain.");
                 return is.getInput();
             }
         }
@@ -105,12 +116,14 @@ public class TaskImpl implements Task
         {
             Integer key = new Integer(output.getInputId());
             inprogress.remove(key);
-            if (unfinished.remove(key))
+            if (unfinishedInputIds.remove(key))
             {
+                if (log.isDebugEnabled())
+                   log.debug("onComplete() : " + output.getInputId() + " finished, " + unfinishedInputIds.size() + " remain.");
                 if (aggregator != null)
                     aggregator.aggregate(output);
             }
-            if (unfinished.size() == 0)
+            if (unfinishedInputIds.size() == 0)
                 finished.broadcast();
         }
         finally
@@ -131,7 +144,7 @@ public class TaskImpl implements Task
         acquireMutex();
         try
         {
-            while (unfinished.size() > 0 && failure == null)
+            while (unfinishedInputIds.size() > 0 && failure == null)
                 finished.await();
             if (failure != null)
                 throw failure;
@@ -160,6 +173,7 @@ public class TaskImpl implements Task
             // Send the assign message while we have the mutex so
             // nobody can get input until we've processed the responses.
             AssignResponse[] responses = bus.assign(servers, info);
+            // Now there are threads waiting on the servers for input!
             // Remember all the servers that responded.
             for (int i = 0; i < responses.length; i++)
             {
