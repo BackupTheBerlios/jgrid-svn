@@ -296,6 +296,24 @@ public class JGroupsBus implements Bus
         return rv;
     }
 
+    public void go(TaskInfo taskInfo)
+    {
+        dispatcher.callRemoteMethods(
+                null, "_go",
+                new Object[]{taskInfo},
+                new Class[]{taskInfo.getClass()},
+                GroupRequest.GET_NONE, 0);
+    }
+
+    public void release(TaskInfo taskInfo)
+    {
+        dispatcher.callRemoteMethods(
+                null, "_release",
+                new Object[]{taskInfo},
+                new Class[]{taskInfo.getClass()},
+                GroupRequest.GET_NONE, 0);
+    }
+
     public NodeStatus[] getGridStatus()
     {
         RspList responses = dispatcher.callRemoteMethods(
@@ -324,5 +342,10 @@ public class JGroupsBus implements Bus
     private Address toAddress(NodeAddress nodeAddress)
     {
         return ((JGroupsAddress) nodeAddress).getAddress();
+    }
+
+    Address getJGroupsAddress()
+    {
+        return channel.getLocalAddress();
     }
 }

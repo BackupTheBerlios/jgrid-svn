@@ -2,6 +2,8 @@ package org.jegrid.impl;
 
 import org.jegrid.Grid;
 import org.jegrid.NodeStatus;
+import org.jegrid.NodeAddress;
+import org.jegrid.jgroups.JGroupsAddress;
 import org.jegrid.util.MicroContainer;
 
 import java.util.Set;
@@ -39,6 +41,7 @@ public interface GridImplementor extends Grid
     /**
      * Initializes the grid implementation with the given micro container.  This is
      * invoked once during GridConfiguration.configure().
+     *
      * @param mc the micro container.
      */
     void initialize(MicroContainer mc);
@@ -47,15 +50,19 @@ public interface GridImplementor extends Grid
 
     /**
      * Invoked when the membership changes.
+     *
      * @param joined The addresses that joined up with the grid.
-     * @param left The addresses that have left the grid.
+     * @param left   The addresses that have left the grid.
      */
     void onMembershipChange(Set joined, Set left);
 
     /**
      * Invoked when a node joins the grid for the first time.   Everybody says hello.
+     *
      * @param from the status of the node that has just joined the grid
      */
     void onHello(NodeStatus from);
 
+    void onNewCoordinator(NodeAddress address)
+            ;
 }

@@ -37,4 +37,25 @@ public class TaskInfo implements Serializable
     {
         return taskClassName;
     }
+
+    public boolean equals(Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TaskInfo taskInfo = (TaskInfo) o;
+
+        if (taskId != taskInfo.taskId) return false;
+        if (!client.equals(taskInfo.client)) return false;
+
+        return true;
+    }
+
+    public int hashCode()
+    {
+        int result;
+        result = client.hashCode();
+        result = 31 * result + taskId;
+        return result;
+    }
 }

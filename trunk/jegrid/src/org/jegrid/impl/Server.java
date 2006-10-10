@@ -20,4 +20,10 @@ public interface Server
 
     int totalThreads()
             ;
+
+    void onGo(TaskInfo task)
+            ;
+
+    void onRelease(TaskInfo task)
+            ;
 }

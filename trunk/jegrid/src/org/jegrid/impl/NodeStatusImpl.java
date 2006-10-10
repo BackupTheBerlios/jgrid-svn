@@ -15,8 +15,9 @@ import java.io.Serializable;
 public class NodeStatusImpl implements NodeStatus, Serializable
 {
     private static final long serialVersionUID = -8698235516175764007L;
-    
+
     private NodeAddress address;
+    private NodeAddress coordinator;
     private int type = Grid.TYPE_UNKNOWN;
     private long freeMemory;
     private long totalMemory;
@@ -28,10 +29,11 @@ public class NodeStatusImpl implements NodeStatus, Serializable
         this.address = address;
     }
 
-    public NodeStatusImpl(NodeAddress address, int type, long freeMemory, long totalMemory, int freeThreads, int totalThreads)
+    public NodeStatusImpl(NodeAddress address, int type, NodeAddress coordinator, long freeMemory, long totalMemory, int freeThreads, int totalThreads)
     {
         this.address = address;
         this.type = type;
+        this.coordinator = address;
         this.freeMemory = freeMemory;
         this.totalMemory = totalMemory;
         this.freeThreads = freeThreads;
@@ -41,6 +43,11 @@ public class NodeStatusImpl implements NodeStatus, Serializable
     public NodeAddress getNodeAddress()
     {
         return address;
+    }
+
+    public NodeAddress getCoordinator()
+    {
+        return coordinator;
     }
 
     public int getType()
@@ -63,11 +70,29 @@ public class NodeStatusImpl implements NodeStatus, Serializable
         return freeMemory;
     }
 
+    private String getNodeType()
+    {
+        switch (type)
+        {
+            case Grid.TYPE_OBSERVER:
+                return "OBSERVER";
+            case Grid.TYPE_SERVER:
+                return "SERVER  ";
+            case Grid.TYPE_CLIENT:
+                return "CLIENT  ";
+            case Grid.TYPE_UNKNOWN:
+            default:
+                return "UNKNOWN ";
+
+        }
+    }
+
     public String toString()
     {
         return "NodeStatusImpl{" +
                 "address=" + address +
-                ", type=" + type +
+                ", type=" + getNodeType() +
+                ", coordinator=" + coordinator +
                 ", freeMemory=" + freeMemory +
                 ", totalMemory=" + totalMemory +
                 ", freeThreads=" + freeThreads +

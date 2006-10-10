@@ -71,6 +71,8 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
         Set joined = toNodeAddresses(diff.getJoined());
         Set left = toNodeAddresses(diff.getLeft());
         grid.onMembershipChange(joined, left);
+        if (diff.isCoordinatorChanged())
+            grid.onNewCoordinator(new JGroupsAddress(diff.getCoordinator()));
         currentView = newView;
     }
 

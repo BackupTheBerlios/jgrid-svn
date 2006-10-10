@@ -22,6 +22,9 @@ public interface Bus
     AssignResponse[] assign(NodeAddress[] servers, TaskInfo taskInfo)
             ;
 
+    void go(TaskInfo info)
+            ;
+
     NodeStatus[] getGridStatus()
             ;
 
@@ -36,4 +39,8 @@ public interface Bus
 
     void taskFailed(NodeAddress client, int taskId, GridException ge)
             ;
+
+    void release(TaskInfo info)
+            ;
+
 }

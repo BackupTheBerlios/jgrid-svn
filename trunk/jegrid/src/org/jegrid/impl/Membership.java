@@ -5,10 +5,7 @@ import EDU.oswego.cs.dl.util.concurrent.CondVar;
 
 import java.util.*;
 
-import org.jegrid.GridException;
-import org.jegrid.NodeAddress;
-import org.jegrid.NodeStatus;
-import org.jegrid.GridStatus;
+import org.jegrid.*;
 import org.apache.log4j.Logger;
 
 /**
@@ -22,12 +19,13 @@ class Membership implements GridStatus
     private static Logger log = Logger.getLogger(Membership.class);
 
     private static final long TIMEOUT_FOR_FIRST_MEMBERSHIP_CHANGE = 10000;
-    
+
     private int numberOfMembershipChanges;
     private Mutex membershipMutex;
     private CondVar membershipChanged;
     private Map allNodesByAddress = new HashMap();
     private GridImpl grid;
+    private NodeAddress coordinator;
 
     public Membership(GridImpl grid)
     {
@@ -64,7 +62,11 @@ class Membership implements GridStatus
                 }
                 else
                 {
-                    NodeStatusImpl node = new NodeStatusImpl(address);
+                    // Don't make up a new status for the local node.  If the
+                    // address is mine, then use my own status.
+                    NodeStatus node = (address.equals(grid.getLocalAddress())) ?
+                            grid.getLocalStatus() :
+                            new NodeStatusImpl(address);
                     allNodesByAddress.put(address, node);
                     log.info("Node " + node + " added.");
                 }
@@ -97,7 +99,7 @@ class Membership implements GridStatus
         try
         {
             unsyncWaitForMembershipChange(1, TIMEOUT_FOR_FIRST_MEMBERSHIP_CHANGE);
-            return Collections.unmodifiableCollection(allNodesByAddress.values());           
+            return Collections.unmodifiableCollection(allNodesByAddress.values());
         }
         finally
         {
@@ -110,7 +112,7 @@ class Membership implements GridStatus
         acquireMutex();
         try
         {
-            return numberOfMembershipChanges + 1;           
+            return numberOfMembershipChanges + 1;
         }
         finally
         {
@@ -188,10 +190,22 @@ class Membership implements GridStatus
         if (nodeStatus == null)
             return;
         NodeAddress address = nodeStatus.getNodeAddress();
-        if (allNodesByAddress.containsKey(address))
-            allNodesByAddress.put(address, nodeStatus);
+
+        // Don't use the status for the local node.  If the
+        // address is mine, then use my own status.
+        NodeStatus node = (address.equals(grid.getLocalAddress())) ?
+                grid.getLocalStatus() :
+                nodeStatus;
+
+        NodeStatus old = (NodeStatus) allNodesByAddress.get(address);
+        if (old != null)
+        {
+            if (old.getType() == Grid.TYPE_UNKNOWN)
+                log.info("Node type resolved: " + node);
+            allNodesByAddress.put(address, node);
+        }
         else
-            log.warn("Status from non-member? " + nodeStatus);
+            log.warn("Status from non-member? " + node);
     }
 
 
@@ -223,5 +237,16 @@ class Membership implements GridStatus
             releaseMutex();
         }
         return list.iterator();
+    }
+
+    public void onNewCoordinator(NodeAddress address)
+    {
+        log.info("=== NEW COORDINATOR: " + address + " ===");
+        coordinator = address;
+    }
+
+    public NodeAddress getCoordinator()
+    {
+        return coordinator;
     }
 }

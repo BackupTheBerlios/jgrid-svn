@@ -41,8 +41,8 @@ public class RpcHandler
 
     public NodeStatus _localStatus()
     {
-        if (log.isDebugEnabled())
-            log.debug("_localStatus");
+//        if (log.isDebugEnabled())
+//            log.debug("_localStatus");
         return grid.getLocalStatus();
     }
 
@@ -66,6 +66,30 @@ public class RpcHandler
             if (log.isDebugEnabled())
                 log.debug("_assign returning : " + response.toString());
             return response;
+        }
+    }
+
+    public void _go(TaskInfo task)
+    {
+        Server server = grid.getServer();
+        // Ignore go messages to non-servers.
+        if (server != null)
+        {
+            server.onGo(task);
+        }
+    }
+
+    public void _release(TaskInfo task)
+    {
+        if (log.isDebugEnabled())
+            log.debug("_release");
+        Server server = grid.getServer();
+        // Ignore go messages to non-servers.
+        if (server != null)
+        {
+            if (log.isDebugEnabled())
+                log.debug("_go");
+            server.onRelease(task);
         }
     }
 

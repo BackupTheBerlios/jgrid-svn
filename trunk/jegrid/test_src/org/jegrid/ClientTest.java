@@ -20,13 +20,13 @@ public class ClientTest extends TestCase
         // Nodes with a larger percentage of free threads are preferred.
         // Nodes with a larger percentage of free memory per free thread are preferred.
         NodeStatusImpl[] nodes = new NodeStatusImpl[]{
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, 100, 100, 0, 20),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, 100, 100, 0, 10),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, 100, 100, 19, 25),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, 100, 100, 9, 10),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, 200, 200, 10, 10),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, 100, 100, 10, 10),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, 100, 100, 8, 10),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 0, 20),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 0, 10),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 19, 25),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 9, 10),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 200, 200, 10, 10),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 10, 10),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 8, 10),
         };
         Arrays.sort(nodes, new ServerComparator());
         assertEquals(10, nodes[0].getFreeThreads());

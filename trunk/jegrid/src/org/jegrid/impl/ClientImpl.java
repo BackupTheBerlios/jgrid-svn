@@ -1,13 +1,12 @@
 package org.jegrid.impl;
 
 import org.jegrid.*;
-import org.apache.log4j.Category;
 import org.apache.log4j.Logger;
 
 import java.util.*;
 
 /**
- * TODO: Add class level javadoc
+ * The client - manages a list of tasks.
  * <br> User: jdavis
  * Date: Sep 30, 2006
  * Time: 7:49:52 AM
@@ -21,7 +20,7 @@ public class ClientImpl implements ClientImplementor
     private Comparator serverComparator;
     private static Logger log = Logger.getLogger(ClientImpl.class);
 
-    public ClientImpl(Bus bus,GridImplementor grid)
+    public ClientImpl(Bus bus, GridImplementor grid)
     {
         this.bus = bus;
         this.grid = grid;
@@ -56,9 +55,9 @@ public class ClientImpl implements ClientImplementor
         if (list.size() == 0)
             return new NodeAddress[0];
         // Sort the list, put the most capable servers first.
-        Collections.sort(list,serverComparator);
+        Collections.sort(list, serverComparator);
         // Get only the minimum number of servers.
-        list = list.subList(0,Math.min(list.size(), max));
+        list = list.subList(0, Math.min(list.size(), max));
         NodeAddress[] rv = new NodeAddress[list.size()];
         int i = 0;
         for (Iterator iterator = list.iterator(); iterator.hasNext();)
@@ -79,7 +78,7 @@ public class ClientImpl implements ClientImplementor
     public Task createTask(String taskClassName)
     {
         TaskImpl task = new TaskImpl(this, nextTaskId(), taskClassName);
-        synchronized(tasksById)
+        synchronized (tasksById)
         {
             tasksById.put(new Integer(task.getTaskId()), task);
         }
@@ -92,7 +91,7 @@ public class ClientImpl implements ClientImplementor
         if (task == null)
         {
             if (log.isDebugEnabled())
-               log.debug("getNextInput() : No task " + taskId);
+                log.debug("getNextInput() : No task " + taskId);
             return null;
         }
         return task.getNextInput(server);
@@ -102,7 +101,7 @@ public class ClientImpl implements ClientImplementor
     {
         Integer key = new Integer(taskId);
         TaskImpl task;
-        synchronized(tasksById)
+        synchronized (tasksById)
         {
             task = (TaskImpl) tasksById.get(key);
         }
@@ -112,24 +111,46 @@ public class ClientImpl implements ClientImplementor
     public void putOutput(int taskId, TaskData output)
     {
         TaskImpl task = findTask(taskId);
-        task.onComplete(output);
+        if (task == null)
+        {
+            if (log.isDebugEnabled())
+                log.debug("putOutput() : No task " + taskId);
+            return;
+        }
+        task.putOutput(output);
     }
 
     public void taskFailed(int taskId, GridException throwable)
     {
         TaskImpl task = findTask(taskId);
+        if (task == null)
+        {
+            if (log.isDebugEnabled())
+                log.debug("taskFailed() : No task " + taskId);
+            return;
+        }
         task.onFailure(throwable);
     }
 
     public void onMembershipChange(Set joined, Set left)
     {
-        synchronized(tasksById)
+        synchronized (tasksById)
         {
             for (Iterator iterator = tasksById.values().iterator(); iterator.hasNext();)
             {
                 TaskImpl task = (TaskImpl) iterator.next();
-                task.onMembershipChange(joined,left);
+                task.onMembershipChange(joined, left);
             }
+        }
+    }
+
+    public void onComplete(TaskImpl task)
+    {
+        synchronized (tasksById)
+        {
+            tasksById.remove(new Integer(task.getTaskId()));
+            if (log.isDebugEnabled())
+                log.info("Task complete: " + task.getTaskId());
         }
     }
 }

@@ -77,7 +77,7 @@ public class TaskImpl implements Task
             // TODO: Retry unfinishedInputIds work
             // If the worker is asking for more input and it hasn't completed the last one we gave it
             // then give it the same input once again.  Perhaps it wasn't received last time.
-            
+
             if (queue.size() == 0)
             {
                 if (log.isDebugEnabled())
@@ -109,7 +109,7 @@ public class TaskImpl implements Task
         }
     }
 
-    public void onComplete(TaskData output)
+    public void putOutput(TaskData output)
     {
         acquireMutex();
         try
@@ -119,17 +119,27 @@ public class TaskImpl implements Task
             if (unfinishedInputIds.remove(key))
             {
                 if (log.isDebugEnabled())
-                   log.debug("onComplete() : " + output.getInputId() + " finished, " + unfinishedInputIds.size() + " remain.");
+                    log.debug("putOutput() : " + output.getInputId() + " finished, " + unfinishedInputIds.size() + " remain.");
                 if (aggregator != null)
                     aggregator.aggregate(output);
             }
             if (unfinishedInputIds.size() == 0)
-                finished.broadcast();
+                complete(null);
         }
         finally
         {
             mutex.release();
         }
+    }
+
+    private void complete(GridException e)
+    {
+        failure = e;
+        // Signal finished.
+        finished.broadcast();
+        client.onComplete(this);
+        Bus bus = client.getBus();
+        bus.release(info);
     }
 
     public void run(Aggregator aggregator, int maxWorkers)
@@ -190,6 +200,9 @@ public class TaskImpl implements Task
         {
             mutex.release();
         }
+
+        // Now, send the go message.
+        bus.go(info);
     }
 
     private int getNumberOfInputs()
@@ -222,9 +235,7 @@ public class TaskImpl implements Task
         acquireMutex();
         try
         {
-            failure = e;
-            // Signal finished.
-            finished.broadcast();
+            complete(e);
         }
         finally
         {

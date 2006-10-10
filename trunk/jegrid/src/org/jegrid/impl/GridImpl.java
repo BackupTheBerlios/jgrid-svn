@@ -78,6 +78,7 @@ public class GridImpl implements GridImplementor
         return new NodeStatusImpl(
                 bus.getAddress(),
                 config.getType(),
+                membership.getCoordinator(),
                 rt.freeMemory(),
                 rt.totalMemory(),
                 freeThreads,
@@ -118,11 +119,16 @@ public class GridImpl implements GridImplementor
     {
         membership.onMembershipChange(joined, left);
         if (client != null)
-            client.onMembershipChange(joined,left);
+            client.onMembershipChange(joined, left);
     }
 
     public void onHello(NodeStatus from)
     {
         membership.onHello(from);
+    }
+
+    public void onNewCoordinator(NodeAddress address)
+    {
+        membership.onNewCoordinator(address);
     }
 }

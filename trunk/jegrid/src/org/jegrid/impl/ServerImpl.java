@@ -4,6 +4,9 @@ import EDU.oswego.cs.dl.util.concurrent.Latch;
 import org.apache.log4j.Logger;
 import org.jegrid.*;
 
+import java.util.Map;
+import java.util.HashMap;
+
 /**
  * The server processes jobs and tasks sent to it by clients and other servers.   This contains
  * a pool of worker threads that will get assigned to tasks by clients.
@@ -18,6 +21,7 @@ public class ServerImpl implements Server
     private Bus bus;
     private Latch shutdownLatch;
     private GridImplementor grid;
+    private final Map workersByTask;
 
     public ServerImpl(GridConfiguration config, Bus bus, GridImplementor grid)
     {
@@ -26,6 +30,7 @@ public class ServerImpl implements Server
         int poolSize = config.getThreadPoolSize();
         this.pool = new WorkerThreadPool(poolSize);
         shutdownLatch = new Latch();
+        workersByTask = new HashMap();
     }
 
 
@@ -39,6 +44,35 @@ public class ServerImpl implements Server
         return pool.getMaximumPoolSize();
     }
 
+    public void onGo(TaskInfo task)
+    {
+        Worker worker = findWorker(task);
+        if (worker != null)
+            worker.go();
+        else
+            log.info("Not working on " + task);
+    }
+
+    public void onRelease(TaskInfo task)
+    {
+        Worker worker = findWorker(task);
+        if (worker != null)
+        {
+            done(task);
+            worker.release();
+        }
+        else
+            log.info("Not working on " + task);
+    }
+
+    private Worker findWorker(TaskInfo task)
+    {
+        synchronized (workersByTask)
+        {
+            return (Worker) workersByTask.get(task);
+        }
+    }
+
     public AssignResponse onAssign(TaskInfo task)
     {
         if (log.isDebugEnabled())
@@ -46,10 +80,17 @@ public class ServerImpl implements Server
 
         // Allocate a thread from the pool and run the Worker.  This will loop
         // until there is no more input available from the client.
-        Worker runner = new Worker(this, task, bus);
+        // The worker will remain waiting for the 'go' command from the client.
+        Worker worker = new Worker(this, task, bus);
         try
         {
-            pool.execute(runner);
+            synchronized (workersByTask)
+            {
+                if (workersByTask.containsKey(task))
+                    throw new GridException("Already working on " + task);
+                workersByTask.put(task, worker);
+            }
+            pool.execute(worker);
             return new AssignResponse(bus.getAddress(), pool.getFreeThreads());
         }
         catch (InterruptedException e)
@@ -61,7 +102,7 @@ public class ServerImpl implements Server
     public void run()
     {
         bus.connect();
-        
+
         try
         {
             log.info("Server running...");
@@ -95,8 +136,16 @@ public class ServerImpl implements Server
     public TaskRunnable instantiateTaskRunnable(String taskClass)
             throws IllegalAccessException, InstantiationException, ClassNotFoundException
     {
-        
+
         Class aClass = Thread.currentThread().getContextClassLoader().loadClass(taskClass);
         return (TaskRunnable) aClass.newInstance();
+    }
+
+    public void done(TaskInfo task)
+    {
+        synchronized (workersByTask)
+        {
+            workersByTask.remove(task);
+        }
     }
 }

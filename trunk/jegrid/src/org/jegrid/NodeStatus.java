@@ -10,12 +10,21 @@ public interface NodeStatus
 {
     /**
      * Returns the address of the node.
+     *
      * @return the address of the node.
      */
     NodeAddress getNodeAddress();
 
     /**
+     * Returns the address of the coordinator (as far as the node is concerned).
+     *
+     * @return the address of the coordinator
+     */
+    NodeAddress getCoordinator();
+
+    /**
      * Returns the type of node.  (See Grid.TYPE_XXX)
+     *
      * @return the type of node (See Grid.TYPE_XXX)
      */
     int getType();

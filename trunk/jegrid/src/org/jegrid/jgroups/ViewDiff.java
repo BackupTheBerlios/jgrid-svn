@@ -1,6 +1,7 @@
 package org.jegrid.jgroups;
 
 import org.jgroups.View;
+import org.jgroups.Address;
 
 import java.util.Set;
 import java.util.Vector;
@@ -16,8 +17,10 @@ class ViewDiff
 {
     private Set joined;
     private Set left;
+    private boolean coordinatorChanged = false;
+    private Address coordinator;
 
-    public ViewDiff(View oldView,View newView)
+    public ViewDiff(View oldView, View newView)
     {
         Vector oldMembers = oldView == null ? new Vector() : oldView.getMembers();
         Vector newMembers = newView.getMembers();
@@ -40,6 +43,10 @@ class ViewDiff
             if (!newMembers.contains(mbr))
                 left.add(mbr);
         }
+        // 3. See if the coordinator has changed.
+        coordinator = getCoordinator(newView);
+        Address oldCoordinator = getCoordinator(oldView);
+        coordinatorChanged = (oldCoordinator == null || (!coordinator.equals(oldCoordinator)));
     }
 
     public Set getJoined()
@@ -50,5 +57,20 @@ class ViewDiff
     public Set getLeft()
     {
         return left;
+    }
+
+    public boolean isCoordinatorChanged()
+    {
+        return coordinatorChanged;
+    }
+
+    public Address getCoordinator()
+    {
+        return coordinator;
+    }
+
+    private Address getCoordinator(View view)
+    {
+        return (view == null) ? null : (Address) view.getMembers().get(0);
     }
 }
