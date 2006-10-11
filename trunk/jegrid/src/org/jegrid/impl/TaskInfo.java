@@ -58,4 +58,9 @@ public class TaskInfo implements Serializable
         result = 31 * result + taskId;
         return result;
     }
+
+    public void setTaskClassName(String taskClassName)
+    {
+        this.taskClassName = taskClassName;
+    }
 }

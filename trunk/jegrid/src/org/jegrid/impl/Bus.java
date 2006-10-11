@@ -28,7 +28,7 @@ public interface Bus
     NodeStatus[] getGridStatus()
             ;
 
-    void sayHello()
+    void broadcastNodeStatus()
             ;
 
     TaskData getNextInput(NodeAddress client, int taskId) throws RpcTimeoutException

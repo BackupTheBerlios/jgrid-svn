@@ -1,6 +1,7 @@
 package org.jegrid.impl;
 
 import org.jegrid.*;
+import org.jegrid.jms.TaskRequest;
 import org.apache.log4j.Logger;
 
 import java.io.Serializable;
@@ -26,8 +27,8 @@ public class TaskImpl implements Task
     private TaskInfo info;
     private Mutex mutex;
     private CondVar finished;
-    private List queue;             // A queue of InputStatus - ready to be taken by servers
-    private Set unfinishedInputIds;         // The set of unfinishedInputIds input, by input id.
+    private List queue;             // Queue of TaskData for workers.
+    private Set unfinishedInputIds; // Input ids that are queued, or in progress.
     private Set serverAddresses;    // The server addresses from the assignment.
     private Map inprogress;         // InputStatus by inputId - input that has been taken by a server.
     private Aggregator aggregator;  // The thing that is aggregating the results.
@@ -41,9 +42,9 @@ public class TaskImpl implements Task
         finished = new CondVar(mutex);
         this.client = client;
         this.info = new TaskInfo(client.getBus().getAddress(), taskId, taskClass);
-        this.queue = new LinkedList();      // Queue of TaskData for workers. 
-        this.unfinishedInputIds = new HashSet();    // Input ids that are queued, or in progress.
-        this.inprogress = new HashMap();    // TaskData input in progress, but inputId.
+        this.queue = new LinkedList();
+        this.unfinishedInputIds = new HashSet();
+        this.inprogress = new HashMap();
         this.serverAddresses = new HashSet();
     }
 
@@ -124,7 +125,7 @@ public class TaskImpl implements Task
                     aggregator.aggregate(output);
             }
             if (unfinishedInputIds.size() == 0)
-                complete(null);
+                releaseTask(null);
         }
         finally
         {
@@ -132,7 +133,7 @@ public class TaskImpl implements Task
         }
     }
 
-    private void complete(GridException e)
+    private void releaseTask(GridException e)
     {
         failure = e;
         // Signal finished.
@@ -140,6 +141,9 @@ public class TaskImpl implements Task
         client.onComplete(this);
         Bus bus = client.getBus();
         bus.release(info);
+        serverAddresses.clear();
+        inprogress.clear();
+        queue.clear();
     }
 
     public void run(Aggregator aggregator, int maxWorkers)
@@ -169,32 +173,72 @@ public class TaskImpl implements Task
         }
     }
 
-    void assign()
+    public void acquire()
     {
-        int serverCount = Math.min(maxWorkers, getNumberOfInputs());
-        NodeAddress[] servers = client.getSeverAddresses(serverCount);
-        if (servers == null || servers.length == 0)
-            throw new GridException("No workers available.");
-        // Send the assign message to all servers.
+        // A little like a pre-assignment.  Send the assign message, but since we don't know the task class yet
+        // nor do we have any inputs we're not going to send the 'go' message.
         Bus bus = client.getBus();
         acquireMutex();
         try
         {
-            // Send the assign message while we have the mutex so
-            // nobody can get input until we've processed the responses.
-            AssignResponse[] responses = bus.assign(servers, info);
-            // Now there are threads waiting on the servers for input!
-            // Remember all the servers that responded.
-            for (int i = 0; i < responses.length; i++)
+            // Get one server, send the assign message.  The worker will wait for the 'go' message.
+            sendAssign(1, bus);
+        }
+        finally
+        {
+            mutex.release();
+        }
+    }
+
+    public void run(TaskRequest taskRequest)
+    {
+        info.setTaskClassName(taskRequest.getTaskClassName());
+        for (Iterator iterator = taskRequest.getInput().iterator(); iterator.hasNext();)
+        {
+            Serializable input = (Serializable) iterator.next();
+            addInput(input);
+        }
+        Aggregator aggregator = instantiateAggregator(taskRequest.getAggregatorClassName());
+        run(aggregator, taskRequest.getMaxWorkers());
+    }
+
+    public Aggregator instantiateAggregator(String className)
+    {
+
+        try
+        {
+            Class aClass = Thread.currentThread().getContextClassLoader().loadClass(className);
+            return (Aggregator) aClass.newInstance();
+        }
+        catch (Exception e)
+        {
+            throw new GridException(e);
+        }
+    }
+
+    public void release()
+    {
+        releaseTask(null);
+    }
+
+    void assign()
+    {
+        Bus bus = client.getBus();
+        acquireMutex();
+        try
+        {
+            // Get up to maxWorkers server addresses.  Don't get more than
+            // what we need to process the queue of inputs.
+            int serverCount = Math.min(maxWorkers, queue.size());
+            if (serverCount == 0)
             {
-                AssignResponse response = responses[i];
-                if (response != null)
-                {
-                    if (log.isDebugEnabled())
-                        log.debug("#" + i + " " + responses[i].getServer().toString());
-                    serverAddresses.add(response.getServer());
-                }
+                if (log.isDebugEnabled())
+                    log.debug("No assignment needed.");
+                return;
             }
+            int servers = sendAssign(serverCount, bus);
+            if (servers == 0)
+                throw new GridException("No available workers.");
         }
         finally
         {
@@ -205,17 +249,27 @@ public class TaskImpl implements Task
         bus.go(info);
     }
 
-    private int getNumberOfInputs()
+    private int sendAssign(int serverCount, Bus bus)
     {
-        acquireMutex();
-        try
+        NodeAddress[] servers = client.getSeverAddresses(serverCount);
+        if (servers == null || servers.length == 0)
+            return 0;
+        // Send the assign message while we have the mutex so
+        // nobody can get input until we've processed the responses.
+        AssignResponse[] responses = bus.assign(servers, info);
+        // Now there are threads waiting on the servers for input!
+        // Remember all the servers that responded.
+        for (int i = 0; i < responses.length; i++)
         {
-            return queue.size();
+            AssignResponse response = responses[i];
+            if (response != null)
+            {
+                if (log.isDebugEnabled())
+                    log.debug("#" + i + " " + responses[i].getServer().toString());
+                serverAddresses.add(response.getServer());
+            }
         }
-        finally
-        {
-            mutex.release();
-        }
+        return servers.length;
     }
 
     private void acquireMutex()
@@ -235,7 +289,7 @@ public class TaskImpl implements Task
         acquireMutex();
         try
         {
-            complete(e);
+            releaseTask(e);
         }
         finally
         {
@@ -277,7 +331,7 @@ public class TaskImpl implements Task
                 {
                     GridException exception = new GridException("Server " + server
                             + " left the grid, max retries exceeded!");
-                    fail(exception);
+                    onFailure(exception);
                     return;
                 }
                 // Otherwise, remove the input from the in progress map and
@@ -287,11 +341,4 @@ public class TaskImpl implements Task
             }
         }
     }
-
-    private void fail(GridException e)
-    {
-        failure = e;
-        finished.broadcast();
-    }
-
 }

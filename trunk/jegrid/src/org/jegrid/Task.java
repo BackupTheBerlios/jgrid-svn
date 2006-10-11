@@ -1,5 +1,7 @@
 package org.jegrid;
 
+import org.jegrid.jms.TaskRequest;
+
 import java.io.Serializable;
 
 /**
@@ -19,4 +21,12 @@ public interface Task
     void run(Aggregator aggregator, int maxWorkers)
             ;
 
+    void acquire()
+            ;
+
+    void run(TaskRequest taskRequest)
+            ;
+
+    void release()
+            ;
 }

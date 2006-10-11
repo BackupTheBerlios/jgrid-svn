@@ -61,7 +61,7 @@ public interface GridImplementor extends Grid
      *
      * @param from the status of the node that has just joined the grid
      */
-    void onHello(NodeStatus from);
+    void onNodeStatus(NodeStatus from);
 
     void onNewCoordinator(NodeAddress address)
             ;

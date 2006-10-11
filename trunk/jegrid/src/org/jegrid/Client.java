@@ -11,4 +11,7 @@ public interface Client
     Task createTask(Class taskClass);
 
     Task createTask(String taskClassName);
+
+    Task createTask()
+            ;
 }

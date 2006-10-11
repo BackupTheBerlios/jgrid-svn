@@ -20,14 +20,14 @@ import java.util.List;
 public class JmsTaskPump implements Runnable
 {
     private static Logger log = Logger.getLogger(JmsTaskPump.class);
-    
+
     private GridConfiguration config;
     private InitialContext ic;
-    private ConnectionFactory connectionFactory;
-    private Destination dest;
-    private Connection connection;
-    private Session session;
-    private MessageConsumer consumer;
+    private QueueConnectionFactory connectionFactory;
+    private Queue queue;
+    private QueueConnection connection;
+    private QueueSession session;
+    private QueueReceiver consumer;
     private Client client;
 
     public JmsTaskPump(GridConfiguration config, Client client)
@@ -41,44 +41,42 @@ public class JmsTaskPump implements Runnable
         try
         {
             ic = getInitialContext();
-            connectionFactory = (ConnectionFactory)ic.lookup(config.getJmsConnectionFactoryName());
-            dest = (Destination) ic.lookup(config.getJmsDestinationName());
-            connection = connectionFactory.createConnection();
-            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            consumer = session.createConsumer(dest);
+            queue = (Queue) ic.lookup(config.getJmsDestinationName());
+            connectionFactory = (QueueConnectionFactory) ic.lookup(config.getJmsConnectionFactoryName());
+            connection = connectionFactory.createQueueConnection();
+            session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+            consumer = session.createReceiver(queue);
             connection.start();
+            Task task = client.createTask();
             while (true)
             {
-                Message m = consumer.receive(config.getJmsReceiveTimeout());
-                if (m != null && m instanceof ObjectMessage)
+                task.acquire();
+                try
                 {
-                    ObjectMessage objectMessage = (ObjectMessage) m;
-                    if (objectMessage instanceof TaskRequest)
+                    Message m = consumer.receive(config.getJmsReceiveTimeout());
+                    if (m != null && m instanceof ObjectMessage)
                     {
-                        TaskRequest taskRequest = (TaskRequest) objectMessage;
-                        Task task = client.createTask(taskRequest.getTaskClassName());
-                        List inputs = taskRequest.getInput();
-                        for (Iterator iterator = inputs.iterator(); iterator.hasNext();)
-                            task.addInput((Serializable) iterator.next());
-                        Aggregator aggregator = instantiateAggregator(taskRequest.getAggregatorClassName());
-                        task.run(aggregator,taskRequest.getMaxWorkers());
+                        ObjectMessage objectMessage = (ObjectMessage) m;
+                        Object o = objectMessage.getObject();
+                        if (o instanceof TaskRequest)
+                        {
+                            TaskRequest taskRequest = (TaskRequest) o;
+                            task.run(taskRequest);
+                        }
                     }
+                }
+                finally
+                {
+                    task.release();
                 }
             }
         }
         catch (Exception e)
         {
-            log.error(e,e);
+            log.error(e, e);
         }
     }
 
-    public Aggregator instantiateAggregator(String className)
-            throws IllegalAccessException, InstantiationException, ClassNotFoundException
-    {
-
-        Class aClass = Thread.currentThread().getContextClassLoader().loadClass(className);
-        return (Aggregator) aClass.newInstance();
-    }
 
     private InitialContext getInitialContext()
             throws NamingException

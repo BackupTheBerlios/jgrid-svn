@@ -24,6 +24,7 @@ class Membership implements GridStatus
     private Mutex membershipMutex;
     private CondVar membershipChanged;
     private Map allNodesByAddress = new HashMap();
+    private Map unknownNodes = new HashMap();
     private GridImpl grid;
     private NodeAddress coordinator;
 
@@ -56,7 +57,7 @@ class Membership implements GridStatus
             for (Iterator iterator = joined.iterator(); iterator.hasNext();)
             {
                 NodeAddress address = (NodeAddress) iterator.next();
-                if (allNodesByAddress.containsKey(address))
+                if (nodeExists(address))
                 {
                     log.info("Node list already contains " + address);
                 }
@@ -67,17 +68,16 @@ class Membership implements GridStatus
                     NodeStatus node = (address.equals(grid.getLocalAddress())) ?
                             grid.getLocalStatus() :
                             new NodeStatusImpl(address);
-                    allNodesByAddress.put(address, node);
+                    addNode(address, node);
                     log.info("Node " + node + " added.");
                 }
             } // for
             for (Iterator iterator = left.iterator(); iterator.hasNext();)
             {
                 NodeAddress address = (NodeAddress) iterator.next();
-                if (allNodesByAddress.containsKey(address))
+                if (nodeExists(address))
                 {
-                    allNodesByAddress.remove(address);
-                    log.info("Removed " + address);
+                    removeNode(address);
                 }
                 else
                 {
@@ -90,6 +90,29 @@ class Membership implements GridStatus
         finally
         {
             releaseMutex();
+        }
+    }
+
+    private void removeNode(NodeAddress address)
+    {
+        allNodesByAddress.remove(address);
+        unknownNodes.remove(address);
+        log.info("Removed " + address);
+    }
+
+    private boolean nodeExists(NodeAddress address)
+    {
+        return allNodesByAddress.containsKey(address);
+    }
+
+    private void addNode(NodeAddress address, NodeStatus node)
+    {
+        allNodesByAddress.put(address, node);
+        switch (node.getType())
+        {
+            case Grid.TYPE_UNKNOWN:
+                unknownNodes.put(address, node);
+                break;
         }
     }
 
@@ -158,7 +181,7 @@ class Membership implements GridStatus
         }
     }
 
-    public void onHello(NodeStatus from)
+    public void onNodeStatus(NodeStatus from)
     {
         acquireMutex();
         try
@@ -197,15 +220,20 @@ class Membership implements GridStatus
                 grid.getLocalStatus() :
                 nodeStatus;
 
-        NodeStatus old = (NodeStatus) allNodesByAddress.get(address);
+        NodeStatus old = findNode(address);
         if (old != null)
         {
-            if (old.getType() == Grid.TYPE_UNKNOWN)
-                log.info("Node type resolved: " + node);
-            allNodesByAddress.put(address, node);
+//            if (old.getType() == Grid.TYPE_UNKNOWN)
+//                log.info("Node type resolved: " + node);
+            addNode(address, node);
         }
         else
             log.warn("Status from non-member? " + node);
+    }
+
+    private NodeStatus findNode(NodeAddress address)
+    {
+        return (NodeStatus) allNodesByAddress.get(address);
     }
 
 
@@ -248,5 +276,18 @@ class Membership implements GridStatus
     public NodeAddress getCoordinator()
     {
         return coordinator;
+    }
+
+    public int getNumberOfUnknownNodes()
+    {
+        acquireMutex();
+        try
+        {
+            return unknownNodes.size();
+        }
+        finally
+        {
+            releaseMutex();
+        }
     }
 }

@@ -88,7 +88,7 @@ public class JGroupsBus implements Bus
                 log.debug("doConnect() : channel connected.");
             address = channel.getLocalAddress();
             localAddress = new JGroupsAddress(address);
-            sayHello();
+            broadcastNodeStatus();
         }
         // Re-throw GridExceptions
         catch (GridException e)
@@ -173,11 +173,11 @@ public class JGroupsBus implements Bus
         return localAddress;
     }
 
-    public void sayHello()
+    public void broadcastNodeStatus()
     {
         NodeStatus localStatus = grid.getLocalStatus();
         dispatcher.callRemoteMethods(
-                null, "_hello",
+                null, "_status",
                 new Object[]{localStatus}, new Class[]{NodeStatus.class},
                 GroupRequest.GET_NONE, 0);
     }

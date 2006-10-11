@@ -42,8 +42,8 @@ public class ClientImpl implements ClientImplementor
 
     NodeAddress[] getSeverAddresses(int max)
     {
-        // Get the real status.
-        GridStatus status = grid.getGridStatus(false);
+        // Get the cached status.
+        GridStatus status = grid.getGridStatus(true);
         Iterator iter = status.iterator();
         List list = new LinkedList();
         while (iter.hasNext())
@@ -78,10 +78,22 @@ public class ClientImpl implements ClientImplementor
     public Task createTask(String taskClassName)
     {
         TaskImpl task = new TaskImpl(this, nextTaskId(), taskClassName);
+        addTask(task);
+        return task;
+    }
+
+    private void addTask(TaskImpl task)
+    {
         synchronized (tasksById)
         {
             tasksById.put(new Integer(task.getTaskId()), task);
         }
+    }
+
+    public Task createTask()
+    {
+        TaskImpl task = new TaskImpl(this, nextTaskId(), null);
+        addTask(task);
         return task;
     }
 

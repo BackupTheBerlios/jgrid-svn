@@ -2,10 +2,13 @@ package org.jegrid.impl;
 
 import EDU.oswego.cs.dl.util.concurrent.Latch;
 import org.apache.log4j.Logger;
-import org.jegrid.*;
+import org.jegrid.GridConfiguration;
+import org.jegrid.GridException;
+import org.jegrid.GridStatus;
+import org.jegrid.TaskRunnable;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The server processes jobs and tasks sent to it by clients and other servers.   This contains
@@ -21,34 +24,42 @@ public class ServerImpl implements Server
     private Bus bus;
     private Latch shutdownLatch;
     private GridImplementor grid;
+    private int poolSize;
     private final Map workersByTask;
 
     public ServerImpl(GridConfiguration config, Bus bus, GridImplementor grid)
     {
+        poolSize = config.getThreadPoolSize();
         this.bus = bus;
         this.grid = grid;
-        int poolSize = config.getThreadPoolSize();
-        this.pool = new WorkerThreadPool(poolSize);
+        this.pool = new WorkerThreadPool(this, poolSize);
         shutdownLatch = new Latch();
         workersByTask = new HashMap();
     }
 
-
     public int freeThreads()
     {
-        return pool.getFreeThreads();
+        synchronized (this)
+        {
+            return _freeThreads();
+        }
+    }
+
+    private int _freeThreads()
+    {
+        return poolSize - workersByTask.size();
     }
 
     public int totalThreads()
     {
-        return pool.getMaximumPoolSize();
+        return poolSize;
     }
 
     public void onGo(TaskInfo task)
     {
         Worker worker = findWorker(task);
         if (worker != null)
-            worker.go();
+            worker.go(task);
         else
             log.info("Not working on " + task);
     }
@@ -59,18 +70,14 @@ public class ServerImpl implements Server
         if (worker != null)
         {
             done(task);
-            worker.release();
         }
         else
             log.info("Not working on " + task);
     }
 
-    private Worker findWorker(TaskInfo task)
+    private synchronized Worker findWorker(TaskInfo task)
     {
-        synchronized (workersByTask)
-        {
-            return (Worker) workersByTask.get(task);
-        }
+        return (Worker) workersByTask.get(task);
     }
 
     public AssignResponse onAssign(TaskInfo task)
@@ -84,14 +91,18 @@ public class ServerImpl implements Server
         Worker worker = new Worker(this, task, bus);
         try
         {
-            synchronized (workersByTask)
+            synchronized (this)
             {
+                int freeThreads = _freeThreads();
+                if (freeThreads <= 0)
+                    return null;
                 if (workersByTask.containsKey(task))
                     throw new GridException("Already working on " + task);
                 workersByTask.put(task, worker);
+                pool.execute(worker);
+                bus.broadcastNodeStatus();
+                return new AssignResponse(bus.getAddress(), _freeThreads());
             }
-            pool.execute(worker);
-            return new AssignResponse(bus.getAddress(), pool.getFreeThreads());
         }
         catch (InterruptedException e)
         {
@@ -141,11 +152,9 @@ public class ServerImpl implements Server
         return (TaskRunnable) aClass.newInstance();
     }
 
-    public void done(TaskInfo task)
+    synchronized void done(TaskInfo task)
     {
-        synchronized (workersByTask)
-        {
-            workersByTask.remove(task);
-        }
+        workersByTask.remove(task);
+        bus.broadcastNodeStatus();
     }
 }

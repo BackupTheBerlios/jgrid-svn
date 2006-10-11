@@ -88,7 +88,7 @@ public class GridImpl implements GridImplementor
 
     public GridStatus getGridStatus(boolean cached)
     {
-        if (!cached)
+        if (!cached || membership.getNumberOfUnknownNodes() > 0)
         {
             NodeStatus[] ns = bus.getGridStatus();
             membership.refreshStatus(ns);
@@ -122,9 +122,9 @@ public class GridImpl implements GridImplementor
             client.onMembershipChange(joined, left);
     }
 
-    public void onHello(NodeStatus from)
+    public void onNodeStatus(NodeStatus from)
     {
-        membership.onHello(from);
+        membership.onNodeStatus(from);
     }
 
     public void onNewCoordinator(NodeAddress address)
