@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module version="4" relativePaths="true" type="JAVA_MODULE">
+  <component name="BuildJarSettings">
+    <containerInfo>
+      <containerElement type="module" name="jegrid">
+        <attribute name="method" value="5" />
+        <attribute name="URI" value="/jegrid.jar" />
+      </containerElement>
+    </containerInfo>
+    <setting name="jarUrl" value="file://$MODULE_DIR$/jegrid.jar" />
+    <setting name="buildJar" value="true" />
+    <setting name="mainClass" value="" />
+  </component>
   <component name="ModuleRootManager" />
   <component name="NewModuleRootManager" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/../idea/jegrid_classes" />

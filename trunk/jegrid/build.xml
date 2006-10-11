@@ -1,0 +1,67 @@
+<project name="jegrid" default="all">
+
+    <property name="lib.dir" value="${basedir}/../lib"/>
+
+    <path id="main.classpath">
+        <fileset dir="${lib.dir}">
+            <patternset id="libs">
+                <include name="commons-logging*.jar"/>
+                <include name="concurrent.jar"/>
+                <include name="jgroups-all*.jar"/>
+                <include name="log4j*.jar"/>
+                <include name="picocontainer*.jar"/>
+                <include name="jms.jar"/>
+            </patternset>
+        </fileset>
+    </path>
+
+    <path id="test.classpath">
+        <path refid="main.classpath"/>
+        <pathelement location="${basedir}/classes"/>
+        <fileset dir="${lib.dir}">
+            <include name="junit*.jar"/>
+        </fileset>
+    </path>
+
+    <target name="clean">
+        <delete dir="${basedir}/classes" failonerror="false"/>
+        <delete file="jegrid.jar" failonerror="false"/>
+        <delete file="jegrid.tar.gz" failonerror="false"/>
+    </target>
+
+    <target name="compile" description="Compile all the java code.">
+        <mkdir dir="${basedir}/classes"/>
+        <javac srcdir="${basedir}/src" destdir="${basedir}/classes">
+            <classpath refid="main.classpath"/>
+        </javac>
+        <mkdir dir="${basedir}/test_classes"/>
+        <javac srcdir="${basedir}/test_src" destdir="${basedir}/test_classes">
+            <classpath refid="test.classpath"/>
+        </javac>
+    </target>
+
+    <target name="jar" depends="compile">
+        <jar jarfile="jegrid.jar">
+            <fileset dir="${basedir}/classes" includes="**"/>
+            <fileset dir="${basedir}/test_classes" includes="**"/>
+            <fileset dir="${basedir}/src" includes="**/*.xml"/>
+            <fileset dir="${basedir}/test_src" includes="**/*.properties"/>
+        </jar>
+    </target>
+
+    <target name="tarball" depends="jar">
+        <tar compression="gzip" tarfile="jegrid.tar.gz">
+            <tarfileset dir="${basedir}" mode="755">
+                <include name="server.sh"/>
+            </tarfileset>
+            <tarfileset dir="${lib.dir}" prefix="lib">
+                <patternset refid="libs"/>
+            </tarfileset>
+            <tarfileset dir="${basedir}">
+                <include name="jegrid.jar"/>
+            </tarfileset>
+        </tar>
+    </target>
+
+    <target name="all" depends="clean,tarball"/>
+</project>

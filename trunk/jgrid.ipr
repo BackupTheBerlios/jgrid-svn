@@ -2,14 +2,12 @@
 <project version="4" relativePaths="true">
   <component name="AntConfiguration">
     <defaultAnt bundledAnt="true" />
-    <buildFile url="file://$PROJECT_DIR$/build.xml">
+    <buildFile url="file://$PROJECT_DIR$/jegrid/build.xml">
       <additionalClassPath />
       <antReference projectDefault="true" />
       <customJdkName value="" />
       <maximumHeapSize value="128" />
-      <properties>
-        <property name="env.FORREST_HOME" value="C:\java\apache-forrest-0.7" />
-      </properties>
+      <properties />
     </buildFile>
   </component>
   <component name="BuildJarProjectSettings">
@@ -295,6 +293,10 @@
         <list size="0" />
       </value>
     </option>
+  </component>
+  <component name="com.yanaware.intellij.ideaspring.PluginConfigurable">
+    <option name="autoscrolling" value="false" />
+    <option name="autoscrollingFromSource" value="false" />
   </component>
   <component name="libraryTable">
     <library name="concurrent">

@@ -41,7 +41,8 @@ public class ClientTest extends TestCase
 
     public void testSimpleClient() throws Exception
     {
-        GridConfiguration config = ConfigurationTest.getConfiguration();
+        GridConfiguration config = new GridConfiguration();
+        config.setGridName("test");
         config.setType(Grid.TYPE_CLIENT);
         Grid grid = config.configure();
         grid.connect();

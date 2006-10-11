@@ -2,6 +2,7 @@
 <!-- For JEGrid -->
 
 <config>
+
     <UDP mcast_send_buf_size="32000"
         mcast_port="45566"
         ucast_recv_buf_size="64000"
@@ -18,6 +19,32 @@
         enable_bundling="false"/>
     <PING timeout="2000"
         num_initial_members="3"/>
+
+<!-- non-multicast, requires gossip server -->
+
+<!--
+    <UDP mcast_send_buf_size="32000"
+        mcast_port="45566"
+        ucast_recv_buf_size="64000"
+        mcast_addr="228.8.8.8"
+        receive_on_all_interfaces="false"
+        loopback="true"
+        mcast_recv_buf_size="64000"
+        max_bundle_size="60000"
+        max_bundle_timeout="30"
+        use_incoming_packet_handler="false"
+        use_outgoing_packet_handler="false"
+        ucast_send_buf_size="32000"
+        ip_ttl="32"
+        enable_bundling="false"
+        ip_mcast="false"/>
+    <PING timeout="2000"
+        num_initial_members="3"
+        gossip_host="10.0.10.3"
+        gossip_port="5555"
+        gossip_refresh="15000"/>
+-->
+
     <MERGE2 max_interval="10000"
         min_interval="5000"/>
 <!-- FD_SOCK is better for heavy computing
