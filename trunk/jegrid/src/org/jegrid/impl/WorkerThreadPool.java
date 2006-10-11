@@ -18,15 +18,12 @@ class WorkerThreadPool extends PooledExecutor implements PooledExecutor.BlockedE
 {
     private static Logger log = Logger.getLogger(WorkerThreadPool.class);
 
-    private ServerImpl server;
-
-    public WorkerThreadPool(ServerImpl server, int poolSize)
+    public WorkerThreadPool(int poolSize)
     {
         super(poolSize);
         // Set up the thread pool so it will throw ServerBusyException when
         // it cannot accept the job.
         setBlockedExecutionHandler(this);
-        this.server = server;
     }
 
     public boolean blockedAction(Runnable command)
@@ -44,10 +41,4 @@ class WorkerThreadPool extends PooledExecutor implements PooledExecutor.BlockedE
     {
         super.workerDone(w);
     }
-
-    public int getFreeThreads()
-    {
-        return getMaximumPoolSize() - getPoolSize();
-    }
-
 }

@@ -32,7 +32,7 @@ public class ServerImpl implements Server
         poolSize = config.getThreadPoolSize();
         this.bus = bus;
         this.grid = grid;
-        this.pool = new WorkerThreadPool(this, poolSize);
+        this.pool = new WorkerThreadPool(poolSize);
         shutdownLatch = new Latch();
         workersByTask = new HashMap();
     }
