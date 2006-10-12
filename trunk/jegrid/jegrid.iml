@@ -37,7 +37,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="JBoss 4.0.4RC1" level="application_server_libraries" />
+    <orderEntry type="library" name="JBoss 4.0.4.GA" level="application_server_libraries" />
     <orderEntryProperties />
   </component>
 </module>
