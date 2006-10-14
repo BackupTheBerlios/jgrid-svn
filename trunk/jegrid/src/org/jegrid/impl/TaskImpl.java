@@ -1,14 +1,14 @@
 package org.jegrid.impl;
 
+import EDU.oswego.cs.dl.util.concurrent.Channel;
+import EDU.oswego.cs.dl.util.concurrent.LinkedQueue;
+import EDU.oswego.cs.dl.util.concurrent.Mutex;
+import org.apache.log4j.Logger;
 import org.jegrid.*;
 import org.jegrid.jms.TaskRequest;
-import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.util.*;
-
-import EDU.oswego.cs.dl.util.concurrent.Mutex;
-import EDU.oswego.cs.dl.util.concurrent.CondVar;
 
 /**
  * Client side representation of a task.
@@ -26,26 +26,27 @@ public class TaskImpl implements Task
     private ClientImpl client;
     private TaskInfo info;
     private Mutex mutex;
-    private CondVar finished;
-    private List queue;             // Queue of TaskData for workers.
-    private Set unfinishedInputIds; // Input ids that are queued, or in progress.
-    private Set serverAddresses;    // The server addresses from the assignment.
-    private Map inprogress;         // InputStatus by inputId - input that has been taken by a server.
-    private Aggregator aggregator;  // The thing that is aggregating the results.
+    private List inputQueue;            // Queue of TaskData for workers.
+    private Set unfinishedInputIds;     // Input ids that are queued, or in progress.
+    private Set serverAddresses;        // The server addresses from the assignment.
+    private Map inprogress;             // InputStatus by inputId - input that has been taken by a server.
+    private Channel outputQueue;        // Queue of TaskData for the aggregator.
     private GridException failure;
-    private int maxWorkers;
     private int maxRetries = DEFAULT_MAX_RETRIES;
+    private boolean running;        // True if we're already running.
+    private static final int END_OF_OUTPUT = -1;
+    private static final TaskData END = new TaskData(END_OF_OUTPUT, null);
 
     public TaskImpl(ClientImpl client, int taskId, String taskClass)
     {
         mutex = new Mutex();
-        finished = new CondVar(mutex);
         this.client = client;
         this.info = new TaskInfo(client.getBus().getAddress(), taskId, taskClass);
-        this.queue = new LinkedList();
+        this.inputQueue = new LinkedList();
         this.unfinishedInputIds = new HashSet();
         this.inprogress = new HashMap();
         this.serverAddresses = new HashSet();
+        this.outputQueue = new LinkedQueue();
     }
 
     public int getTaskId()
@@ -58,10 +59,10 @@ public class TaskImpl implements Task
         acquireMutex();
         try
         {
-            int inputId = queue.size();
+            int inputId = inputQueue.size();
             TaskData data = new TaskData(inputId, input);
             TaskInput is = new TaskInput(data);
-            queue.add(is);
+            inputQueue.add(is);
             unfinishedInputIds.add(is.getInputId());
         }
         finally
@@ -70,102 +71,208 @@ public class TaskImpl implements Task
         }
     }
 
-    public TaskData getNextInput(NodeAddress server)
+    /**
+     * Invoked by a worker that has been assigned to this task.  It may also
+     * have some output from the previous run.
+     *
+     * @param server The server that the worker is running on.
+     * @param output The output, if there was any from the previously processed input on that worker.
+     * @return The next input, or null if there is no more input.
+     */
+    public TaskData getNextInput(NodeAddress server, TaskData output)
     {
         acquireMutex();
         try
         {
-            // TODO: Retry unfinishedInputIds work
-            // If the worker is asking for more input and it hasn't completed the last one we gave it
-            // then give it the same input once again.  Perhaps it wasn't received last time.
 
-            if (queue.size() == 0)
+            // If there is output from the server, then process it.
+            if (output != null)
+                handleOutput(output);
+
+            // Return the next input.
+            return nextInput(server);
+        }
+        finally
+        {
+            mutex.release();
+        }
+    }
+
+    private TaskData nextInput(NodeAddress server)
+    {
+        // TODO: Retry unfinishedInputIds work
+        // If the worker is asking for more input and it hasn't completed the last one we gave it
+        // then give it the same input once again.  Perhaps it wasn't received last time.
+        if (inputQueue.size() == 0)
+        {
+            if (log.isDebugEnabled())
+                log.debug("Telling " + server + " that there is no more input.");
+            return null;
+        }
+        else
+        {
+            if (!serverAddresses.contains(server))
             {
-                if (log.isDebugEnabled())
-                    log.debug("Telling " + server + " that there is no more input.");
-                return null;
+                // This simply means that some servers didn't respond before they started
+                // asking for input.  That's okay, we'll let them have it.
+                log.warn("Unassigned server " + server + " asking for input, adding to the list.");
+                serverAddresses.add(server);
             }
+            TaskInput is = (TaskInput) inputQueue.remove(0);
+            is.setServer(server);
+            // Remember the input status in the map in case we have a failure
+            // during processing.  It can then be put back on the queue.
+            inprogress.put(is.getInputId(), is);
+            if (log.isDebugEnabled())
+                log.debug("Input id " + is.getInputId() + " given to server " + server + ", " + inputQueue.size() + " remain.");
+            return is.getInput();
+        }
+    }
+
+    private void handleOutput(TaskData output)
+    {
+        Integer key = new Integer(output.getInputId());
+        inprogress.remove(key);
+        if (unfinishedInputIds.remove(key))
+        {
+            if (log.isDebugEnabled())
+                log.debug("putOutput() : " + output.getInputId() + " finished, " + unfinishedInputIds.size() + " remain.");
+            // Put the output on the queue for the aggregator thread.
+            // We're on the reciever thread now, so we want to return as quickly as possible.
+            try
+            {
+                outputQueue.put(output);
+            }
+            catch (InterruptedException e)
+            {
+                releaseTask(e);
+            }
+        }
+        if (unfinishedInputIds.size() == 0)
+        {
+            if (log.isDebugEnabled())
+                log.debug("All work finished, releasing....");
+            releaseTask(null);
+        }
+    }
+
+    private void releaseTask(Exception e)
+    {
+        try
+        {
+            Bus bus = client.getBus();
+            bus.release(info);
+        }
+        catch (Exception e1)
+        {
+            log.warn("Unexpected exception while sending 'release' message: " + e1, e1);
+        }
+        if (e != null)
+        {
+            log.warn("Task failure: " + e);
+            if (e instanceof GridException)
+                failure = (GridException) e;
             else
-            {
-                if (!serverAddresses.contains(server))
-                {
-                    // This simply means that some servers didn't respond before they started
-                    // asking for input.  That's okay, we'll let them have it.
-                    log.warn("Unassigned server " + server + " asking for input, adding to the list.");
-                    serverAddresses.add(server);
-                }
-                TaskInput is = (TaskInput) queue.remove(0);
-                is.setServer(server);
-                // Remember the input status in the map in case we have a failure
-                // during processing.  It can then be put back on the queue.
-                inprogress.put(is.getInputId(), is);
-                if (log.isDebugEnabled())
-                    log.debug("Input id " + is.getInputId() + " given to server " + server + ", " + queue.size() + " remain.");
-                return is.getInput();
-            }
+                failure = new GridException(e);
         }
-        finally
-        {
-            mutex.release();
-        }
-    }
-
-    public void putOutput(TaskData output)
-    {
-        acquireMutex();
-        try
-        {
-            Integer key = new Integer(output.getInputId());
-            inprogress.remove(key);
-            if (unfinishedInputIds.remove(key))
-            {
-                if (log.isDebugEnabled())
-                    log.debug("putOutput() : " + output.getInputId() + " finished, " + unfinishedInputIds.size() + " remain.");
-                if (aggregator != null)
-                    aggregator.aggregate(output);
-            }
-            if (unfinishedInputIds.size() == 0)
-                releaseTask(null);
-        }
-        finally
-        {
-            mutex.release();
-        }
-    }
-
-    private void releaseTask(GridException e)
-    {
-        failure = e;
-        // Signal finished.
-        finished.broadcast();
         client.onComplete(this);
-        Bus bus = client.getBus();
-        bus.release(info);
         serverAddresses.clear();
         inprogress.clear();
-        queue.clear();
+        inputQueue.clear();
+        try
+        {
+            outputQueue.put(END);
+        }
+        catch (InterruptedException e1)
+        {
+            throw new GridException(e1);
+        }
+        log.info("Task " + info.getTaskId() + " released.");
     }
 
-    public void run(Aggregator aggregator, int maxWorkers)
+    public void run(String taskClassName, Aggregator aggregator, int maxWorkers)
     {
-        this.aggregator = aggregator;
-        this.maxWorkers = maxWorkers;
-        failure = null;
-
-        assign();
-
-        // Wait for the last result to be posted or a failure.
+        Bus bus = client.getBus();
         acquireMutex();
         try
         {
-            while (unfinishedInputIds.size() > 0 && failure == null)
-                finished.await();
+            if (running)
+                throw new GridException("Already running.");
+            info.setTaskClassName(taskClassName);
+
+            // Get up to maxWorkers server addresses.  Don't get more than
+            // what we need to process the queue of inputs.
+            int serverCount = Math.min(maxWorkers, inputQueue.size());
+            if (serverCount == 0)
+                throw new GridException("Zero servers required.");
+            int servers = sendAssign(serverCount, bus);
+            if (servers == 0)
+                throw new GridException("No available workers.");
+            running = true; // We're running now.
+            failure = null;
+        }
+        finally
+        {
+            mutex.release();
+        }
+
+        // Now, send the go message.
+        bus.go(info);
+
+        // Aggregate outputs from the queue using the caller's thread
+        // until the 'END_OF_OUTPUT' is reached.
+        aggregateOutput(aggregator);
+
+        acquireMutex();
+        try
+        {
+            running = false;
+            // If there was an exception, throw it.
             if (failure != null)
                 throw failure;
         }
-        catch (InterruptedException e)
+        finally
         {
-            throw new GridException(e);
+            mutex.release();
+        }
+    }
+
+    private void aggregateOutput(Aggregator aggregator)
+    {
+        // Aggregate outputs from the queue.
+        boolean loop = true;
+        while (loop)
+        {
+            try
+            {
+                // Wait forever for something on the output queue.
+                Object o = outputQueue.take();
+                // If the output queue contains task data, aggregate it.
+                if (o != null && o instanceof TaskData)
+                {
+                    TaskData output = (TaskData) o;
+                    if (output.getInputId() == END_OF_OUTPUT) // This signals the end.
+                        loop = false;
+                    else if (aggregator != null)
+                        aggregator.aggregate(output);
+                }
+                else
+                    throw new IllegalStateException("Unexpected object on output queue: " + o);
+            }
+            catch (InterruptedException e)
+            {
+                loop = false;
+                setFailure(e);
+            }
+        }
+    }
+
+    private void setFailure(Exception e)
+    {
+        acquireMutex();
+        try
+        {
+            releaseTask(e);
         }
         finally
         {
@@ -192,14 +299,13 @@ public class TaskImpl implements Task
 
     public void run(TaskRequest taskRequest)
     {
-        info.setTaskClassName(taskRequest.getTaskClassName());
         for (Iterator iterator = taskRequest.getInput().iterator(); iterator.hasNext();)
         {
             Serializable input = (Serializable) iterator.next();
             addInput(input);
         }
         Aggregator aggregator = instantiateAggregator(taskRequest.getAggregatorClassName());
-        run(aggregator, taskRequest.getMaxWorkers());
+        run(taskRequest.getTaskClassName(), aggregator, taskRequest.getMaxWorkers());
     }
 
     public Aggregator instantiateAggregator(String className)
@@ -219,34 +325,6 @@ public class TaskImpl implements Task
     public void release()
     {
         releaseTask(null);
-    }
-
-    void assign()
-    {
-        Bus bus = client.getBus();
-        acquireMutex();
-        try
-        {
-            // Get up to maxWorkers server addresses.  Don't get more than
-            // what we need to process the queue of inputs.
-            int serverCount = Math.min(maxWorkers, queue.size());
-            if (serverCount == 0)
-            {
-                if (log.isDebugEnabled())
-                    log.debug("No assignment needed.");
-                return;
-            }
-            int servers = sendAssign(serverCount, bus);
-            if (servers == 0)
-                throw new GridException("No available workers.");
-        }
-        finally
-        {
-            mutex.release();
-        }
-
-        // Now, send the go message.
-        bus.go(info);
     }
 
     private int sendAssign(int serverCount, Bus bus)
@@ -337,7 +415,7 @@ public class TaskImpl implements Task
                 // Otherwise, remove the input from the in progress map and
                 // put it in the queue.
                 inputs.remove();
-                queue.add(is);
+                inputQueue.add(is);
             }
         }
     }

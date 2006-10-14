@@ -31,10 +31,7 @@ public interface Bus
     void broadcastNodeStatus()
             ;
 
-    TaskData getNextInput(NodeAddress client, int taskId) throws RpcTimeoutException
-            ;
-
-    void putOutput(NodeAddress client, int taskId, TaskData output)
+    TaskData getNextInput(NodeAddress client, int taskId, TaskData output) throws RpcTimeoutException
             ;
 
     void taskFailed(NodeAddress client, int taskId, GridException ge)

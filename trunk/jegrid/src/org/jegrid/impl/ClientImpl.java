@@ -49,7 +49,7 @@ public class ClientImpl implements ClientImplementor
         while (iter.hasNext())
         {
             NodeStatus node = (NodeStatus) iter.next();
-            if (node.getType() == Grid.TYPE_SERVER && node.getFreeThreads() > 0)
+            if (node.getType() == Grid.TYPE_SERVER && node.getAvailableWorkers() > 0)
                 list.add(node);
         }
         if (list.size() == 0)
@@ -69,19 +69,6 @@ public class ClientImpl implements ClientImplementor
         return rv;
     }
 
-    public Task createTask(Class taskClass)
-    {
-        String taskClassName = taskClass.getName();
-        return createTask(taskClassName);
-    }
-
-    public Task createTask(String taskClassName)
-    {
-        TaskImpl task = new TaskImpl(this, nextTaskId(), taskClassName);
-        addTask(task);
-        return task;
-    }
-
     private void addTask(TaskImpl task)
     {
         synchronized (tasksById)
@@ -97,7 +84,7 @@ public class ClientImpl implements ClientImplementor
         return task;
     }
 
-    public TaskData getNextInput(int taskId, NodeAddress server)
+    public TaskData getNextInput(int taskId, NodeAddress server, TaskData output)
     {
         TaskImpl task = findTask(taskId);
         if (task == null)
@@ -106,7 +93,7 @@ public class ClientImpl implements ClientImplementor
                 log.debug("getNextInput() : No task " + taskId);
             return null;
         }
-        return task.getNextInput(server);
+        return task.getNextInput(server, output);
     }
 
     private TaskImpl findTask(int taskId)
@@ -118,18 +105,6 @@ public class ClientImpl implements ClientImplementor
             task = (TaskImpl) tasksById.get(key);
         }
         return task;
-    }
-
-    public void putOutput(int taskId, TaskData output)
-    {
-        TaskImpl task = findTask(taskId);
-        if (task == null)
-        {
-            if (log.isDebugEnabled())
-                log.debug("putOutput() : No task " + taskId);
-            return;
-        }
-        task.putOutput(output);
     }
 
     public void taskFailed(int taskId, GridException throwable)

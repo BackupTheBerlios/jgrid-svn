@@ -5,8 +5,8 @@ import junit.framework.TestCase;
 import javax.naming.InitialContext;
 import javax.naming.Context;
 import javax.jms.*;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
+//import javax.transaction.TransactionManager;
+//import javax.transaction.UserTransaction;
 import java.util.Hashtable;
 
 /**
@@ -36,15 +36,15 @@ public class JmsTest extends TestCase
         receiver.setMessageListener(new Listener());
         QueueSender sender = session.createSender(queue);
         // For this one needs jboss-transactionclient.jar
-        UserTransaction tx = (UserTransaction) ic.lookup("java:/UserTransaction");
-        tx.begin();
+//        UserTransaction tx = (UserTransaction) ic.lookup("java:/UserTransaction");
+//        tx.begin();
         for (int i = 0; i < 10; i++)
         {
             TextMessage tm = session.createTextMessage("MSG" + i);
             sender.send(tm);
         }
         System.out.println("commit...");
-        tx.commit();
+//        tx.commit();
         Thread.sleep(5000);
     }
 

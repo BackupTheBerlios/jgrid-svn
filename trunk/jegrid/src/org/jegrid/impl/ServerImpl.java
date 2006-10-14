@@ -2,13 +2,9 @@ package org.jegrid.impl;
 
 import EDU.oswego.cs.dl.util.concurrent.Latch;
 import org.apache.log4j.Logger;
-import org.jegrid.GridConfiguration;
-import org.jegrid.GridException;
-import org.jegrid.GridStatus;
-import org.jegrid.TaskRunnable;
+import org.jegrid.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * The server processes jobs and tasks sent to it by clients and other servers.   This contains
@@ -25,7 +21,7 @@ public class ServerImpl implements Server
     private Latch shutdownLatch;
     private GridImplementor grid;
     private int poolSize;
-    private final Map workersByTask;
+    private final WorkerMap workers;
 
     public ServerImpl(GridConfiguration config, Bus bus, GridImplementor grid)
     {
@@ -34,7 +30,7 @@ public class ServerImpl implements Server
         this.grid = grid;
         this.pool = new WorkerThreadPool(poolSize);
         shutdownLatch = new Latch();
-        workersByTask = new HashMap();
+        workers = new WorkerMap();
     }
 
     public int freeThreads()
@@ -47,7 +43,7 @@ public class ServerImpl implements Server
 
     private int _freeThreads()
     {
-        return poolSize - workersByTask.size();
+        return poolSize - workers.size();
     }
 
     public int totalThreads()
@@ -69,6 +65,7 @@ public class ServerImpl implements Server
         Worker worker = findWorker(task);
         if (worker != null)
         {
+            worker.setReleased(true);
             done(task);
         }
         else
@@ -77,7 +74,7 @@ public class ServerImpl implements Server
 
     private synchronized Worker findWorker(TaskInfo task)
     {
-        return (Worker) workersByTask.get(task);
+        return workers.findWorker(task);
     }
 
     public AssignResponse onAssign(TaskInfo task)
@@ -96,9 +93,9 @@ public class ServerImpl implements Server
                 int freeThreads = _freeThreads();
                 if (freeThreads <= 0)
                     return null;
-                if (workersByTask.containsKey(task))
+                if (workers.contains(task))
                     throw new GridException("Already working on " + task);
-                workersByTask.put(task, worker);
+                workers.addWorker(task, worker);
                 pool.execute(worker);
                 bus.broadcastNodeStatus();
                 return new AssignResponse(bus.getAddress(), _freeThreads());
@@ -152,9 +149,100 @@ public class ServerImpl implements Server
         return (TaskRunnable) aClass.newInstance();
     }
 
+    public void onMembershipChange(Set joined, Set left)
+    {
+        synchronized (this)
+        {
+            // If any server left that we care about, then
+            // this task has errored.
+            for (Iterator iterator = left.iterator(); iterator.hasNext();)
+            {
+                NodeAddress nodeAddress = (NodeAddress) iterator.next();
+                Iterator iter = workers.iterateWorkersByClient(nodeAddress);
+                while (iter.hasNext())
+                {
+                    Worker worker = (Worker) iter.next();
+                    worker.setReleased(true);
+                }
+            }
+        }
+    }
+
     synchronized void done(TaskInfo task)
     {
-        workersByTask.remove(task);
+        workers.removeWorker(task);
         bus.broadcastNodeStatus();
+    }
+
+    class WorkerMap
+    {
+        private Map workerMapByClient = new HashMap();
+        private int size;
+
+        public void addWorker(TaskInfo info, Worker worker)
+        {
+            Map map = findMapByClient(info.getClient());
+            if (map == null)
+            {
+                map = new HashMap();
+                workerMapByClient.put(info.getClient(), map);
+            }
+            map.put(info, worker);
+            size++;
+        }
+
+        public Worker removeWorker(TaskInfo info)
+        {
+            Map map = findMapByClient(info.getClient());
+            if (map != null)
+            {
+                size--;
+                Worker worker = (Worker) map.remove(info);
+                if (map.size() == 0)
+                    workerMapByClient.remove(info.getClient());
+                return worker;
+            }
+            else
+                return null;
+        }
+
+        public Worker findWorker(TaskInfo info)
+        {
+            Map map = findMapByClient(info.getClient());
+            if (map != null)
+                return (Worker) map.get(info);
+            else
+                return null;
+        }
+
+        public Iterator iterateWorkersByClient(NodeAddress addr)
+        {
+            Map map = findMapByClient(addr);
+            if (map != null)
+                return map.values().iterator();
+            else
+                return Collections.EMPTY_LIST.iterator();
+        }
+
+        private Map findMapByClient(NodeAddress address)
+        {
+            return (Map) workerMapByClient.get(address);
+        }
+
+        public int size()
+        {
+            return size;
+        }
+
+        public boolean contains(TaskInfo task)
+        {
+            Map map = findMapByClient(task.getClient());
+            return map != null && map.containsKey(task);
+        }
+
+        public boolean containsClient(NodeAddress nodeAddress)
+        {
+            return workerMapByClient.containsKey(nodeAddress);
+        }
     }
 }

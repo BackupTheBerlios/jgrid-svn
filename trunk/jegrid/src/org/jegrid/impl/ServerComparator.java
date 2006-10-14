@@ -18,19 +18,19 @@ public class ServerComparator implements Comparator
         NodeStatus n1 = (NodeStatus) o1;
         NodeStatus n2 = (NodeStatus) o2;
         // Primary criteria: Nodes with zero free threads should always go last.
-        if (n1.getFreeThreads() == 0 || n2.getFreeThreads() == 0)
-            return n2.getFreeThreads() - n1.getFreeThreads();
+        if (n1.getAvailableWorkers() == 0 || n2.getAvailableWorkers() == 0)
+            return n2.getAvailableWorkers() - n1.getAvailableWorkers();
         // Secondary criteria: Nodes with a greater ratio of free threads are preferred.
         int diff = ratioDiff(
-                n1.getFreeThreads(), n1.getTotalThreads(),
-                n2.getFreeThreads(), n2.getTotalThreads());
+                n1.getAvailableWorkers(), n1.getTotalWorkers(),
+                n2.getAvailableWorkers(), n2.getTotalWorkers());
         if (diff != 0)
             return diff;
         // Tertiary criteria: Nodes with more memory per free thread are preferred.
         // Note that divide by zero is prevented by the first criteria.
         diff = ratioDiff(
-                n1.getFreeMemory(), n1.getFreeThreads(),
-                n2.getFreeMemory(), n2.getFreeThreads()
+                n1.getFreeMemory(), n1.getAvailableWorkers(),
+                n2.getFreeMemory(), n2.getAvailableWorkers()
         );
         return diff;
     }

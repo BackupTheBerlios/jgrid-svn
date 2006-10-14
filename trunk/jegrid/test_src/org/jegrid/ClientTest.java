@@ -3,6 +3,7 @@ package org.jegrid;
 import junit.framework.TestCase;
 import org.jegrid.impl.NodeStatusImpl;
 import org.jegrid.impl.ServerComparator;
+import org.apache.log4j.Logger;
 
 import java.util.Arrays;
 
@@ -14,6 +15,8 @@ import java.util.Arrays;
  */
 public class ClientTest extends TestCase
 {
+    private static Logger log = Logger.getLogger(ClientTest.class);
+
     public void testServerComparator() throws Exception
     {
         // Nodes with zero free threads go to the bottom.
@@ -29,14 +32,14 @@ public class ClientTest extends TestCase
                 new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 8, 10),
         };
         Arrays.sort(nodes, new ServerComparator());
-        assertEquals(10, nodes[0].getFreeThreads());
+        assertEquals(10, nodes[0].getAvailableWorkers());
         assertEquals(200, nodes[0].getFreeMemory());
-        assertEquals(10, nodes[1].getFreeThreads());
+        assertEquals(10, nodes[1].getAvailableWorkers());
         assertEquals(100, nodes[1].getFreeMemory());
-        assertEquals(9, nodes[2].getFreeThreads());
-        assertEquals(8, nodes[3].getFreeThreads());
-        assertEquals(19, nodes[4].getFreeThreads());
-        assertEquals(0, nodes[nodes.length - 1].getFreeThreads());
+        assertEquals(9, nodes[2].getAvailableWorkers());
+        assertEquals(8, nodes[3].getAvailableWorkers());
+        assertEquals(19, nodes[4].getAvailableWorkers());
+        assertEquals(0, nodes[nodes.length - 1].getAvailableWorkers());
     }
 
     public void testSimpleClient() throws Exception
@@ -47,20 +50,29 @@ public class ClientTest extends TestCase
         Grid grid = config.configure();
         grid.connect();
         Client client = grid.getClient();
-        Task task = client.createTask(MonteCarloPi.class);
+        Task task = client.createTask();
         for (int i = 0; i < 10; i++)
             task.addInput(new MonteCarloPi.Input(17 * i + 1, 10000));
-        final MonteCarloPi.Output aggregate = new MonteCarloPi.Output();
-        task.run(new Aggregator()
-        {
+        final MonteCarloPi.Output output = new MonteCarloPi.Output();
+        Aggregator aggregator = new MonteCarloPiAggregator(output);
+        task.run(MonteCarloPi.class.getName(), aggregator, 10);
+        log.info("output : " + output.showResult());
+    }
 
-            public void aggregate(TaskData output)
-            {
-                MonteCarloPi.Output out = (MonteCarloPi.Output) output.getData();
-                System.out.println("# " + output.getInputId() + " : " + out.showResult());
-                aggregate.aggregate(out);
-            }
-        }, 10);
-        System.out.println("aggregate : " + aggregate.showResult());
+    private static class MonteCarloPiAggregator implements Aggregator
+    {
+        private final MonteCarloPi.Output aggregate;
+
+        public MonteCarloPiAggregator(MonteCarloPi.Output aggregate)
+        {
+            this.aggregate = aggregate;
+        }
+
+        public void aggregate(TaskData output)
+        {
+            MonteCarloPi.Output out = (MonteCarloPi.Output) output.getData();
+            log.info("# " + output.getInputId() + " : " + out.showResult());
+            aggregate.aggregate(out);
+        }
     }
 }

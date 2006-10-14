@@ -55,12 +55,12 @@ public class NodeStatusImpl implements NodeStatus, Serializable
         return type;
     }
 
-    public int getFreeThreads()
+    public int getAvailableWorkers()
     {
         return freeThreads;
     }
 
-    public int getTotalThreads()
+    public int getTotalWorkers()
     {
         return totalThreads;
     }

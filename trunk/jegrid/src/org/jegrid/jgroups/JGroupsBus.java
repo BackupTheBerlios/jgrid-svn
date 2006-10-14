@@ -182,14 +182,14 @@ public class JGroupsBus implements Bus
                 GroupRequest.GET_NONE, 0);
     }
 
-    public TaskData getNextInput(NodeAddress client, int taskId) throws RpcTimeoutException
+    public TaskData getNextInput(NodeAddress client, int taskId, TaskData output) throws RpcTimeoutException
     {
         Address address = toAddress(client);
         try
         {
             Object o = dispatcher.callRemoteMethod(address, "_nextInput",
-                    new Object[]{new Integer(taskId), localAddress},
-                    new Class[]{Integer.class, NodeAddress.class},
+                    new Object[]{new Integer(taskId), localAddress, output},
+                    new Class[]{Integer.class, NodeAddress.class, TaskData.class},
                     GroupRequest.GET_ALL,
                     NEXT_INPUT_TIMEOUT);   // Wait a little longer for this, sometimes the client is slow.
             checkForException(o);
@@ -216,27 +216,6 @@ public class JGroupsBus implements Bus
     {
         if (o instanceof Exception)
             throw(Exception) o;
-    }
-
-    public void putOutput(NodeAddress client, int taskId, TaskData output)
-    {
-        Address address = toAddress(client);
-        try
-        {
-            dispatcher.callRemoteMethod(address, "_putOutput",
-                    new Object[]{new Integer(taskId), output},
-                    new Class[]{Integer.class, TaskData.class},
-                    GroupRequest.GET_ALL,
-                    TIMEOUT);
-        }
-        catch (GridException ge)
-        {
-            throw ge;
-        }
-        catch (Exception e)
-        {
-            throw new GridException(e);
-        }
     }
 
     public void taskFailed(NodeAddress client, int taskId, GridException ge)

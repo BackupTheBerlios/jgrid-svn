@@ -1,7 +1,7 @@
 package org.jegrid;
 
 /**
- * Aggregates the results when tasks process input in parallel.
+ * Aggregates the outputs produced by the TaskRunnable for a task.
  * <br>User: Joshua Davis
  * Date: Oct 8, 2006
  * Time: 10:36:29 AM

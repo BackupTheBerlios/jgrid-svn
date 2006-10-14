@@ -1,17 +1,17 @@
 package org.jegrid;
 
 /**
- * TODO: Add class level javadoc
+ * Grid client interface.
  * <br> User: jdavis
  * Date: Sep 30, 2006
  * Time: 7:49:17 AM
  */
 public interface Client
 {
-    Task createTask(Class taskClass);
-
-    Task createTask(String taskClassName);
-
-    Task createTask()
-            ;
+    /**
+     * Creates a new task that can be executed on the grid servers.
+     *
+     * @return the new task
+     */
+    Task createTask();
 }

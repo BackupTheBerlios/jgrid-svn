@@ -15,10 +15,7 @@ import java.util.Set;
  */
 public interface ClientImplementor extends Client
 {
-    TaskData getNextInput(int taskId, NodeAddress server)
-            ;
-
-    void putOutput(int taskId, TaskData output)
+    TaskData getNextInput(int taskId, NodeAddress server, TaskData output)
             ;
 
     void taskFailed(int taskId, GridException throwable)

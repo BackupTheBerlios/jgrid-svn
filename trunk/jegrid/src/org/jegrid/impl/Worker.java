@@ -1,29 +1,34 @@
 package org.jegrid.impl;
 
 import org.jegrid.TaskRunnable;
-import org.jegrid.NodeAddress;
 import org.jegrid.TaskData;
 import org.jegrid.GridException;
 import org.apache.log4j.NDC;
+import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 
 import EDU.oswego.cs.dl.util.concurrent.Latch;
 
 /**
- * TODO: Add class level javadoc
+ * A runnable that performs the work on a server.  It instantiates the task class and begins processing input from the
+ * client using the task's run() method.  The output is then sent back to the client.  This is repeated until
+ * there is no more input from the client, or there was some sort of error.
  * <br> User: jdavis
  * Date: Oct 7, 2006
  * Time: 10:10:32 AM
  */
 public class Worker implements Runnable
 {
+    private static Logger log = Logger.getLogger(Worker.class);
+
     private final ServerImpl server;
     private final TaskInfo task;
     private Bus bus;
     private Latch goLatch;
     private Exception exception;
     private static final long GO_TIMEOUT = 10000;
+    private boolean released;
 
     public Worker(ServerImpl server, TaskInfo task, Bus bus)
     {
@@ -78,8 +83,10 @@ public class Worker implements Runnable
     private void runTask()
             throws Exception
     {
+        if (log.isDebugEnabled())
+            log.debug("Worker started on " + task.getClient() + " " + task.getTaskId());
         // Priming read.
-        TaskData input = nextInput(task.getClient(), task.getTaskId());
+        TaskData input = nextInput(null);
         if (shouldRun(input))
         {
             // Create the task instance and run until there isn't any more input.
@@ -89,8 +96,7 @@ public class Worker implements Runnable
                 int inputId = input.getInputId();
                 Serializable data = taskInstance.run(inputId, input.getData());
                 TaskData output = new TaskData(inputId, data);
-                bus.putOutput(task.getClient(), task.getTaskId(), output);
-                input = nextInput(task.getClient(), task.getTaskId());
+                input = nextInput(output);
             }
         }
     }
@@ -115,12 +121,28 @@ public class Worker implements Runnable
         }
     }
 
-    private TaskData nextInput(NodeAddress client, int taskId)
+    private TaskData nextInput(TaskData output)
             throws RpcTimeoutException
     {
-        return bus.getNextInput(client, taskId);
+        if (isReleased())
+        {
+            if (log.isDebugEnabled())
+                log.debug("Worker released from " + task);
+            return null;
+        }
+        return bus.getNextInput(task.getClient(), task.getTaskId(), output);
     }
 
+
+    public synchronized void setReleased(boolean flag)
+    {
+        released = flag;
+    }
+
+    public synchronized boolean isReleased()
+    {
+        return released;
+    }
 
     public synchronized Exception getException()
     {

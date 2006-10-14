@@ -10,7 +10,17 @@ import java.util.Iterator;
  */
 public interface GridStatus
 {
+    /**
+     * The number of nodes on the grid including clients, servers, and observers.
+     *
+     * @return the number of nodes on the grid
+     */
     int getNumberOfNodes();
-    
+
+    /**
+     * An iterator returning a NodeStatus for each node on the grid.
+     *
+     * @return iterator returning a NodeStatus for each node on the grid.
+     */
     Iterator iterator();
 }

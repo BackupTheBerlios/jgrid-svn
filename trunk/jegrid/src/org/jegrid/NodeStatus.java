@@ -29,12 +29,27 @@ public interface NodeStatus
      */
     int getType();
 
-    int getFreeThreads()
+    /**
+     * The number of available workers on the node. Always zero for non-server nodes.
+     *
+     * @return the number of available workers on the node.
+     */
+    int getAvailableWorkers()
             ;
 
-    int getTotalThreads()
+    /**
+     * The total number of workers on the node. Always zero for non-server nodes.
+     *
+     * @return the total number of workers on the node
+     */
+    int getTotalWorkers()
             ;
 
+    /**
+     * The amount of free heap space on the node, in bytes.
+     *
+     * @return The amount of free heap space on the node, in bytes.
+     */
     long getFreeMemory()
             ;
 }

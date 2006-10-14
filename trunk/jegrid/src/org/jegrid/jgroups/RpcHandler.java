@@ -93,7 +93,7 @@ public class RpcHandler
 
     // === Client messages ===
 
-    public TaskData _nextInput(Integer taskId, NodeAddress server)
+    public TaskData _nextInput(Integer taskId, NodeAddress server, TaskData output)
     {
         if (log.isDebugEnabled())
             log.debug("_nextInput");
@@ -104,20 +104,7 @@ public class RpcHandler
             return null;
         }
         else
-            return client.getNextInput(taskId.intValue(), server);
-    }
-
-    public void _putOutput(Integer taskId, TaskData output)
-    {
-        if (log.isDebugEnabled())
-            log.debug("_putOutput");
-        ClientImplementor client = (ClientImplementor) grid.getClient();
-        if (client == null)
-        {
-            log.warn("No client here.");
-        }
-        else
-            client.putOutput(taskId.intValue(), output);
+            return client.getNextInput(taskId.intValue(), server, output);
     }
 
     public void _taskFailed(Integer taskId, GridException t)
