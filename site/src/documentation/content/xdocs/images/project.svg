@@ -1,4 +1,4 @@
-<?xml version="1.0" standalone="no"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!--
   Copyright 2002-2004 The Apache Software Foundation or its licensors,
   as applicable.
@@ -15,7 +15,6 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-
 <!--
        SVG Anteater logo
 
@@ -23,7 +22,6 @@ To get started with SVG, I'd recommend getting the Adobe SVG plugin, and the
 xml-batik CVS module. Then have a look at the xml-batik/samples files. Use the
 SVG spec (http://www.w3.org/TR/SVG/) as a reference.
 -->
-
 <!-- See Forrest Issue: FOR-229
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN"
 "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd"
@@ -33,52 +31,139 @@ SVG spec (http://www.w3.org/TR/SVG/) as a reference.
  <!ELEMENT for:project-name (#PCDATA)>
 ]>
 -->
-<svg xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink"
-     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-     xsl:version="1.0"
-     xmlns:for="http://apache.org/forrest"
-     width="420" height="65" >
-  <title>JEGrid logo</title>
-
-  <defs>
-
-    <radialGradient id="gradient">
-      <stop style="stop-color:gold" offset="0"/>
-      <stop style="stop-color:orange" offset=".5"/>
-      <stop style="stop-color:crimson" offset="1"/>
+<svg
+   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://inkscape.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xsl:version="1.0"
+   width="420"
+   height="65"
+   id="svg2"
+   sodipodi:version="0.32"
+   inkscape:version="0.43"
+   sodipodi:docname="project.svg"
+   sodipodi:docbase="C:\Documents and Settings\Joshua Davis\Desktop">
+  <metadata
+     id="metadata27">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     inkscape:window-height="480"
+     inkscape:window-width="640"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base"
+     showguides="true"
+     inkscape:guide-bbox="true" />
+  <title
+     id="title4">JEGrid logo</title>
+  <defs
+     id="defs6">
+    <radialGradient
+       id="gradient"
+       gradientTransform="scale(1.764347,0.566782)"
+       cx="-39.971304"
+       cy="-21.155104"
+       fx="-39.971304"
+       fy="-21.155104"
+       r="38.10834"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         style="stop-color:gold"
+         offset="0"
+         id="stop9" />
+      <stop
+         style="stop-color:orange"
+         offset=".5"
+         id="stop11" />
+      <stop
+         style="stop-color:crimson"
+         offset="1"
+         id="stop13" />
     </radialGradient>
-      <!--
+<!--
       <linearGradient id="linearGradient">
         <stop style="stop-color:gold" offset="0"/>
         <stop style="stop-color:orange" offset=".5"/>
         <stop style="stop-color:crimson" offset="1"/>
       </linearGradient>
-      -->
-
-<!--
+      --><!--
     <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
       <stop style="stop-color:white" offset="0"/>
       <stop style="stop-color:lightgreen" offset="1"/>
     </linearGradient>
--->
-
-    <filter id="shadowFilter" filterUnits="objectBoundingBox" width="1.4" height="1.4">
-      <!-- Takes the alpha channel (black outline of the text), blurs it and saves as 'blur' -->
-      <feGaussianBlur in="SourceAlpha" stdDeviation="3 3" result="blur"/>
-      <!-- Takes saved 'blur' and offsets it by 4 pixels, saves as 'offsetBlur' -->
-      <feOffset in="blur" dx="4" dy="4" result="offsetBlur"/>
-      <!-- Merges SourceGraphic (original image) and 'offsetBlur', putting the
+-->    <filter
+       id="shadowFilter"
+       filterUnits="objectBoundingBox"
+       width="1.4"
+       height="1.4">
+<!-- Takes the alpha channel (black outline of the text), blurs it and saves as 'blur' -->      <feGaussianBlur
+         in="SourceAlpha"
+         stdDeviation="3 3"
+         result="blur"
+         id="feGaussianBlur16" />
+<!-- Takes saved 'blur' and offsets it by 4 pixels, saves as 'offsetBlur' -->      <feOffset
+         in="blur"
+         dx="4"
+         dy="4"
+         result="offsetBlur"
+         id="feOffset18" />
+<!-- Merges SourceGraphic (original image) and 'offsetBlur', putting the
       former 'over' the latter, and using the merged result as the finished
-      image -->
-      <feComposite in="SourceGraphic" in2="offsetBlur" operator="over"/>
+      image -->      <feComposite
+         in="SourceGraphic"
+         in2="offsetBlur"
+         operator="over"
+         id="feComposite20" />
     </filter>
-
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#gradient"
+       id="radialGradient1326"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="scale(1.764347,0.566782)"
+       cx="-39.971304"
+       cy="-21.155104"
+       fx="-39.971304"
+       fy="-21.155104"
+       r="38.10834" />
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#gradient"
+       id="radialGradient1328"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="scale(1.764347,0.566782)"
+       cx="-39.971304"
+       cy="-21.155104"
+       fx="-39.971304"
+       fy="-21.155104"
+       r="38.10834" />
   </defs>
-
-  <g filter="url(#shadowFilter)" fill="url(#gradient)">
-    <text x="80%" y="60%" style="font-size:36pt; font-wieght: bold ; font-family:Lucida ; text-anchor: end" >
-    <for:project-name />
-    </text>
+  <g
+     filter="url(#shadowFilter)"
+     id="g22"
+     style="fill:url(#radialGradient1328)"
+     transform="translate(166,47)">
+    <text
+       x="0.80000001"
+       y="0.60000002"
+       style="font-size:45px;text-anchor:end;fill:url(#radialGradient1326);font-family:Lucida"
+       id="text24"><!--    <for:project-name /> -->JEGrid</text>
   </g>
 </svg>
