@@ -1,0 +1,16 @@
+<project name="jegrid-site" default="site">
+
+    <property environment="env"/>
+    
+    <target name="site" description="Build the website with Forrest.">
+        <!-- FORREST_HOME must be set as an environment variable -->
+        <property name="forrest.home" value="${env.FORREST_HOME}"/>
+        <ant antfile="${forrest.home}/main/forrest.build.xml" target="site" dir="${basedir}">
+        </ant>
+    </target>
+
+    <target name="clean" description="Delete all generated files.">
+	    <delete failonerror="false" dir="${basedir}/build"/>
+    </target>
+
+</project>

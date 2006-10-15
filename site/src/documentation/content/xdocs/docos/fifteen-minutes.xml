@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
+<document> 
+  <header> 
+    <title>JEGrid in 15 Minutes</title> 
+  </header> 
+  <body> 
+    <section id="download">
+      <title>Downloading JEGrid</title>
+      <p>...</p>
+    </section>
+    <section id="client-server">
+      <title>Writing Client and server code</title>
+      <p>...</p>
+    </section>
+    <section id="startserver">
+      <title>Starting the server</title>
+      <p>...</p>
+    </section>
+    <section id="runclient">
+      <title>Running the client</title>
+      <p>...</p>
+    </section>
+  </body>
+</document>

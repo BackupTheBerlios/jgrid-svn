@@ -30,7 +30,7 @@ This file contains an outline of the site's information content.  It is used to:
 See http://forrest.apache.org/docs/linking.html for more info
 -->
 
-<site label="EnterGrid" href="" xmlns="http://apache.org/forrest/linkmap/1.0" tab="">
+<site label="JEGrid" href="" xmlns="http://apache.org/forrest/linkmap/1.0" tab="">
    <!-- Note: No matter what you configure here, Forrest will always try to load
        index.html when you request http://yourHost/.
        'How can I use a start-up-page other than index.html?' in the FAQs has more 
@@ -40,6 +40,11 @@ See http://forrest.apache.org/docs/linking.html for more info
     <index label="Index" href="index.html" description="Welcome to JGrid"/>
   </about>
 
+  <docos label="Documentation" href="docos/" tab="docos">
+	    <index label="Index" href="index.html" description="Documentation"/>
+	    <fifteen-minutes label="In 15 minutes..." href="fifteen-minutes.html" description="JEGrid in 15 minutes"/>
+    </docos>
+    
     <project label="Project" href="project/" tab="project">
         <index label="Index" href="index.html" description="About the project..."/>
     </project>
@@ -105,6 +110,8 @@ See http://forrest.apache.org/docs/linking.html for more info
     <cocoon href="http://cocoon.apache.org/"/>
     <xml.apache.org href="http://xml.apache.org/"/>
     <project href="http://developer.berlios.de/projects/jgrid"/>
+    <jgroups href="http://www.jgroups.org"/>
+    <picocontainer href="http://www.picocontainer.org"/>
   </external-refs>
 
 </site>
