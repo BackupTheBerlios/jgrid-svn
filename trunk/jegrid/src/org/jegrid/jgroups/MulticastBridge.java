@@ -139,13 +139,9 @@ public class MulticastBridge
         String bridgeHost = bridge[0];
         int bridgeport = Integer.parseInt(bridge[1]);
 
-/*
-        String[] bind = args[0].split("\\:");
+        String[] bind = args[1].split("\\:");
         String bindHost = bind[0];
         int bindport = Integer.parseInt(bind[1]);
-*/
-        String bindHost = "228.8.8.8";
-        int bindport = 45566;
 
         InetAddress bindNic = InetAddress.getByName(bindHost);
         InetAddress bridgeNic = InetAddress.getByName(bridgeHost);
