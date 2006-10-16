@@ -54,25 +54,8 @@ public class ClientTest extends TestCase
         for (int i = 0; i < 10; i++)
             task.addInput(new MonteCarloPi.Input(17 * i + 1, 10000));
         final MonteCarloPi.Output output = new MonteCarloPi.Output();
-        Aggregator aggregator = new MonteCarloPiAggregator(output);
+        Aggregator aggregator = new MonteCarloPi.MCPiAggregator(output);
         task.run(MonteCarloPi.class.getName(), aggregator, 10);
         log.info("output : " + output.showResult());
-    }
-
-    private static class MonteCarloPiAggregator implements Aggregator
-    {
-        private final MonteCarloPi.Output aggregate;
-
-        public MonteCarloPiAggregator(MonteCarloPi.Output aggregate)
-        {
-            this.aggregate = aggregate;
-        }
-
-        public void aggregate(TaskData output)
-        {
-            MonteCarloPi.Output out = (MonteCarloPi.Output) output.getData();
-            log.info("# " + output.getInputId() + " : " + out.showResult());
-            aggregate.aggregate(out);
-        }
     }
 }

@@ -52,7 +52,7 @@
     <target name="tarball" depends="jar">
         <tar compression="gzip" tarfile="jegrid.tar.gz">
             <tarfileset dir="${basedir}" mode="755">
-                <include name="server.sh"/>
+                <include name="*.sh"/>
             </tarfileset>
             <tarfileset dir="${lib.dir}" prefix="lib">
                 <patternset refid="libs"/>
