@@ -4,10 +4,17 @@
   <header> 
     <title>Download JEGrid</title> 
   </header> 
-  <body> 
-    <p>Source and binary distributions can be downloaded from <a href="ext:projectfiles">this page.</a></p>
-  </body> 
-  <footer> 
-    <legal>This is a legal notice, so it is <strong>important</strong>.</legal> 
-  </footer>
+  <body>
+    <p>JEGrid is available in source and binary form, as well as from anonymous SVN.</p>
+    <section id="bin">
+        <title>Binary downloads</title>
+        <p>Source and binary distributions can be downloaded from <a href="ext:projectfiles">this page.</a></p>
+    </section>
+    <section id="svn">
+        <title>SVN Access</title>
+        <p>The source code for the most recent version of JEGrid can be checked out via anonymous svn like this:</p>
+        <source>svn checkout http://svn.berlios.de/svnroot/repos/jgrid/trunk</source>
+        <p>See the <a href="ext:projectsvn">svn page</a> on the project status site for more information.</p>
+    </section>
+  </body>
 </document>

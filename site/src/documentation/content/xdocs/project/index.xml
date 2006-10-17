@@ -15,6 +15,19 @@
       to serve as a front end for the compute farm.
       </p>
     </section>
+      <section id="dependencies">
+          <title>Dependencies</title>
+          <p>Thanks to the following projects for making JEGrid possible</p>
+          <ul>
+              <li>
+                  <strong><a href="ext:jgroups">JGroups</a></strong> - Provides the network layer for JEGrid.</li>
+              <li>
+                  <strong><a href="ext:picocontainer">Pico Container</a></strong> - A lightweight micro-container
+                  that provides Dependency Injection and Service Locator design patterns.</li>
+              <li>
+                  <strong><a href="ext:rngpack">RngPack</a></strong> - Random number generators.</li>
+          </ul>
+      </section>
     <section id="links">
 	    <title>Project Links</title>
 	    <ul>

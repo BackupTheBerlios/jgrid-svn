@@ -25,17 +25,5 @@
 				    <li><strong>Flexible networking</strong> - Can use IP Multicast, UDP, or TCP as it's underlying protocol.</li>
 				</ul>
 		</section>
-		<section id="dependencies">
-			<title>Dependencies</title>
-			<p>Thanks to the following projects for making JEGrid possible</p>
-			<ul>
-				<li>
-					<strong><a href="ext:jgroups">JGroups</a></strong> - http://www.jgroups.org</li>
-				<li>
-					<strong><a href="ext:picocontainer">Pico Container</a></strong> - http://www.picocontainer.org</li>
-				<li>
-					<strong><a href="ext:rngpack">RngPack</a></strong> - http://www.honeylocust.com/RngPack</li>
-			</ul>
-		</section>
 	</body>
 </document>
