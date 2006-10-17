@@ -37,14 +37,16 @@ See http://forrest.apache.org/docs/linking.html for more info
        information tells you how to change that. 
    -->
   <about label="About">
-    <index label="Index" href="index.html" description="Welcome to JGrid"/>
+    <index label="About JEGrid" href="index.html" description="Welcome to JGrid"/>
+    <download label="Download" href="download.html" description="Download JEGrid!"/>
+    <license label="License" href="project/license.html" description="License"/>
   </about>
 
   <docos label="Documentation" href="docos/" tab="docos">
 	    <index label="Index" href="index.html" description="Documentation"/>
 	    <fifteen-minutes label="In 15 minutes..." href="fifteen-minutes.html" description="JEGrid in 15 minutes"/>
     </docos>
-    
+        
     <project label="Project" href="project/" tab="project">
         <index label="Index" href="index.html" description="About the project..."/>
     </project>
@@ -110,8 +112,10 @@ See http://forrest.apache.org/docs/linking.html for more info
     <cocoon href="http://cocoon.apache.org/"/>
     <xml.apache.org href="http://xml.apache.org/"/>
     <project href="http://developer.berlios.de/projects/jgrid"/>
+    <projectfiles href="http://developer.berlios.de/project/showfiles.php?group_id=5214"/>
     <jgroups href="http://www.jgroups.org"/>
     <picocontainer href="http://www.picocontainer.org"/>
+    <lgpl href="http://www.gnu.org/licenses/lgpl.html"/>
   </external-refs>
 
 </site>

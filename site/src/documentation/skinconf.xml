@@ -373,8 +373,8 @@ which will be used to configure the chosen Forrest skin.
       <color name="fixme" value="#cc6600"/>
       <color name="note" value="#006699"/>
       <color name="warning" value="#990000"/>
-      <color name="code" value="#003366"/>
-
+<!-- <color name="code" value="#003366"/> -->
+	 <color name="code" value="#e0e0e0"/>
       <color name="footer" value="#E5E4D9"/>
 
   </colors>
@@ -452,7 +452,6 @@ which will be used to configure the chosen Forrest skin.
     web pages  
    -->
   <credits>
-<!--
     <credit>
       <name>Built with Apache Forrest</name>
       <url>http://forrest.apache.org/</url>
@@ -460,16 +459,13 @@ which will be used to configure the chosen Forrest skin.
       <width>88</width>
       <height>31</height>
     </credit>
--->
     <!-- A credit with @role="pdf" will be used to compose a footer
      for each page in the PDF, using either "name" or "url" or both.
     -->
-    <!--
     <credit role="pdf">
       <name>Built with Apache Forrest</name>
       <url>http://forrest.apache.org/</url>
     </credit>
-    -->
   </credits>
 
 </skinconfig>

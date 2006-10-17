@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
+<document> 
+  <header> 
+    <title>Download JEGrid</title> 
+  </header> 
+  <body> 
+    <p>Source and binary distributions can be downloaded from <a href="ext:projectfiles">this page.</a></p>
+  </body> 
+  <footer> 
+    <legal>This is a legal notice, so it is <strong>important</strong>.</legal> 
+  </footer>
+</document>

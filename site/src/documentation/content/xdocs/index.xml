@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
-<document> 
-  <header> 
-    <title>JEGrid - Enterprise Grid Computing for Java</title>
-  </header> 
-  <body> 
-    <section id="intro">
-      <title>Introduction</title>
-      <p>
+<document>
+	<header>
+		<title>JEGrid - Enterprise Grid Computing for Java</title>
+	</header>
+	<body>
+		<section id="intro">
+			<title>Introduction</title>
+			<p>
       JEGrid is a light weight <strong>enterprise grid framework for Java</strong> that provides
       <strong>federation</strong> (clustering), <strong>coarse-grained parallelism</strong>, and
       <strong>load balancing</strong>.
@@ -15,23 +15,27 @@
       COTS (Commodity, Off The Shelf) hardware which is more economical, more scaleable, and
       more familiar to IT personell.
       </p>
-    </section>
-    <section id="features">
-        <title>Features</title>
-        <p></p>
-    </section>
-    <section id="license">
-        <title>License</title>
-	<p>JEGrid is licensed under the LGPL.  See lgpl.txt in the source distribution for details.</p>
-    </section>
-      <section id="dependencies">
-        <title>Dependencies</title>
-        <p>Thanks to the following projects for making JEGrid possible</p>
-        <ul>
-           <li><strong>JGroups</strong> - http://www.jgroups.org</li>
-           <li><strong>Pico Container</strong> - http://www.picocontainer.org</li>
-           <li><strong>RngPack</strong> - http://www.honeylocust.com/RngPack</li>
-        </ul>
-      </section>
-  </body>
+		</section>
+		<section id="features">
+			<title>Features</title>
+				<ul>
+				    <li><strong>SIMD distributed parallelism</strong> - Each task has code and any number of inputs.  The code is run on multiple machines to process the input in parallel.  JEGroups handles all the network communication and threading.</li>
+					<li><strong>Fast, with a minimal AP</strong>I - JEGroups has very minimal network overhead for maximum speed.  The simple API requires only a few lines of code to take advantage of parallelism.</li>
+					<li><strong>Automatic clustering and failure detection</strong> - Servers, clients and observers automatically join the grid cluster.   If any node fails all nodes depending on it will be notified and take appropriate action.</li>
+				    <li><strong>Flexible networking</strong> - Can use IP Multicast, UDP, or TCP as it's underlying protocol.</li>
+				</ul>
+		</section>
+		<section id="dependencies">
+			<title>Dependencies</title>
+			<p>Thanks to the following projects for making JEGrid possible</p>
+			<ul>
+				<li>
+					<strong><a href="ext:jgroups">JGroups</a></strong> - http://www.jgroups.org</li>
+				<li>
+					<strong><a href="ext:picocontainer">Pico Container</a></strong> - http://www.picocontainer.org</li>
+				<li>
+					<strong><a href="ext:rngpack">RngPack</a></strong> - http://www.honeylocust.com/RngPack</li>
+			</ul>
+		</section>
+	</body>
 </document>
