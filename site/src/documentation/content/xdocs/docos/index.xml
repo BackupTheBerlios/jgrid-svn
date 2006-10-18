@@ -2,9 +2,61 @@
 <!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
 <document> 
   <header> 
-    <title>Documentation</title> 
+    <title>Overview</title>
   </header> 
   <body> 
-   <p>...</p>
-  </body>
+   <section id="architecture">
+       <title>Architecture and Concepts</title>
+       <p>A Grid is a set of nodes that know about each other.  Each node can be one of three types:</p>
+       <ol>
+           <li><strong>Observer</strong> - Views the status of all the other nodes, used for monitoring.</li>
+           <li><strong>Client</strong> - Creates tasks and runs them on the server nodes in the grid.</li>
+           <li><strong>Server</strong> - Processes task input, produces output.</li>
+       </ol>
+       <p>Each node is connected to the grid and will send messages to other nodes based on what they need
+       to do.  The interconnect is called the Bus.</p>
+       <section id="tasks">
+           <title>Tasks</title>
+           <p>Tasks are the basic unit of work in JEGrid.  Each task has:</p>
+           <ul>
+               <li>A list of data that is to be processed in parallel.</li>
+               <li>The code that should be used to process each input.</li>
+               <li>The code that should be used to aggregate the output for each input.</li>
+           </ul>
+           <p>Once a task has the list of inputs and the processing class, the task can be started on grid.
+               Once started, the task acts like a distributed thread pool.  Each worker thread will begin
+               processing input as fast as it can, in parallel with all the other workers associated with that
+               task.  The results of the workers will be aggregated in the client JVM.  Once all the input has been
+               processed and the output has been aggregated, the task is completed.
+           </p>
+           <p>The lifecycle of a task is as follows:</p>
+           <ol>
+               <li>A task is created by a Client.  It is given an id by the Client.</li>
+               <li>Input data is added to the task.  This data is placed in the task's input queue.</li>
+               <li>The task is assigned to workers on the grid and the workers begin asking for input from the queue.
+               Each input will only be given to one worker at a time.</li>
+               <li>Output from the workers is sent to the aggregator by the task.  The task keeps track of the
+               work that is not finished yet.</li>
+               <li>Once an output has been received for each input, the task is complete.</li>
+           </ol>
+       </section>
+       <section id="workers">
+           <title>Workers</title>
+           <p>Workers are threads on a server that process input from the queue of the task they are assigned to.
+           Each server has a pool of workers.   Clients will ask the servers to allocate workers to tasks and give them
+           a signal to begin processing once everything is ready.  The lifecycle of a worker is as follows:
+           </p>
+           <ol>
+               <li>A worker is created by a server if the server has not reached the maximum number of workers.</li>
+               <li>The worker is assigned to a task and waits for the go signal.
+                  It now knows the network address of the client and the task id.
+               </li>
+                <li>When the go signal is received, the worker will instantiate the input processor class.</li>
+               <li>The worker will then repeatedly ask for input from the task, processs it with the input processor, and
+               send the output back to the task.</li>
+               <li>When there is no more input, the worker is released back to the pool on the server.</li>
+            </ol>
+        </section>
+   </section>
+</body>
 </document>

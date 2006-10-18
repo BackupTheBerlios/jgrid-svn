@@ -9,8 +9,8 @@
       <title>Downloading JEGrid</title>
       <p>...</p>
     </section>
-    <section id="client-server">
-      <title>Writing Client and server code</title>
+    <section id="configuration">
+      <title>Configuring JEGrid</title>
       <p>...</p>
     </section>
     <section id="startserver">
