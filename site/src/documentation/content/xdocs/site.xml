@@ -87,6 +87,7 @@
         <projectsvn href="http://developer.berlios.de/svn/?group_id=5214"/>
         <jgroups href="http://www.jgroups.org"/>
         <picocontainer href="http://www.picocontainer.org"/>
+        <rngpack href="http://www.honeylocust.com/RngPack"/>
         <lgpl href="http://www.gnu.org/licenses/lgpl.html"/>
     </external-refs>
 
