@@ -15,6 +15,15 @@
       to serve as a front end for the compute farm.
       </p>
     </section>
+    <section id="license">
+        <title>License</title>
+        <p>JEGrid uses the <a class="jump" href="/license.html">LGPL license</a>.</p>
+    </section>
+      <section id="thiswebsite">
+        <title>About this web site...</title>
+        <p>This web site was built with <a href="ext:forrest">Apache Forrest</a>.  See <a
+        href="ext:forrest/userguide">the user guide</a> for more information on how it is edited, etc.</p>
+    </section>
       <section id="dependencies">
           <title>Dependencies</title>
           <p>Thanks to the following projects for making JEGrid possible</p>
@@ -29,11 +38,17 @@
           </ul>
       </section>
     <section id="links">
-	    <title>Project Links</title>
+	    <title>Links</title>
 	    <ul>
-		    <li><a href="ext:project">Project Summary</a></li>
+		    <li><a href="ext:project">JEGrid Project Summary</a></li>
 		    <li><a href="ext:jgroups">JGroups Home Page</a></li>
-		    <li><a href="ext:picocontainer">Pico-container Home Page</a></li>
+            <li><a href="ext:picocontainer">Pico-container Home Page</a></li>
+            <li><a href="ext:forrest">Forrest Home Page</a>
+                <ul>
+                    <li><a href="ext:forrest/userguide">Forrest User's Guide</a></li>
+                    <li><a href="ext:forrest/linking">Linking</a></li>
+                </ul>
+            </li>
 	    </ul>
     </section>
   </body>

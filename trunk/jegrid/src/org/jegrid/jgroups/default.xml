@@ -10,7 +10,7 @@ If the host has multiple NICs, this makes it more likely to choose the right one
     receive_on_all_interfaces="false" use_local_host="true"
 -->
     <UDP mcast_send_buf_size="32000"
-        mcast_port="45566"
+        mcast_port="45666"
         ucast_recv_buf_size="64000"
         mcast_addr="228.8.8.8"
         receive_on_all_interfaces="false"

@@ -3,6 +3,10 @@
 <document>
     <header>
         <title>JEGrid in 15 Minutes</title>
+        <abstract>In this guide, you will run one of the JEGrid examples and take a look at the example
+        source code.  If you are evaluating JEGrid or you are not sure what JEGrid does, this is the
+        place to start.
+        </abstract>
     </header>
     <body>
         <section id="download">

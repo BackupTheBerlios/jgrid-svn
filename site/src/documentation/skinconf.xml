@@ -1,26 +1,8 @@
 <?xml version="1.0"?>
 <!--
-  Copyright 2002-2005 The Apache Software Foundation or its licensors,
-  as applicable.
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
--->
-
-<!--
 Skin configuration file. This file contains details of your project,
 which will be used to configure the chosen Forrest skin.
 -->
-
 <!DOCTYPE skinconfig PUBLIC "-//APACHE//DTD Skin Configuration V0.7-1//EN" "http://forrest.apache.org/dtd/skinconfig-v07-1.dtd">
 <skinconfig>
   <!-- To enable lucene search add provider="lucene" (default is google).
@@ -30,7 +12,7 @@ which will be used to configure the chosen Forrest skin.
     no search box. @domain will enable sitesearch for the specific domain with google.
     In other words google will search the @domain for the query string.
   -->
-  <search name="MyProject" domain="mydomain" provider="google"/>
+  <search name="JEGrid" domain="http://jgrid.berlios.de" provider="google"/>
 
   <!-- Disable the print link? If enabled, invalid HTML 4.0.1 -->
   <disable-print-link>true</disable-print-link>  
@@ -75,9 +57,9 @@ which will be used to configure the chosen Forrest skin.
 
   <!-- optional group logo
        default skin: renders it at the top-left corner -->
-  <group-name>BerliOS</group-name>
-  <group-description>Hosted by BerliOS</group-description>
-  <group-url>http://developer.berlios.de</group-url>
+  <group-name></group-name>
+  <group-description></group-description>
+  <group-url></group-url>
   <group-logo></group-logo>
   <!-- Alternative static image:
   <group-logo>images/group-logo.gif</group-logo> -->
@@ -91,7 +73,7 @@ which will be used to configure the chosen Forrest skin.
   <favicon-url></favicon-url>
 
   <!-- The following are used to construct a copyright statement -->
-  <year>2005</year>
+  <year>2005-2006</year>
   <vendor>The JEGrid team.</vendor>
   <!-- The optional copyright-link URL will be used as a link in the
     copyright statement
@@ -124,7 +106,7 @@ which will be used to configure the chosen Forrest skin.
   @location ("page","menu","page,menu", "none")
    Where to show the TOC.
   -->
-  <toc max-depth="2" min-sections="1" location="page"/>
+  <toc max-depth="2" min-sections="1" location="page,menu"/>
 
   <!-- Heading types can be clean|underlined|boxed  -->
   <headings type="boxed"/>
@@ -179,6 +161,37 @@ which will be used to configure the chosen Forrest skin.
        used in your documentation.
     -->
   <extra-css>
+
+      <!-- The content font needs to be a little smaller -->
+      #content {
+        font-size: 80%;
+      }
+
+      .abstract {
+          font-style: italic;
+      margin-bottom: 2em;
+      margin-left: 2em;
+      margin-right: 2em;
+      }
+
+    <!-- Heading 4 looks better bold -->
+    h4     {
+      font-size : 120%;
+      margin: 0.7em 0px 0px 0px;
+      padding: 0px;
+      font-weight : bold;
+      text-align: left;
+    }
+
+    <!-- Tables are a little dense looking -->
+      #content th,
+      #content td {
+        margin: 0;
+        padding: 3px;
+        vertical-align: top;
+      }
+
+
     <!--Example of reason B:
         To define the css definition of a new element that you may have used
         in the class attribute of a <p> node. 

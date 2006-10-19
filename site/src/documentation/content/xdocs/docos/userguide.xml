@@ -3,6 +3,10 @@
 <document>
     <header>
         <title>JEGrid User's Guide</title>
+        <abstract>
+            This guide will take you through most of the JEGrid API and covers all the configuration parameters
+            with detailed examples.
+        </abstract>
     </header>
     <body>
         <section id="configuration">

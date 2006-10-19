@@ -3,7 +3,11 @@
 <document> 
   <header> 
     <title>Overview</title>
-  </header> 
+    <abstract>
+        This is an overview of what JEGrid does and what kind of infrastructure it needs to run on.
+        If you are evaluating JEGrid and want to know more about how it works, you are in the right place.
+    </abstract>
+    </header>
   <body> 
    <section id="architecture">
        <title>Architecture and Concepts</title>
