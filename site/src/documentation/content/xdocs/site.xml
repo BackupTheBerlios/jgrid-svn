@@ -43,8 +43,9 @@ See http://forrest.apache.org/docs/linking.html for more info
     </about>
 
     <docos label="Documentation" href="docos/" tab="docos">
-        <index label="Index" href="index.html" description="Documentation"/>
+        <index label="Overview" href="index.html" description="Overview"/>
         <fifteen-minutes label="In 15 minutes..." href="fifteen-minutes.html" description="JEGrid in 15 minutes"/>
+        <usersguide label="User's Guide" href="userguide.html" description="User's Guide"/>
     </docos>
 
     <project label="Project" href="project/" tab="project">

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
+<document>
+    <header>
+        <title>JEGrid User's Guide</title>
+    </header>
+    <body>
+        <section id="configuration">
+            <title>Configuring JEGrid</title>
+            <p>
+                The starting point for using JEGrid is the GridConfiguration class. This class
+                contains all of the global settings that determine the type of node and the identity of
+                the grid that it should connect to. To obtain a connection to the grid, simply create a configuarion set
+                any parameters, then call the <code>configure()</code> method to get a Grid object. For example:
+            </p>
+            <source>
+                GridConfiguration config = new GridConfiguration();
+                config.setGridName("mygrid");
+                Grid grid = config.configure();
+                grid.connect();
+            </source>
+            <p>This creates a grid node of the default node type
+                <code>Grid.OBSERVER</code>
+                , and connects the node to a grid called
+                <code>"mygrid"</code>.
+                All of the public interfaces for JEGrid are in the
+                <code>org.jegrid</code> package. The <code>org.jegrid.Grid</code>
+                interface is the connection to the grid and it serves as a factory for all the
+                other important interfaces.
+            </p>
+            <section id="gridname">
+                <title>Grid name</title>
+                <p>The
+                    <code>gridName</code>
+                    property is what identifies the grid that the node
+                    will connect to, or join. This allows nodes in different grids on the same LAN to
+                    recognize each other, and avoid joining the wrong grid. Client nodes that want to run jobs on the
+                    server nodes need to have the same grid
+                    name in their configurations as the server nodes, for example.
+                    The value can be any string that is expected to be unique for the grid on the LAN
+                    it is running on.
+                </p>
+            </section>
+            <section id="busconfig">
+                <title>Bus Configuration</title>
+                <p>This is the name of an XML resource that will be used to configure the network
+                    layer, JGroups. It can also be a JGroups 'properties' string as well. This tells
+                    JGroups whether to use IP multicast or not, for example.
+                </p>
+                <table>
+                    <tr>
+                        <th>Bus Configuration Value</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <code>"org/jegrid/jgroups/default.xml"</code>
+                        </td>
+                        <td>This is the default JGroups protocol stack for the JEGrid bus, which will be loaded
+                            from the classpath.  It uses IP multicast address 228.8.8.8 and port 45666.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>"file:///home/jdavis/myjgroupsconfig.xml"</code></td>
+                        <td>This will load the JGroups protocol stack configuration file
+                            <code>/home/jdavis/myjgroupsconfig.xml</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>null</code></td>
+                        <td>This will cause JGroups to use it's default protocol stack.  It probably won't work
+                            very well with JEGrid because it doesn't have all the behavior that JEGrid expects.
+                        </td>
+                    </tr>
+                </table>
+                <section id="multicast">
+                    <title>Multicast IP</title>
+                    <p>The default configuration for JEGrid uses an IP multicast JGroups protocol stack.
+                    This is what allows JGroups to federate so quickly and reliably.  There are some consequences to
+                    this, however:</p>
+                    <ol>
+                        <li><strong>Switches and routers must handle IP multicast</strong> - This might seem
+                        obvious, but if the nodes are on separate LANs or VLANs where IP multicast packets are
+                        not routed then the nodes will not federate.  If you can reconfigure your routers to
+                        route multicast packets for the IP multicast address used by JGroups across the LANs
+                        then the nodes will see each other.  Another method is to use a gossip server and
+                        not use multicast IP at all.
+                        </li>
+                        <li><strong>Nodes with the same grid name and different multicast addresses or ports
+                        will not federate!</strong> - When using IP multicast, the grid is identified by the
+                        multicast IP address, the multicast port, and the grid name.
+                        </li>
+                    </ol>
+                </section>
+            </section>
+            <section id="nodetype">
+                <title>Node Type</title>
+                <p>The node type property tells the configuration what kind of node this will be. The value is
+                    one of the
+                    <code>TYPE_xxx</code>
+                    constants in the
+                    <code>Grid</code>
+                    interface.
+                </p>
+                <table>
+                    <tr>
+                        <th>Node Type</th>
+                        <th>Available
+                            <br/>
+                            Interfaces
+                        </th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>Grid.TYPE_OBSERVER</td>
+                        <td>Only
+                            <code>Grid</code>
+                        </td>
+                        <td>This is the default node type. Views the status of all the other nodes, used for
+                            monitoring.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Grid.TYPE_CLIENT</td>
+                        <td>
+                            <code>Grid</code>
+                            and
+                            <code>Client</code>
+                        </td>
+                        <td>Creates tasks and adds input to them. Asks the servers to process the task input.
+                            A producer of work for the grid to do.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Grid.TYPE_SERVER</td>
+                        <td>
+                            <code>Grid</code>
+                            ,
+                            <code>Server</code>
+                            and
+                            <code>Client</code>
+                        </td>
+                        <td>Processes task input, produces output using a pool of workers. A consumer of work for the
+                            grid. It can also be a client for recursively splitting parallel tasks.
+                        </td>
+                    </tr>
+                </table>
+            </section>
+            <section id="configure">
+                <title>The configure() method</title>
+                <p>
+                    The configure() method creates the internal micro-container and sets up all the components
+                    necessary for the node type specified in the configuration.
+                </p>
+            </section>
+        </section>
+    </body>
+</document>

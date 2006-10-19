@@ -1,25 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
-<document> 
-  <header> 
-    <title>JEGrid in 15 Minutes</title> 
-  </header> 
-  <body> 
-    <section id="download">
-      <title>Downloading JEGrid</title>
-      <p>...</p>
-    </section>
-    <section id="configuration">
-      <title>Configuring JEGrid</title>
-      <p>...</p>
-    </section>
-    <section id="startserver">
-      <title>Starting the server</title>
-      <p>...</p>
-    </section>
-    <section id="runclient">
-      <title>Running the client</title>
-      <p>...</p>
-    </section>
-  </body>
+<document>
+    <header>
+        <title>JEGrid in 15 Minutes</title>
+    </header>
+    <body>
+        <section id="download">
+            <title>Downloading JEGrid</title>
+            <p>Download the latest binary distribution <a href="ext:projectfiles">here</a>.
+            </p>
+        </section>
+        <section id="runexamples">
+            <title>Running the examples</title>
+            <p>The binary distribution comes with a monte carlo Pi example.   This is an implementation
+            of the Buffon's needle algorithm, running the simulation in parallel using a different seed
+            for each task input.  The the results of each task input are aggregated into a final
+            statistical approximation of Pi.</p>
+            <p>To run the MonteCarloPi example:</p>
+            <ol>
+                <li>Start at least one server JVM.</li>
+                <li>Run the example client.</li>
+            </ol>
+        </section>
+        <section id="configuration">
+            <title>Configuring JEGrid</title>
+            <p>
+                The starting point for using JEGrid is the GridConfiguration class. This class
+                contains all of the global settings that determine the type of node and the identity of
+                the grid that it should connect to.
+            </p>
+            <p>
+                To obtain a connection to the grid, simply create a configuarion set any parameters, then call the
+                configure() method to get a Grid object. For example:
+            </p>
+            <source>
+                GridConfiguration config = new GridConfiguration();
+                config.setGridName("mygrid");
+                Grid grid = config.configure();
+                grid.connect();
+            </source>
+            <p>
+                The configure() method creates the internal micro-container and sets up all the components
+                necessary for the node type specified in the configuration.
+            </p>
+            <section id="whatuneed">
+                <title>What you need to connect</title>
+                <ol>
+                    <li>A 'grid name'. This identifies the grid so that other nodes can join in. All nodes (clients,
+                        servers, observers) with the same grid name will be part of the same grid.
+                    </li>
+                    <li>A JGroups configuration file. There are a few examples supplied.</li>
+                    <li>JEGrid and the lib directory in the classpath.</li>
+                    <li>Your code in the classpath. Both clients and servers will need this in order to send the data
+                        objects over the network. Observers don't need this.
+                    </li>
+                </ol>
+            </section>
+        </section>
+        <section id="startserver">
+            <title>Starting the server</title>
+            <p>There is a command line java program in the <code>org.jgrid</code> package.</p>
+        </section>
+        <section id="runclient">
+            <title>Running the client</title>
+            <p>...</p>
+        </section>
+    </body>
 </document>
