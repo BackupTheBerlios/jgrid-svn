@@ -77,25 +77,25 @@
                         </td>
                     </tr>
                 </table>
-                <section id="multicast">
-                    <title>Multicast IP</title>
-                    <p>The default configuration for JEGrid uses an IP multicast JGroups protocol stack.
-                    This is what allows JGroups to federate so quickly and reliably.  There are some consequences to
-                    this, however:</p>
-                    <ol>
-                        <li><strong>Switches and routers must handle IP multicast</strong> - This might seem
-                        obvious, but if the nodes are on separate LANs or VLANs where IP multicast packets are
-                        not routed then the nodes will not federate.  If you can reconfigure your routers to
-                        route multicast packets for the IP multicast address used by JGroups across the LANs
-                        then the nodes will see each other.  Another method is to use a gossip server and
-                        not use multicast IP at all.
-                        </li>
-                        <li><strong>Nodes with the same grid name and different multicast addresses or ports
-                        will not federate!</strong> - When using IP multicast, the grid is identified by the
-                        multicast IP address, the multicast port, and the grid name.
-                        </li>
-                    </ol>
-                </section>
+            </section>
+            <section id="multicast">
+                <title>Multicast IP</title>
+                <p>The default configuration for JEGrid uses an IP multicast JGroups protocol stack.
+                This is what allows JGroups to federate so quickly and reliably.  There are some consequences to
+                this, however:</p>
+                <ol>
+                    <li><strong>Switches and routers must handle IP multicast</strong> - This might seem
+                    obvious, but if the nodes are on separate LANs or VLANs where IP multicast packets are
+                    not routed then the nodes will not federate.  If you can reconfigure your routers to
+                    route multicast packets for the IP multicast address used by JGroups across the LANs
+                    then the nodes will see each other.  Another method is to use a gossip server and
+                    not use multicast IP at all.
+                    </li>
+                    <li><strong>Nodes with the same grid name and different multicast addresses or ports
+                    will not federate!</strong> - When using IP multicast, the grid is identified by the
+                    multicast IP address, the multicast port, and the grid name.
+                    </li>
+                </ol>
             </section>
             <section id="nodetype">
                 <title>Node Type</title>
