@@ -17,8 +17,10 @@
            <li><strong>Client</strong> - Creates tasks and runs them on the server nodes in the grid.</li>
            <li><strong>Server</strong> - Processes task input, produces output.</li>
        </ol>
+       <p><img src="overview.png" alt="JEGrid architecture"/></p>
        <p>Each node is connected to the grid and will send messages to other nodes based on what they need
-       to do.  The interconnect is called the Bus.</p>
+       to do.  The interconnect is called the Bus. Typically, server nodes will each run in their own JVMs, and
+       clients and observer nodes will run inside a web or GUI application JVM, usually as a singleton.</p>
        <section id="tasks">
            <title>Tasks</title>
            <p>Tasks are the basic unit of work in JEGrid.  Each task has:</p>
@@ -33,6 +35,8 @@
                task.  The results of the workers will be aggregated in the client JVM.  Once all the input has been
                processed and the output has been aggregated, the task is completed.
            </p>
+           <p><img
+           src="running-task.png" alt="running task"/></p>
            <p>The lifecycle of a task is as follows:</p>
            <ol>
                <li>A task is created by a Client.  It is given an id by the Client.</li>

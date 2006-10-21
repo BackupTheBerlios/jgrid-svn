@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://inkscape.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="323.28pt"
+   height="268.89001pt"
+   id="svg2"
+   sodipodi:version="0.32"
+   inkscape:version="0.43"
+   sodipodi:docbase="C:\Documents and Settings\Joshua Davis\Desktop"
+   sodipodi:docname="jegrid-overview.svg"
+   version="1.0">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.2921875"
+     inkscape:cx="298.83656"
+     inkscape:cy="171.59593"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="true"
+     inkscape:grid-bbox="true"
+     inkscape:grid-points="true"
+     gridspacingy="10px"
+     gridspacingx="10px"
+     gridoriginy="0px"
+     gridoriginx="0px"
+     gridempspacing="10"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:window-width="1280"
+     inkscape:window-height="977"
+     inkscape:window-x="-4"
+     inkscape:window-y="-4"
+     showborder="true" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="opacity:1;fill:#7d89fe;fill-opacity:0.14197531;stroke:#11112c;stroke-width:1.25888956;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.69135802"
+       id="rect9420"
+       width="154.10793"
+       height="159.29868"
+       x="221.8049"
+       y="18.213991"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <rect
+       style="opacity:1;fill:#7d89fe;fill-opacity:0.14197531;stroke:#11112c;stroke-width:1.25888956;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.69135802"
+       id="rect6789"
+       width="154.10793"
+       height="159.29868"
+       x="38.169151"
+       y="18.213991"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <rect
+       style="opacity:1;fill:#7d89fe;fill-opacity:1;stroke:#7d89fe;stroke-width:2.05339622;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect5866"
+       width="369.42487"
+       height="18.809635"
+       x="21.965508"
+       y="199.50021"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       x="196.1459"
+       y="212.70074"
+       id="text6757"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90"><tspan
+         sodipodi:role="line"
+         id="tspan6759"
+         x="196.1459"
+         y="212.70074">Bus</tspan></text>
+    <rect
+       style="fill:#ffc359;fill-opacity:1;stroke:#ffc359;stroke-width:1.37241518;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect5882"
+       width="68.61393"
+       height="68.627586"
+       x="82.504761"
+       y="68.658394"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       x="91.131073"
+       y="87.972191"
+       id="text6761"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90"><tspan
+         sodipodi:role="line"
+         id="tspan6763"
+         x="91.131073"
+         y="87.972191">Client</tspan></text>
+    <use
+       x="0"
+       y="0"
+       xlink:href="#rect5882"
+       id="use6765"
+       transform="matrix(1.000195,0,0,1,179.9704,6.25861e-5)"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       x="269.32617"
+       y="87.972191"
+       id="text6767"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90"><tspan
+         sodipodi:role="line"
+         x="269.32617"
+         y="87.972191"
+         id="tspan6771">Observer</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       x="41.756531"
+       y="43.748478"
+       id="text9416"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90"><tspan
+         sodipodi:role="line"
+         id="tspan9418"
+         x="41.756531"
+         y="43.748478">Application Server (J2EE)</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       x="231.8049"
+       y="43.748478"
+       id="text9422"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90"><tspan
+         sodipodi:role="line"
+         id="tspan9424"
+         x="231.8049"
+         y="43.748478">Monitoring Application</tspan></text>
+    <g
+       id="g10356"
+       inkscape:tile-w="69.979857"
+       inkscape:tile-h="69.999999"
+       inkscape:tile-cx="133.57093"
+       inkscape:tile-cy="206.5883"
+       transform="translate(-74.29853,76.55381)"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90">
+      <rect
+         inkscape:tile-cy="87.741756"
+         inkscape:tile-cx="134.63234"
+         inkscape:tile-h="72.141091"
+         inkscape:tile-w="72.102754"
+         y="172.2518"
+         x="99.244499"
+         height="68.672997"
+         width="68.652855"
+         id="rect5864"
+         style="fill:#fa9f02;fill-opacity:0.83950614;stroke:#fa9f02;stroke-width:1.32700253;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.83921569" />
+      <text
+         id="text9426"
+         y="187.93657"
+         x="114.53445"
+         style="font-size:12px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+         xml:space="preserve"><tspan
+           y="187.93657"
+           x="114.53445"
+           id="tspan9428"
+           sodipodi:role="line">Server</tspan></text>
+    </g>
+    <g
+       id="g9450"
+       transform="translate(-78.1951,65.77993)"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90">
+      <path
+         sodipodi:nodetypes="cccccccc"
+         id="rect9445"
+         d="M 190.12616,83.003054 L 185.59475,83.003054 L 195.0748,72.362183 L 204.46105,83.003054 L 199.99773,83.003054 L 199.99773,125.77776 L 190.12616,125.77776 L 190.12616,83.003054 z "
+         style="fill:#7d89fe;fill-opacity:1;stroke:#7d89fe;stroke-width:0.5061813;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1" />
+      <path
+         sodipodi:nodetypes="cccccccc"
+         id="path9448"
+         d="M 199.87503,121.73028 L 204.40643,121.73848 L 194.90714,132.36218 L 185.54016,121.70434 L 190.00348,121.71242 L 190.08087,78.93779 L 199.95243,78.955652 L 199.87503,121.73028 z "
+         style="fill:#7d89fe;fill-opacity:1;stroke:#7d89fe;stroke-width:0.5061813;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1" />
+    </g>
+    <use
+       x="0"
+       y="0"
+       xlink:href="#g9450"
+       id="use9454"
+       transform="translate(180.5816,0.253093)"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <use
+       x="0"
+       y="0"
+       inkscape:tiled-clone-of="#g10356"
+       xlink:href="#g10356"
+       id="use10361"
+       transform="translate(99.53514,2.586099e-6)"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <use
+       x="0"
+       y="0"
+       inkscape:tiled-clone-of="#g10356"
+       xlink:href="#g10356"
+       transform="translate(199.0702,2.586099e-6)"
+       id="use10363"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <use
+       x="0"
+       y="0"
+       inkscape:tiled-clone-of="#g10356"
+       xlink:href="#g10356"
+       transform="translate(298.6054,2.586099e-6)"
+       id="use10365"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <g
+       id="g10369"
+       transform="matrix(1,0,0,0.488395,-138.1709,184.0941)"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90">
+      <path
+         style="fill:#7d89fe;fill-opacity:1;stroke:#7d89fe;stroke-width:0.5061813;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1"
+         d="M 190.12616,83.003054 L 185.59475,83.003054 L 195.0748,72.362183 L 204.46105,83.003054 L 199.99773,83.003054 L 199.99773,125.77776 L 190.12616,125.77776 L 190.12616,83.003054 z "
+         id="path10371"
+         sodipodi:nodetypes="cccccccc" />
+      <path
+         style="fill:#7d89fe;fill-opacity:1;stroke:#7d89fe;stroke-width:0.5061813;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1"
+         d="M 199.87503,121.73028 L 204.40643,121.73848 L 194.90714,132.36218 L 185.54016,121.70434 L 190.00348,121.71242 L 190.08087,78.93779 L 199.95243,78.955652 L 199.87503,121.73028 z "
+         id="path10373"
+         sodipodi:nodetypes="cccccccc" />
+    </g>
+    <use
+       x="0"
+       y="0"
+       xlink:href="#g10369"
+       id="use10375"
+       transform="translate(100.7876,0)"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <use
+       x="0"
+       y="0"
+       xlink:href="#use10375"
+       id="use10377"
+       transform="translate(100.7876,0)"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <use
+       x="0"
+       y="0"
+       xlink:href="#use10377"
+       id="use10379"
+       transform="translate(100.7876,-4.139e-7)"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="C:\Documents and Settings\Joshua Davis\Desktop\jegrid-overview.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+  </g>
+</svg>
