@@ -10,7 +10,8 @@
     </header>
   <body> 
    <section id="architecture">
-       <title>Architecture and Concepts</title>
+       <title>Architecture</title>
+       <section><title>Grid</title></section>
        <p>A Grid is a set of nodes that know about each other.  Each node can be one of three types:</p>
        <ol>
            <li><strong>Observer</strong> - Views the status of all the other nodes, used for monitoring.</li>
@@ -18,9 +19,60 @@
            <li><strong>Server</strong> - Processes task input, produces output.</li>
        </ol>
        <p><img src="overview.png" alt="JEGrid architecture"/></p>
+       <p>A running and functional grid with JEGrid will consist of:</p>
+       <ul>
+           <li>At least one server JVM that will do work on behalf of clients.  The degree of paralellism
+           depends entirely on the number of server JVMs.</li>
+           <li>At least one client JVM that will be assigning work to the servers.</li>
+       </ul>
        <p>Each node is connected to the grid and will send messages to other nodes based on what they need
        to do.  The interconnect is called the Bus. Typically, server nodes will each run in their own JVMs, and
        clients and observer nodes will run inside a web or GUI application JVM, usually as a singleton.</p>
+       <section>
+           <title>Deployment</title>
+           <p>Paralellism is achieved by assigning work to multiple server simultaneously.  In many
+           cases, this work is CPU intensive and may take a long time to complete.</p>
+           <ul>
+               <li>For CPU intensive algorithms, it is recommended that you deploy the server nodes
+               on dedicated hardware.  Server nodes can be deployed along J2EE application servers
+               for example, but this may cause resource contention.</li>
+               <li>The grid hosts should be connected by a network that supports multicast IP packets.
+               While it is definitely possible to use non-multicast protocols, JEGrid will function
+               best if it is on a high-speed, relatively reliable network that supports IP multicast.</li>
+               <li>The classes for the end-user's application should be in the class path for both the
+               client and the server.   As of this writing, JEGrid doesn't support dynamic class loading.
+               </li>
+           </ul>
+       </section>
+   </section>
+   <section>
+       <title>Concepts</title>
+       <p>This section covers the basic concepts and terminology used in JEGrid.</p>
+       <section id="client">
+           <title>Client Nodes</title>
+           <p>Clients create tasks and assign work to <a href="#workers">workers</a> that live on
+               the <a href="#server">Server Nodes</a>.  The client JVM will:</p>
+           <ol>
+               <li>Manage the queue of input elements and corresponding output for each task.</li>
+               <li>Do any aggregation.  The caller's thread will be used in most cases.</li>
+               <li>Receive log messages from any workers on remote JVMs.</li>
+               <li>Submit 'background' tasks to a server, in which case the server JVM does all
+                   the work.</li>
+           </ol>
+       </section>
+       <section id="server">
+           <title>Server Nodes</title>
+           <p>Servers contain a pool of workers that are assigned to various <a href="#tasks">tasks</a>.
+           Each server can also act like a client in some cases.  Servers can also process 'background' tasks
+           where the server JVM will use a worker thread to do both the client (aggregation, input queue) and
+           and the server (processing input) work.</p>
+       </section>
+       <section id="observer">
+           <title>Observer Nodes</title>
+           <p>Observers are nodes that exist only to monitor the grid.  This is essential for
+           production systems where the IT staff will want to take corrective action if there
+           is a failure.</p>
+       </section>
        <section id="tasks">
            <title>Tasks</title>
            <p>Tasks are the basic unit of work in JEGrid.  Each task has:</p>
@@ -66,5 +118,6 @@
             </ol>
         </section>
    </section>
-</body>
+  </body>
 </document>
+

@@ -9,21 +9,39 @@
 			<title>Introduction</title>
 			<p>
       JEGrid is a light weight <strong>enterprise grid framework for Java</strong> that provides
-      <strong>federation</strong> (clustering), <strong>coarse-grained parallelism</strong>, and
+      <strong>federation</strong> (clustering), <strong>coarse-grained SIMD parallelism</strong>, and
       <strong>load balancing</strong>.
       Using the coarse-grained parallelism features, super-computer performance can be realized with
-      COTS (Commodity, Off The Shelf) hardware which is more economical, more scaleable, and
+      commodity-off-the-shelf hardware which is more economical, more scaleable, and
       more familiar to IT personell.
       </p>
 		</section>
 		<section id="features">
 			<title>Features</title>
 				<ul>
-				    <li><strong>SIMD distributed parallelism</strong> - Each task has code and any number of inputs.  The code is run on multiple machines to process the input in parallel.  JEGroups handles all the network communication and threading.</li>
-					<li><strong>Fast, with a minimal AP</strong>I - JEGroups has very minimal network overhead for maximum speed.  The simple API requires only a few lines of code to take advantage of parallelism.</li>
-					<li><strong>Automatic clustering and failure detection</strong> - Servers, clients and observers automatically join the grid cluster.   If any node fails all nodes depending on it will be notified and take appropriate action.</li>
-				    <li><strong>Flexible networking</strong> - Can use IP Multicast, UDP, or TCP as it's underlying protocol.</li>
-				</ul>
+				    <li><strong>Single Instruction Multiple Data parallelism</strong> -
+                    JEGrid allows a developer to run the same code on a set of input data elements in parallel.
+                    It handles all the network communication and multithreading, which allows the developer to
+                    focus on the algorithm and how it should be parallelized.</li>
+					<li><strong>Fast, with a minimal API</strong> - JEGrid has very minimal network overhead for maximum speed.
+                    The simple API requires only a few lines of code to take advantage of parallelism.</li>
+					<li><strong>Automatic clustering and failure detection</strong> - Servers, clients and observers
+                    automatically join the grid cluster.   If any node fails all nodes depending on it will be
+                    notified and take appropriate action.</li>
+				    <li><strong>Flexible networking</strong> - Can use IP Multicast, UDP,
+                    or TCP as it's underlying protocol.</li>
+                    <li><strong>Centralized Logging</strong> - Log messages from the distributed nodes
+                    messages can be concentrated onto a single JVM for easier debugging and troubleshooting.</li>
+                </ul>
 		</section>
-	</body>
+        <section id="applications">
+            <title>What can JEGrid be used for?</title>
+            <ul>
+                <li><strong>Finanical Calculations</strong> - "Monte Carlo" simulations and other optimizing techniques
+                can be parallelized relatively easily with JEGrid.</li>
+                <li><strong>Scientific and Engineering Simulations</strong> - Simulated Annealing, genetic algorithms,
+                neural network simulations... anything that can be processed with SIMD parallelism.</li>
+            </ul>
+        </section>
+    </body>
 </document>
