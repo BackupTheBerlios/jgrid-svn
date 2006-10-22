@@ -1,5 +1,8 @@
 package org.jegrid.impl;
 
+import org.jegrid.TaskId;
+import org.jegrid.TaskRequest;
+
 /**
  * Server implementation.
  * <br> User: jdavis
@@ -11,10 +14,10 @@ public interface Server
     /**
      * Client wants to reserve a worker thread for a particular task.
      *
-     * @param task the task
+     * @param id
      * @return A response indicating whether this server can reserve a thread.
      */
-    AssignResponse onAssign(TaskInfo task);
+    AssignResponse onAssign(TaskId id);
 
     /**
      * Runs the server loop.  Returns only on shutdown.
@@ -38,14 +41,24 @@ public interface Server
     /**
      * A client is allowing the worker on this task to proceed.
      *
-     * @param task the task from the client
+     * @param id
+     * @param className
      */
-    void onGo(TaskInfo task);
+    void onGo(TaskId id, String className);
 
     /**
      * Invoked by the client when it considers a task complete (errored, or successful)
      *
-     * @param task the task that is complete.
+     * @param id the task id
      */
-    void onRelease(TaskInfo task);
+    void onRelease(TaskId id);
+
+    /**
+     * Invoked by the client when it wants to hand the entire task over to this server.
+     *
+     * @param request The task request.
+     * @return true if it was accepted, false if not
+     */
+    boolean onAssignTask(TaskRequest request)
+            ;
 }

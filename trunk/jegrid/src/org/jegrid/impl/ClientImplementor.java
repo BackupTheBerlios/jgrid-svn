@@ -1,9 +1,7 @@
 package org.jegrid.impl;
 
-import org.jegrid.Client;
-import org.jegrid.TaskData;
-import org.jegrid.GridException;
-import org.jegrid.NodeAddress;
+import org.apache.log4j.spi.LoggingEvent;
+import org.jegrid.*;
 
 import java.util.Set;
 
@@ -15,12 +13,15 @@ import java.util.Set;
  */
 public interface ClientImplementor extends Client
 {
-    TaskData getNextInput(int taskId, NodeAddress server, TaskData output)
+    TaskData getNextInput(TaskId taskId, NodeAddress server, TaskData output)
             ;
 
-    void taskFailed(int taskId, GridException throwable)
+    void taskFailed(TaskId taskId, GridException throwable)
             ;
 
     void onMembershipChange(Set joined, Set left)
+            ;
+
+    void append(TaskId taskId, LoggingEvent event)
             ;
 }

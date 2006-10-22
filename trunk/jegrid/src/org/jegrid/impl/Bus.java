@@ -1,12 +1,10 @@
 package org.jegrid.impl;
 
-import org.jegrid.NodeAddress;
-import org.jegrid.NodeStatus;
-import org.jegrid.TaskData;
-import org.jegrid.GridException;
+import org.apache.log4j.spi.LoggingEvent;
+import org.jegrid.*;
 
 /**
- * TODO: Add class level comments.
+ * Internal interface to the communication bus.
  * <br>User: jdavis
  * Date: Sep 30, 2006
  * Time: 7:32:12 AM
@@ -19,10 +17,10 @@ public interface Bus
 
     NodeAddress getAddress();
 
-    AssignResponse[] assign(NodeAddress[] servers, TaskInfo taskInfo)
+    AssignResponse[] assign(NodeAddress[] servers, TaskId taskId)
             ;
 
-    void go(TaskInfo info)
+    void go(TaskId id, String inputProcessorClassName) throws Exception
             ;
 
     NodeStatus[] getGridStatus()
@@ -31,13 +29,18 @@ public interface Bus
     void broadcastNodeStatus()
             ;
 
-    TaskData getNextInput(NodeAddress client, int taskId, TaskData output) throws RpcTimeoutException
+    TaskData getNextInput(TaskId taskId, TaskData output) throws RpcTimeoutException
             ;
 
-    void taskFailed(NodeAddress client, int taskId, GridException ge)
+    void taskFailed(TaskId taskId, GridException ge) throws RpcTimeoutException
             ;
 
-    void release(TaskInfo info)
+    void release(TaskId taskId) throws Exception
             ;
 
+    boolean assignTask(NodeAddress address, TaskRequest request) throws RpcTimeoutException
+            ;
+
+    void apppend(TaskId id, LoggingEvent event) throws RpcTimeoutException
+            ;
 }

@@ -1,10 +1,10 @@
 package org.jegrid.impl;
 
+import org.apache.log4j.Logger;
 import org.jegrid.*;
 import org.jegrid.util.MicroContainer;
-import org.apache.log4j.Logger;
 
-import java.util.*;
+import java.util.Set;
 
 /**
  * Implements a connection to the grid based on the Bus abstraction, manages
@@ -130,5 +130,10 @@ public class GridImpl implements GridImplementor
     public void onNewCoordinator(NodeAddress address)
     {
         membership.onNewCoordinator(address);
+    }
+
+    public void waitForServers() throws InterruptedException
+    {
+        membership.waitForServers();
     }
 }

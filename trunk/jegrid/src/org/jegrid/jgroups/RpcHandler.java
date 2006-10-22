@@ -1,11 +1,12 @@
 package org.jegrid.jgroups;
 
 import org.apache.log4j.Logger;
-import org.jegrid.impl.*;
-import org.jegrid.NodeStatus;
-import org.jegrid.TaskData;
-import org.jegrid.GridException;
-import org.jegrid.NodeAddress;
+import org.apache.log4j.spi.LoggingEvent;
+import org.jegrid.*;
+import org.jegrid.impl.AssignResponse;
+import org.jegrid.impl.ClientImplementor;
+import org.jegrid.impl.GridImplementor;
+import org.jegrid.impl.Server;
 
 /**
  * Handles RPCs from the RpcDispatcher in the JGroupsBus.
@@ -46,7 +47,7 @@ public class RpcHandler
 
     // === Server messages ===
 
-    public AssignResponse _assign(TaskInfo task)
+    public AssignResponse _assign(TaskId id)
     {
         Server server = grid.getServer();
         // If we're not a server, return null.
@@ -60,14 +61,29 @@ public class RpcHandler
         {
             if (log.isDebugEnabled())
                 log.debug("_assign");
-            AssignResponse response = server.onAssign(task);
+            AssignResponse response = server.onAssign(id);
             if (log.isDebugEnabled())
                 log.debug("_assign returning : " + response.toString());
             return response;
         }
     }
 
-    public void _go(TaskInfo task)
+    public boolean _assignTask(TaskRequest request)
+    {
+        Server server = grid.getServer();
+        // If we're not a server, return null.
+        if (server == null)
+        {
+            log.warn("_assignTask: No server here.");
+            return false;
+        }
+        else
+        {
+            return server.onAssignTask(request);
+        }
+    }
+
+    public void _go(TaskId id, String className)
     {
         Server server = grid.getServer();
         // Ignore go messages to non-servers.
@@ -75,11 +91,11 @@ public class RpcHandler
         {
             if (log.isDebugEnabled())
                 log.debug("_go");
-            server.onGo(task);
+            server.onGo(id, className);
         }
     }
 
-    public void _release(TaskInfo task)
+    public void _release(TaskId id)
     {
         Server server = grid.getServer();
         // Ignore go messages to non-servers.
@@ -87,13 +103,13 @@ public class RpcHandler
         {
             if (log.isDebugEnabled())
                 log.debug("_release");
-            server.onRelease(task);
+            server.onRelease(id);
         }
     }
 
     // === Client messages ===
 
-    public TaskData _nextInput(Integer taskId, NodeAddress server, TaskData output)
+    public TaskData _nextInput(TaskId taskId, NodeAddress server, TaskData output)
     {
         if (log.isDebugEnabled())
             log.debug("_nextInput");
@@ -104,10 +120,10 @@ public class RpcHandler
             return null;
         }
         else
-            return client.getNextInput(taskId.intValue(), server, output);
+            return client.getNextInput(taskId, server, output);
     }
 
-    public void _taskFailed(Integer taskId, GridException t)
+    public void _taskFailed(TaskId taskId, GridException t)
     {
         if (log.isDebugEnabled())
             log.debug("_taskFailed");
@@ -117,6 +133,19 @@ public class RpcHandler
             log.warn("No client here.");
         }
         else
-            client.taskFailed(taskId.intValue(), t);
+            client.taskFailed(taskId, t);
+    }
+
+    public void _append(TaskId taskId, LoggingEvent event)
+    {
+        //hmm... now what
+        ClientImplementor client = (ClientImplementor) grid.getClient();
+        if (client == null)
+        {
+            log.warn("No client here.");
+        }
+        else
+            client.append(taskId, event);
+
     }
 }

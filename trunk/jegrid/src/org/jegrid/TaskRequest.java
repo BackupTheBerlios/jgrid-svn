@@ -1,32 +1,33 @@
-package org.jegrid.jms;
+package org.jegrid;
 
 import java.io.Serializable;
 import java.util.List;
 
 /**
- * A JMS task request
+ * A complete task request as a serializable object.  Used for remotely executing the entire
+ * task or for putting tasks on JMS queues, etc.
  * <br>User: Joshua Davis
  * Date: Oct 8, 2006
  * Time: 4:17:15 PM
  */
 public class TaskRequest implements Serializable
 {
-    private String taskClassName;
+    private String inputProcessorClassName;
     private String aggregatorClassName;
     private int maxWorkers;
     private List input;
 
-    public TaskRequest(String taskClassName, String aggregatorClassName, int maxWorkers, List input)
+    public TaskRequest(String inputProcessorClassName, String aggregatorClassName, int maxWorkers, List input)
     {
-        this.taskClassName = taskClassName;
+        this.inputProcessorClassName = inputProcessorClassName;
         this.aggregatorClassName = aggregatorClassName;
         this.maxWorkers = maxWorkers;
         this.input = input;
     }
 
-    public String getTaskClassName()
+    public String getInputProcessorClassName()
     {
-        return taskClassName;
+        return inputProcessorClassName;
     }
 
     public List getInput()

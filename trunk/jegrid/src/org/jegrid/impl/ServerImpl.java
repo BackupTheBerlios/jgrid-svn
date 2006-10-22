@@ -51,59 +51,91 @@ public class ServerImpl implements Server
         return poolSize;
     }
 
-    public void onGo(TaskInfo task)
+    public void onGo(TaskId id, String className)
     {
-        Worker worker = findWorker(task);
+        InputProcessingWorker worker = findWorker(id);
         if (worker != null)
-            worker.go(task);
+            worker.go(id, className);
         else
-            log.info("Not working on " + task);
+            log.info("Not working on " + id);
     }
 
-    public void onRelease(TaskInfo task)
+    public void onRelease(TaskId id)
     {
-        Worker worker = findWorker(task);
+        InputProcessingWorker worker = findWorker(id);
         if (worker != null)
         {
             worker.setReleased(true);
-            done(task);
+            done(id);
         }
         else
-            log.info("Not working on " + task);
+            log.info("Not working on " + id);
     }
 
-    private synchronized Worker findWorker(TaskInfo task)
+    public boolean onAssignTask(TaskRequest request)
     {
-        return workers.findWorker(task);
-    }
-
-    public AssignResponse onAssign(TaskInfo task)
-    {
-        if (log.isDebugEnabled())
-            log.debug("onAssign() : " + task);
-
-        // Allocate a thread from the pool and run the Worker.  This will loop
-        // until there is no more input available from the client.
-        // The worker will remain waiting for the 'go' command from the client.
-        Worker worker = new Worker(this, task, bus);
         try
         {
             synchronized (this)
             {
                 int freeThreads = _freeThreads();
                 if (freeThreads <= 0)
-                    return null;
-                if (workers.contains(task))
-                    throw new GridException("Already working on " + task);
-                workers.addWorker(task, worker);
+                    return false;
+                Task task = grid.getClient().createTask();
+                RemoteTaskWorker worker = new RemoteTaskWorker(this,
+                        grid.getClient(), request, task.getTaskId());
+                workers.addWorker(task.getTaskId(), worker);
                 pool.execute(worker);
                 bus.broadcastNodeStatus();
-                return new AssignResponse(bus.getAddress(), _freeThreads());
+                return true;
             }
         }
         catch (InterruptedException e)
         {
             throw new GridException(e);
+        }
+    }
+
+    private synchronized InputProcessingWorker findWorker(TaskId id)
+    {
+        return workers.findWorker(id);
+    }
+
+    public AssignResponse onAssign(TaskId id)
+    {
+        if (log.isDebugEnabled())
+            log.debug("onAssign() : " + id);
+
+        // Allocate a thread from the pool and run the InputProcessingWorker.  This will loop
+        // until there is no more input available from the client.
+        // The worker will remain waiting for the 'go' command from the client.
+        InputProcessingWorker worker = new InputProcessingWorker(this, id, bus);
+        synchronized (this)
+        {
+            int freeThreads = _freeThreads();
+            if (freeThreads <= 0)
+                return null;
+            if (workers.contains(id))
+                throw new GridException("Already working on " + id);
+            workers.addWorker(id, worker);
+            try
+            {
+                pool.execute(worker);
+            }
+            catch (ServerBusyException sbe)
+            {
+                log.info("This server is busy.");
+                workers.removeWorker(id);
+                throw new GridException(sbe);
+            }
+            catch (InterruptedException e)
+            {
+                log.info("This server was interrupted.");
+                workers.removeWorker(id);
+                throw new GridException(e);
+            }
+            bus.broadcastNodeStatus();
+            return new AssignResponse(bus.getAddress(), _freeThreads());
         }
     }
 
@@ -141,12 +173,12 @@ public class ServerImpl implements Server
         }
     }
 
-    public TaskRunnable instantiateTaskRunnable(String taskClass)
+    public InputProcessor instantiateInputProcessor(String taskClass)
             throws IllegalAccessException, InstantiationException, ClassNotFoundException
     {
 
         Class aClass = Thread.currentThread().getContextClassLoader().loadClass(taskClass);
-        return (TaskRunnable) aClass.newInstance();
+        return (InputProcessor) aClass.newInstance();
     }
 
     public void onMembershipChange(Set joined, Set left)
@@ -161,16 +193,16 @@ public class ServerImpl implements Server
                 Iterator iter = workers.iterateWorkersByClient(nodeAddress);
                 while (iter.hasNext())
                 {
-                    Worker worker = (Worker) iter.next();
+                    InputProcessingWorker worker = (InputProcessingWorker) iter.next();
                     worker.setReleased(true);
                 }
             }
         }
     }
 
-    synchronized void done(TaskInfo task)
+    synchronized void done(TaskId id)
     {
-        workers.removeWorker(task);
+        workers.removeWorker(id);
         bus.broadcastNodeStatus();
     }
 
@@ -179,38 +211,38 @@ public class ServerImpl implements Server
         private Map workerMapByClient = new HashMap();
         private int size;
 
-        public void addWorker(TaskInfo info, Worker worker)
+        public void addWorker(TaskId id, Worker worker)
         {
-            Map map = findMapByClient(info.getClient());
+            Map map = findMapByClient(id.getClient());
             if (map == null)
             {
                 map = new HashMap();
-                workerMapByClient.put(info.getClient(), map);
+                workerMapByClient.put(id.getClient(), map);
             }
-            map.put(info, worker);
+            map.put(id, worker);
             size++;
         }
 
-        public Worker removeWorker(TaskInfo info)
+        public Worker removeWorker(TaskId id)
         {
-            Map map = findMapByClient(info.getClient());
+            Map map = findMapByClient(id.getClient());
             if (map != null)
             {
                 size--;
-                Worker worker = (Worker) map.remove(info);
+                Worker worker = (Worker) map.remove(id);
                 if (map.size() == 0)
-                    workerMapByClient.remove(info.getClient());
+                    workerMapByClient.remove(id.getClient());
                 return worker;
             }
             else
                 return null;
         }
 
-        public Worker findWorker(TaskInfo info)
+        public InputProcessingWorker findWorker(TaskId id)
         {
-            Map map = findMapByClient(info.getClient());
+            Map map = findMapByClient(id.getClient());
             if (map != null)
-                return (Worker) map.get(info);
+                return (InputProcessingWorker) map.get(id);
             else
                 return null;
         }
@@ -234,7 +266,7 @@ public class ServerImpl implements Server
             return size;
         }
 
-        public boolean contains(TaskInfo task)
+        public boolean contains(TaskId task)
         {
             Map map = findMapByClient(task.getClient());
             return map != null && map.containsKey(task);

@@ -1,12 +1,11 @@
 package org.jegrid.impl;
 
-import EDU.oswego.cs.dl.util.concurrent.Mutex;
 import EDU.oswego.cs.dl.util.concurrent.CondVar;
+import EDU.oswego.cs.dl.util.concurrent.Mutex;
+import org.apache.log4j.Logger;
+import org.jegrid.*;
 
 import java.util.*;
-
-import org.jegrid.*;
-import org.apache.log4j.Logger;
 
 /**
  * A delegate that manages grid membership info.
@@ -23,8 +22,10 @@ class Membership implements GridStatus
     private int numberOfMembershipChanges;
     private Mutex membershipMutex;
     private CondVar membershipChanged;
+    private CondVar serversNotFull;
     private Map allNodesByAddress = new HashMap();
     private Map unknownNodes = new HashMap();
+    private Map serverNodes = new HashMap();
     private GridImpl grid;
     private NodeAddress coordinator;
 
@@ -32,6 +33,7 @@ class Membership implements GridStatus
     {
         membershipMutex = new Mutex();
         membershipChanged = new CondVar(membershipMutex);
+        serversNotFull = new CondVar(membershipMutex);
         this.grid = grid;
     }
 
@@ -68,7 +70,7 @@ class Membership implements GridStatus
                     NodeStatus node = (address.equals(grid.getLocalAddress())) ?
                             grid.getLocalStatus() :
                             new NodeStatusImpl(address);
-                    addNode(address, node);
+                    putNode(address, node, null);
                     log.info("Node " + node + " added.");
                 }
             } // for
@@ -105,13 +107,25 @@ class Membership implements GridStatus
         return allNodesByAddress.containsKey(address);
     }
 
-    private void addNode(NodeAddress address, NodeStatus node)
+    private void putNode(NodeAddress address, NodeStatus node, NodeStatus old)
     {
         allNodesByAddress.put(address, node);
         switch (node.getType())
         {
             case Grid.TYPE_UNKNOWN:
                 unknownNodes.put(address, node);
+                break;
+            case Grid.TYPE_SERVER:
+                serverNodes.put(address, node);
+                // If the old status was 'no free threads' and the new is not
+                // then notify anyone waiting on available threads.
+                if (node.getAvailableWorkers() > 0)
+                {
+                    if (old == null)
+                        serversNotFull.signal();
+                    else if (old.getAvailableWorkers() == 0)
+                        serversNotFull.signal();
+                }
                 break;
         }
     }
@@ -222,11 +236,7 @@ class Membership implements GridStatus
 
         NodeStatus old = findNode(address);
         if (old != null)
-        {
-//            if (old.getType() == Grid.TYPE_UNKNOWN)
-//                log.info("Node type resolved: " + node);
-            addNode(address, node);
-        }
+            putNode(address, node, old);
         else
             log.warn("Status from non-member? " + node);
     }
@@ -284,6 +294,19 @@ class Membership implements GridStatus
         try
         {
             return unknownNodes.size();
+        }
+        finally
+        {
+            releaseMutex();
+        }
+    }
+
+    public void waitForServers() throws InterruptedException
+    {
+        acquireMutex();
+        try
+        {
+            serversNotFull.await();
         }
         finally
         {

@@ -1,9 +1,8 @@
 package org.jegrid.impl;
 
 import org.jegrid.Grid;
-import org.jegrid.NodeStatus;
 import org.jegrid.NodeAddress;
-import org.jegrid.jgroups.JGroupsAddress;
+import org.jegrid.NodeStatus;
 import org.jegrid.util.MicroContainer;
 
 import java.util.Set;
@@ -64,5 +63,8 @@ public interface GridImplementor extends Grid
     void onNodeStatus(NodeStatus from);
 
     void onNewCoordinator(NodeAddress address)
+            ;
+
+    void waitForServers() throws InterruptedException
             ;
 }

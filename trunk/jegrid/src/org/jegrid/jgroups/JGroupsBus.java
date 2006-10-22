@@ -1,19 +1,23 @@
 package org.jegrid.jgroups;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggingEvent;
 import org.jegrid.*;
-import org.jegrid.impl.*;
-import org.jgroups.*;
-import org.jgroups.protocols.AUTOCONF;
+import org.jegrid.impl.AssignResponse;
+import org.jegrid.impl.Bus;
+import org.jegrid.impl.GridImplementor;
+import org.jegrid.impl.RpcTimeoutException;
+import org.jgroups.Address;
+import org.jgroups.Channel;
+import org.jgroups.ChannelException;
+import org.jgroups.JChannel;
 import org.jgroups.blocks.GroupRequest;
-import org.jgroups.blocks.RpcDispatcher;
-import org.jgroups.util.Rsp;
-import org.jgroups.util.RspList;
+import org.jgroups.protocols.AUTOCONF;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Enumeration;
-import java.util.Vector;
+import java.util.List;
 
 /**
  * JGroups implementation of the messaging layer.
@@ -24,6 +28,12 @@ import java.util.Vector;
 public class JGroupsBus implements Bus
 {
     private static Logger log = Logger.getLogger(JGroupsBus.class);
+
+    private static final long TIMEOUT = 10000;
+    private static final Object[] NO_ARGS = new Object[0];
+    private static final Class[] NO_TYPES = new Class[0];
+    private static final long NEXT_INPUT_TIMEOUT = TIMEOUT * 3;
+
     private boolean running = false;
     private Channel channel;
     private GridConfiguration config;
@@ -32,10 +42,6 @@ public class JGroupsBus implements Bus
     private JGroupsListener listener;
     private GridImplementor grid;
     private RpcDispatcher dispatcher;
-    private static final long TIMEOUT = 10000;
-    private static final Object[] NO_ARGS = new Object[0];
-    private static final Class[] NO_TYPES = new Class[0];
-    private static final long NEXT_INPUT_TIMEOUT = TIMEOUT * 3;
 
     public JGroupsBus(GridConfiguration config, GridImplementor grid)
     {
@@ -80,8 +86,7 @@ public class JGroupsBus implements Bus
                 throw new GridException("No grid name.  Please provide a grid name so the grid can federate.");
             // Before we connect, set up the listener.
             listener = new JGroupsListener(grid);
-            RpcHandler handler = new RpcHandler(grid);
-            dispatcher = new RpcDispatcher(channel, listener, listener, handler);
+            dispatcher = new RpcDispatcher(channel, listener, new RpcHandler(grid));
             channel.addChannelListener(listener);       // Listens for connect/disconnect events.
             channel.connect(config.getGridName());      // Okay, connect the channel.
             if (log.isDebugEnabled())
@@ -176,151 +181,129 @@ public class JGroupsBus implements Bus
     public void broadcastNodeStatus()
     {
         NodeStatus localStatus = grid.getLocalStatus();
-        dispatcher.callRemoteMethods(
+        dispatcher.broadcast(
                 null, "_status",
                 new Object[]{localStatus}, new Class[]{NodeStatus.class},
                 GroupRequest.GET_NONE, 0);
     }
 
-    public TaskData getNextInput(NodeAddress client, int taskId, TaskData output) throws RpcTimeoutException
+    public TaskData getNextInput(TaskId taskId, TaskData output) throws RpcTimeoutException
     {
-        Address address = toAddress(client);
-        try
-        {
-            Object o = dispatcher.callRemoteMethod(address, "_nextInput",
-                    new Object[]{new Integer(taskId), localAddress, output},
-                    new Class[]{Integer.class, NodeAddress.class, TaskData.class},
-                    GroupRequest.GET_ALL,
-                    NEXT_INPUT_TIMEOUT);   // Wait a little longer for this, sometimes the client is slow.
-            checkForException(o);
-            return (TaskData) o;
-        }
-        catch (GridException ge)
-        {
-            throw ge;
-        }
-        catch (TimeoutException e)
-        {
-            // NOTE: If this call times out it may mean that the client has already
-            // given the server the input.
-            throw new RpcTimeoutException(e);
-        }
-        catch (Exception e)
-        {
-            throw new GridException(e);
-        }
+        Object o = dispatcher.call(taskId.getClient(), "_nextInput",
+                new Object[]{taskId, localAddress, output},
+                new Class[]{taskId.getClass(), NodeAddress.class, TaskData.class},
+                GroupRequest.GET_ALL,
+                NEXT_INPUT_TIMEOUT);   // Wait a little longer for this, sometimes the client is slow.
+        return (TaskData) o;
     }
 
-    private void checkForException(Object o)
-            throws Exception
+    public void taskFailed(TaskId taskId, GridException ge) throws RpcTimeoutException
     {
-        if (o instanceof Exception)
-            throw(Exception) o;
-    }
-
-    public void taskFailed(NodeAddress client, int taskId, GridException ge)
-    {
-        Address address = toAddress(client);
-        try
-        {
-            log.warn("Task " + taskId + " failed with " + ge, ge);
-            dispatcher.callRemoteMethod(address, "_taskFailed",
-                    new Object[]{new Integer(taskId), ge},
-                    new Class[]{Integer.class, GridException.class},
-                    GroupRequest.GET_ALL,
-                    TIMEOUT);
-        }
-        catch (GridException g)
-        {
-            throw g;
-        }
-        catch (Exception e)
-        {
-            throw new GridException(e);
-        }
+        log.warn("Task " + taskId + " failed with " + ge, ge);
+        dispatcher.call(taskId.getClient(), "_taskFailed",
+                new Object[]{taskId, ge},
+                new Class[]{taskId.getClass(), ge.getClass()},
+                GroupRequest.GET_ALL,
+                TIMEOUT);
     }
 
     public void sayGoodbye()
     {
-        dispatcher.callRemoteMethods(
+        dispatcher.broadcast(
                 null, "_goodbye", NO_ARGS, NO_TYPES, GroupRequest.GET_NONE, 0);
     }
 
     /**
      * Send assign messages to the specified addresses and wait for the responses.
      *
-     * @param servers  the addresses of the servers to send the message to.
-     * @param taskInfo the task to assign.
+     * @param servers the addresses of the servers to send the message to.
+     * @param taskId  the task to assign.
      * @return The responses.
      */
-    public AssignResponse[] assign(NodeAddress[] servers, TaskInfo taskInfo)
+    public AssignResponse[] assign(NodeAddress[] servers, TaskId taskId)
     {
-        Vector dests = new Vector();
-        for (int i = 0; i < servers.length; i++)
-            dests.add(toAddress(servers[i]));
-
-        RspList responses = dispatcher.callRemoteMethods(dests, "_assign",
-                new Object[]{taskInfo},
-                new Class[]{taskInfo.getClass()},
+        List responses = dispatcher.broadcast(servers, "_assign",
+                new Object[]{taskId},
+                new Class[]{taskId.getClass()},
                 GroupRequest.GET_ALL,
                 TIMEOUT);
         AssignResponse[] rv = new AssignResponse[responses.size()];
         for (int i = 0; i < rv.length; i++)
         {
-            Rsp rsp = (Rsp) responses.elementAt(i);
+            Object o = responses.get(i);
             if (log.isDebugEnabled())
-                log.debug("assign() : Rsp #" + i + " " + rsp.toString());
-            rv[i] = (AssignResponse) rsp.getValue();
+                log.debug("assign() : Rsp #" + i + " " + o.toString());
+            rv[i] = null;
+            if (o instanceof AssignResponse)
+                rv[i] = (AssignResponse) o;
+            else if (o instanceof Exception)
+            {
+                log.error(o, (Exception) o);
+            }
         }
         return rv;
     }
 
-    public void go(TaskInfo taskInfo)
+    public void go(TaskId taskId, String inputProcessorClassName) throws Exception
     {
-        dispatcher.callRemoteMethods(
+        dispatcher.broadcastWithExceptionCheck(
                 null, "_go",
-                new Object[]{taskInfo},
-                new Class[]{taskInfo.getClass()},
+                new Object[]{taskId, inputProcessorClassName},
+                new Class[]{taskId.getClass(), String.class},
+                GroupRequest.GET_ALL, TIMEOUT);
+    }
+
+    public void release(TaskId id) throws Exception
+    {
+        dispatcher.broadcastWithExceptionCheck(
+                null, "_release",
+                new Object[]{id},
+                new Class[]{id.getClass()},
                 GroupRequest.GET_NONE, 0);
     }
 
-    public void release(TaskInfo taskInfo)
+    public boolean assignTask(NodeAddress server, TaskRequest request) throws RpcTimeoutException
     {
-        dispatcher.callRemoteMethods(
-                null, "_release",
-                new Object[]{taskInfo},
-                new Class[]{taskInfo.getClass()},
-                GroupRequest.GET_NONE, 0);
+        Object o = dispatcher.call(server, "_assignTask",
+                new Object[]{request},
+                new Class[]{TaskRequest.class},
+                GroupRequest.GET_ALL,
+                NEXT_INPUT_TIMEOUT);   // Wait a little longer for this, sometimes the client is slow.
+        if (o == null)
+            return false;
+        Boolean accpted = (Boolean) o;
+        return accpted.booleanValue();
+    }
+
+    public void apppend(TaskId taskId, LoggingEvent event) throws RpcTimeoutException
+    {
+        dispatcher.call(taskId.getClient(), "_append",
+                new Object[]{taskId, event},
+                new Class[]{taskId.getClass(), event.getClass()},
+                GroupRequest.GET_NONE,
+                0);
     }
 
     public NodeStatus[] getGridStatus()
     {
-        RspList responses = dispatcher.callRemoteMethods(
-                null, "_localStatus", NO_ARGS, NO_TYPES, GroupRequest.GET_ALL, TIMEOUT);
+        List responses = null;
+        try
+        {
+            responses = dispatcher.broadcastWithExceptionCheck(
+                    null, "_localStatus", NO_ARGS, NO_TYPES, GroupRequest.GET_ALL, TIMEOUT);
+        }
+        catch (GridException ge)
+        {
+            throw ge;
+        }
+        catch (Exception e)
+        {
+            throw new GridException(e);
+        }
         NodeStatus[] rv = new NodeStatus[responses.size()];
         for (int i = 0; i < rv.length; i++)
-        {
-            Rsp rsp = (Rsp) responses.elementAt(i);
-            try
-            {
-                checkForException(rv[i]);
-            }
-            catch (GridException g)
-            {
-                throw g;
-            }
-            catch (Exception e)
-            {
-                throw new GridException(e);
-            }
-            rv[i] = (NodeStatus) rsp.getValue();
-        }
+            rv[i] = (NodeStatus) responses.get(i);
         return rv;
-    }
-
-    private Address toAddress(NodeAddress nodeAddress)
-    {
-        return ((JGroupsAddress) nodeAddress).getAddress();
     }
 
     Address getJGroupsAddress()

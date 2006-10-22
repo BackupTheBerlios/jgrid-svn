@@ -12,7 +12,7 @@ import java.util.Random;
  * Date: Dec 31, 2005
  * Time: 5:39:01 PM
  */
-public class MonteCarloPi implements TaskRunnable
+public class MonteCarloPi implements InputProcessor
 {
     private static Logger log = Logger.getLogger(MonteCarloPi.class);
 
@@ -33,8 +33,9 @@ public class MonteCarloPi implements TaskRunnable
             for (int i = 0; i < 10; i++)
                 task.addInput(new MonteCarloPi.Input(17 * i + 1, 10000));
             final MonteCarloPi.Output output = new MonteCarloPi.Output();
-            Aggregator aggregator = new MCPiAggregator(output);
-            task.run(MonteCarloPi.class.getName(), aggregator, 10);
+            MCPiAggregator aggregator = new MCPiAggregator();
+            aggregator.setAggregate(output);
+            task.run(MonteCarloPi.class.getName(), aggregator, 10, false);
             log.info("output : " + output.showResult());
         }
         catch (Exception e)
@@ -135,7 +136,7 @@ public class MonteCarloPi implements TaskRunnable
         log.info("" + iterationsPerSecond + " iterations / sec.");
     }
 
-    public Serializable run(int inputId, Serializable input)
+    public Serializable processInput(int inputId, Serializable input)
     {
         Input in = (Input) input;
         // Simulate a needle of length 'l' being dropped at random between two parallel lines separated by
@@ -254,9 +255,13 @@ public class MonteCarloPi implements TaskRunnable
 
     public static class MCPiAggregator implements Aggregator
     {
-        private final Output aggregate;
+        private Output aggregate;
 
-        public MCPiAggregator(Output aggregate)
+        public MCPiAggregator()
+        {
+        }
+
+        public void setAggregate(Output aggregate)
         {
             this.aggregate = aggregate;
         }
@@ -265,6 +270,8 @@ public class MonteCarloPi implements TaskRunnable
         {
             Output out = (Output) output.getData();
             log.info("# " + output.getInputId() + " : " + out.showResult());
+            if (aggregate == null)
+                aggregate = new Output();
             aggregate.aggregate(out);
         }
     }

@@ -1,7 +1,8 @@
 package org.jegrid.impl;
 
-import org.jegrid.*;
 import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggingEvent;
+import org.jegrid.*;
 
 import java.util.*;
 
@@ -13,18 +14,21 @@ import java.util.*;
  */
 public class ClientImpl implements ClientImplementor
 {
+    private static Logger log = Logger.getLogger(ClientImpl.class);
+
     private int nextTaskId = 1000;
     private final Map tasksById = new HashMap();
     private Bus bus;
     private GridImplementor grid;
     private Comparator serverComparator;
-    private static Logger log = Logger.getLogger(ClientImpl.class);
+    private LogEventPump logPump;
 
     public ClientImpl(Bus bus, GridImplementor grid)
     {
         this.bus = bus;
         this.grid = grid;
-        this.serverComparator = new ServerComparator();
+        serverComparator = new ServerComparator();
+        logPump = new LogEventPump();
     }
 
     private int nextTaskId()
@@ -56,8 +60,12 @@ public class ClientImpl implements ClientImplementor
             return new NodeAddress[0];
         // Sort the list, put the most capable servers first.
         Collections.sort(list, serverComparator);
-        // Get only the minimum number of servers.
-        list = list.subList(0, Math.min(list.size(), max));
+
+        // If max < 0 that means get all the servers.
+        // If max > 0 don't get more than 'max' servers.
+        if (max > 0)
+            list = list.subList(0, Math.min(list.size(), max));
+
         NodeAddress[] rv = new NodeAddress[list.size()];
         int i = 0;
         for (Iterator iterator = list.iterator(); iterator.hasNext();)
@@ -73,18 +81,63 @@ public class ClientImpl implements ClientImplementor
     {
         synchronized (tasksById)
         {
-            tasksById.put(new Integer(task.getTaskId()), task);
+            tasksById.put(task.getTaskId(), task);
         }
     }
 
     public Task createTask()
     {
-        TaskImpl task = new TaskImpl(this, nextTaskId(), null);
+        TaskImpl task = new TaskImpl(grid, this, nextTaskId(), null);
         addTask(task);
         return task;
     }
 
-    public TaskData getNextInput(int taskId, NodeAddress server, TaskData output)
+    public void background(TaskRequest request)
+    {
+        boolean loop = true;
+        while (loop)
+        {
+            try
+            {
+                // Get a list of servers.
+                NodeAddress[] addresses = getSeverAddresses(-1);
+                if (addresses == null || addresses.length == 0)
+                {
+                    // Wait for a membership change.
+                    if (log.isDebugEnabled())
+                        log.debug("background() : No servers, waiting...");
+                    grid.waitForServers();
+                    continue;
+                }
+                // Try to assign a worker thread to this task.
+                for (int i = 0; i < addresses.length; i++)
+                {
+                    NodeAddress address = addresses[i];
+                    if (log.isDebugEnabled())
+                        log.debug("background() : trying " + address);
+                    boolean accepted = bus.assignTask(address, request);
+                    if (accepted)
+                    {
+                        if (log.isDebugEnabled())
+                            log.debug("background() : Accepted.");
+                        loop = false;
+                        break;
+                    }
+                }
+            }
+            catch (RpcTimeoutException e)
+            {
+                log.warn(e, e);
+            }
+            catch (InterruptedException e)
+            {
+                throw new GridException(e);
+            }
+        }
+    }
+
+
+    public TaskData getNextInput(TaskId taskId, NodeAddress server, TaskData output)
     {
         TaskImpl task = findTask(taskId);
         if (task == null)
@@ -96,18 +149,17 @@ public class ClientImpl implements ClientImplementor
         return task.getNextInput(server, output);
     }
 
-    private TaskImpl findTask(int taskId)
+    private TaskImpl findTask(TaskId taskId)
     {
-        Integer key = new Integer(taskId);
         TaskImpl task;
         synchronized (tasksById)
         {
-            task = (TaskImpl) tasksById.get(key);
+            task = (TaskImpl) tasksById.get(taskId);
         }
         return task;
     }
 
-    public void taskFailed(int taskId, GridException throwable)
+    public void taskFailed(TaskId taskId, GridException throwable)
     {
         TaskImpl task = findTask(taskId);
         if (task == null)
@@ -131,11 +183,17 @@ public class ClientImpl implements ClientImplementor
         }
     }
 
+    public void append(TaskId taskId, LoggingEvent event)
+    {
+        // Errr... not sure if this is the right thing to do.
+        logPump.append(event);
+    }
+
     public void onComplete(TaskImpl task)
     {
         synchronized (tasksById)
         {
-            tasksById.remove(new Integer(task.getTaskId()));
+            tasksById.remove(task.getTaskId());
             if (log.isDebugEnabled())
                 log.info("Task complete: " + task.getTaskId());
         }

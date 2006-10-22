@@ -1,11 +1,13 @@
 package org.jegrid;
 
 import junit.framework.TestCase;
+import org.apache.log4j.Logger;
 import org.jegrid.impl.NodeStatusImpl;
 import org.jegrid.impl.ServerComparator;
-import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * TODO: Add class level javadoc.
@@ -54,8 +56,33 @@ public class ClientTest extends TestCase
         for (int i = 0; i < 10; i++)
             task.addInput(new MonteCarloPi.Input(17 * i + 1, 10000));
         final MonteCarloPi.Output output = new MonteCarloPi.Output();
-        Aggregator aggregator = new MonteCarloPi.MCPiAggregator(output);
-        task.run(MonteCarloPi.class.getName(), aggregator, 10);
+        MonteCarloPi.MCPiAggregator aggregator = new MonteCarloPi.MCPiAggregator();
+        aggregator.setAggregate(output);
+        task.run(MonteCarloPi.class.getName(), aggregator, 10, false);
         log.info("output : " + output.showResult());
     }
+
+    public void testBackgroundTask() throws Exception
+    {
+        GridConfiguration config = new GridConfiguration();
+        config.setGridName("test");
+        config.setType(Grid.TYPE_CLIENT);
+        Grid grid = config.configure();
+        grid.connect();
+        Client client = grid.getClient();
+        List input = new ArrayList();
+        for (int i = 0; i < 10; i++)
+            input.add(new MonteCarloPi.Input(17 * i + 1, 10000));
+        TaskRequest request = new TaskRequest(
+                MonteCarloPi.class.getName(),
+                MonteCarloPi.MCPiAggregator.class.getName(),
+                10, input);
+        log.info("Background task 1...");
+        client.background(request);
+        log.info("Background task 2...");
+        client.background(request);
+        log.info("Background task 3...");
+        client.background(request);
+    }
+
 }

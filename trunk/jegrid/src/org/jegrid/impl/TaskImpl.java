@@ -5,7 +5,6 @@ import EDU.oswego.cs.dl.util.concurrent.LinkedQueue;
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
 import org.apache.log4j.Logger;
 import org.jegrid.*;
-import org.jegrid.jms.TaskRequest;
 
 import java.io.Serializable;
 import java.util.*;
@@ -23,8 +22,12 @@ public class TaskImpl implements Task
 
     private Logger log = Logger.getLogger(TaskImpl.class);
 
+    private static final int END_OF_OUTPUT = -1;
+    private static final TaskData END = new TaskData(END_OF_OUTPUT, null);
+
     private ClientImpl client;
-    private TaskInfo info;
+    private TaskId id;
+    private String inputProcessorClassName;
     private Mutex mutex;
     private List inputQueue;            // Queue of TaskData for workers.
     private Set unfinishedInputIds;     // Input ids that are queued, or in progress.
@@ -33,15 +36,18 @@ public class TaskImpl implements Task
     private Channel outputQueue;        // Queue of TaskData for the aggregator.
     private GridException failure;
     private int maxRetries = DEFAULT_MAX_RETRIES;
-    private boolean running;        // True if we're already running.
-    private static final int END_OF_OUTPUT = -1;
-    private static final TaskData END = new TaskData(END_OF_OUTPUT, null);
+    private boolean running;            // True if we're already running.
+    private GridImplementor grid;
+    private LocalWorker localWorker;    // The local worker.
 
-    public TaskImpl(ClientImpl client, int taskId, String taskClass)
+
+    public TaskImpl(GridImplementor grid, ClientImpl client, int taskId, String inputProcesorClassName)
     {
+        id = new TaskId(client.getBus().getAddress(), taskId);
+        inputProcessorClassName = inputProcesorClassName;
         mutex = new Mutex();
+        this.grid = grid;
         this.client = client;
-        this.info = new TaskInfo(client.getBus().getAddress(), taskId, taskClass);
         this.inputQueue = new LinkedList();
         this.unfinishedInputIds = new HashSet();
         this.inprogress = new HashMap();
@@ -49,9 +55,9 @@ public class TaskImpl implements Task
         this.outputQueue = new LinkedQueue();
     }
 
-    public int getTaskId()
+    public TaskId getTaskId()
     {
-        return info.getTaskId();
+        return id;
     }
 
     public void addInput(Serializable input)
@@ -100,7 +106,6 @@ public class TaskImpl implements Task
 
     private TaskData nextInput(NodeAddress server)
     {
-        // TODO: Retry unfinishedInputIds work
         // If the worker is asking for more input and it hasn't completed the last one we gave it
         // then give it the same input once again.  Perhaps it wasn't received last time.
         if (inputQueue.size() == 0)
@@ -161,7 +166,7 @@ public class TaskImpl implements Task
         try
         {
             Bus bus = client.getBus();
-            bus.release(info);
+            bus.release(id);
         }
         catch (Exception e1)
         {
@@ -187,10 +192,10 @@ public class TaskImpl implements Task
         {
             throw new GridException(e1);
         }
-        log.info("Task " + info.getTaskId() + " released.");
+        log.info("Task " + id + " released.");
     }
 
-    public void run(String taskClassName, Aggregator aggregator, int maxWorkers)
+    public void run(String inputProcessorClassName, Aggregator aggregator, int maxWorkers, boolean useLocalWorker)
     {
         Bus bus = client.getBus();
         acquireMutex();
@@ -198,15 +203,16 @@ public class TaskImpl implements Task
         {
             if (running)
                 throw new GridException("Already running.");
-            info.setTaskClassName(taskClassName);
+
+            this.inputProcessorClassName = inputProcessorClassName;
 
             // Get up to maxWorkers server addresses.  Don't get more than
             // what we need to process the queue of inputs.
             int serverCount = Math.min(maxWorkers, inputQueue.size());
             if (serverCount == 0)
                 throw new GridException("Zero servers required.");
-            int servers = sendAssign(serverCount, bus);
-            if (servers == 0)
+            sendAssign(serverCount, bus, useLocalWorker);
+            if (serverAddresses.size() == 0)
                 throw new GridException("No available workers.");
             running = true; // We're running now.
             failure = null;
@@ -217,11 +223,21 @@ public class TaskImpl implements Task
         }
 
         // Now, send the go message.
-        bus.go(info);
+        go(bus);
 
-        // Aggregate outputs from the queue using the caller's thread
-        // until the 'END_OF_OUTPUT' is reached.
-        aggregateOutput(aggregator);
+        if (localWorker == null)
+        {
+            // Aggregate outputs from the queue using the caller's thread
+            // until the 'END_OF_OUTPUT' is reached.
+            aggregateOutput(aggregator);
+        }
+        else
+        {
+            // We're using a local worker, so it will process the input
+            // and aggregate.
+            localWorker.setAggregator(aggregator);
+            localWorker.run();
+        }
 
         acquireMutex();
         try
@@ -237,6 +253,20 @@ public class TaskImpl implements Task
         }
     }
 
+    private void go(Bus bus)
+    {
+        if (localWorker != null)
+            localWorker.go(id, inputProcessorClassName);
+        try
+        {
+            bus.go(id, inputProcessorClassName);
+        }
+        catch (Exception e)
+        {
+            setFailure(e);
+        }
+    }
+
     private void aggregateOutput(Aggregator aggregator)
     {
         // Aggregate outputs from the queue.
@@ -247,17 +277,7 @@ public class TaskImpl implements Task
             {
                 // Wait forever for something on the output queue.
                 Object o = outputQueue.take();
-                // If the output queue contains task data, aggregate it.
-                if (o != null && o instanceof TaskData)
-                {
-                    TaskData output = (TaskData) o;
-                    if (output.getInputId() == END_OF_OUTPUT) // This signals the end.
-                        loop = false;
-                    else if (aggregator != null)
-                        aggregator.aggregate(output);
-                }
-                else
-                    throw new IllegalStateException("Unexpected object on output queue: " + o);
+                loop = aggregateOneOutput(aggregator, o);
             }
             catch (InterruptedException e)
             {
@@ -265,6 +285,33 @@ public class TaskImpl implements Task
                 setFailure(e);
             }
         }
+    }
+
+    public void drainOutputQueue(Aggregator aggregator) throws InterruptedException
+    {
+        Object o;
+        while ((o = outputQueue.poll(0)) != null)
+        {
+            if (log.isDebugEnabled())
+                log.debug("drainOutputQueue() : aggregating.");
+            aggregateOneOutput(aggregator, o);
+        }
+    }
+
+    private boolean aggregateOneOutput(Aggregator aggregator, Object o)
+    {
+        // If the output queue contains task data, aggregate it.
+        if (o != null && o instanceof TaskData)
+        {
+            TaskData output = (TaskData) o;
+            if (output.getInputId() == END_OF_OUTPUT) // This signals the end.
+                return false;
+            else if (aggregator != null)
+                aggregator.aggregate(output);
+        }
+        else
+            throw new IllegalStateException("Unexpected object on output queue: " + o);
+        return true;
     }
 
     private void setFailure(Exception e)
@@ -289,7 +336,7 @@ public class TaskImpl implements Task
         try
         {
             // Get one server, send the assign message.  The worker will wait for the 'go' message.
-            sendAssign(1, bus);
+            sendAssign(1, bus, false);
         }
         finally
         {
@@ -297,7 +344,7 @@ public class TaskImpl implements Task
         }
     }
 
-    public void run(TaskRequest taskRequest)
+    public void run(TaskRequest taskRequest, boolean useLocalWorker)
     {
         for (Iterator iterator = taskRequest.getInput().iterator(); iterator.hasNext();)
         {
@@ -305,10 +352,11 @@ public class TaskImpl implements Task
             addInput(input);
         }
         Aggregator aggregator = instantiateAggregator(taskRequest.getAggregatorClassName());
-        run(taskRequest.getTaskClassName(), aggregator, taskRequest.getMaxWorkers());
+        run(taskRequest.getInputProcessorClassName(), aggregator,
+                taskRequest.getMaxWorkers(), useLocalWorker);
     }
 
-    public Aggregator instantiateAggregator(String className)
+    Aggregator instantiateAggregator(String className)
     {
 
         try
@@ -327,14 +375,20 @@ public class TaskImpl implements Task
         releaseTask(null);
     }
 
-    private int sendAssign(int serverCount, Bus bus)
+    private int sendAssign(int serverCount, Bus bus, boolean useLocalWorker)
     {
+        if (useLocalWorker)
+        {
+            serverCount--;
+            serverAddresses.add(getLocalAddress());
+            localWorker = new LocalWorker(this);
+        }
         NodeAddress[] servers = client.getSeverAddresses(serverCount);
         if (servers == null || servers.length == 0)
             return 0;
         // Send the assign message while we have the mutex so
         // nobody can get input until we've processed the responses.
-        AssignResponse[] responses = bus.assign(servers, info);
+        AssignResponse[] responses = bus.assign(servers, id);
         // Now there are threads waiting on the servers for input!
         // Remember all the servers that responded.
         for (int i = 0; i < responses.length; i++)
@@ -347,7 +401,7 @@ public class TaskImpl implements Task
                 serverAddresses.add(response.getServer());
             }
         }
-        return servers.length;
+        return serverAddresses.size();
     }
 
     private void acquireMutex()
@@ -397,6 +451,16 @@ public class TaskImpl implements Task
 
     private void handleServerFailure(NodeAddress server)
     {
+        log.warn("Server " + server + " failed!");
+        if (!serverAddresses.contains(server))
+            log.warn("Server " + server + " failed, but there is nothing assigned from task " + id);
+
+        GridException exception = null;
+
+        serverAddresses.remove(server);
+        if (serverAddresses.size() == 0)
+            exception = new GridException("Server " + server + " failed and there are no more workers left!");
+
         // Find all inputs that were sent to the server
         for (Iterator inputs = inprogress.values().iterator(); inputs.hasNext();)
         {
@@ -407,10 +471,8 @@ public class TaskImpl implements Task
                 // If maximum retries has been exeeded, fail.
                 if (is.getRetries() > maxRetries)
                 {
-                    GridException exception = new GridException("Server " + server
+                    exception = new GridException("Server " + server
                             + " left the grid, max retries exceeded!");
-                    onFailure(exception);
-                    return;
                 }
                 // Otherwise, remove the input from the in progress map and
                 // put it in the queue.
@@ -418,5 +480,17 @@ public class TaskImpl implements Task
                 inputQueue.add(is);
             }
         }
+        if (exception != null)
+            releaseTask(exception);
+    }
+
+    public String getInputProcessorClassName()
+    {
+        return inputProcessorClassName;
+    }
+
+    public NodeAddress getLocalAddress()
+    {
+        return grid.getLocalAddress();
     }
 }

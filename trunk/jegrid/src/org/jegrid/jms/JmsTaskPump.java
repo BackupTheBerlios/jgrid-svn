@@ -1,15 +1,16 @@
 package org.jegrid.jms;
 
+
 import org.apache.log4j.Logger;
-import org.jegrid.*;
+import org.jegrid.Client;
+import org.jegrid.GridConfiguration;
+import org.jegrid.Task;
+import org.jegrid.TaskRequest;
 
 import javax.jms.*;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import java.io.Serializable;
 import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * Receives tasks from a queue and submits them on the grid.
@@ -61,7 +62,7 @@ public class JmsTaskPump implements Runnable
                         if (o instanceof TaskRequest)
                         {
                             TaskRequest taskRequest = (TaskRequest) o;
-                            task.run(taskRequest);
+                            task.run(taskRequest, false);
                         }
                     }
                 }
