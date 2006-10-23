@@ -89,6 +89,8 @@
         <picocontainer href="http://www.picocontainer.org"/>
         <rngpack href="http://www.honeylocust.com/RngPack"/>
         <lgpl href="http://www.gnu.org/licenses/lgpl.html"/>
+        <jini href="http://www.jini.org"/>
+        <mapreduce href="http://en.wikipedia.org/wiki/MapReduce"/>
     </external-refs>
 
 </site>
