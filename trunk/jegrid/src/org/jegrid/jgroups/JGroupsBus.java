@@ -3,10 +3,7 @@ package org.jegrid.jgroups;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
 import org.jegrid.*;
-import org.jegrid.impl.AssignResponse;
-import org.jegrid.impl.Bus;
-import org.jegrid.impl.GridImplementor;
-import org.jegrid.impl.RpcTimeoutException;
+import org.jegrid.impl.*;
 import org.jgroups.Address;
 import org.jgroups.Channel;
 import org.jgroups.ChannelException;
@@ -16,6 +13,7 @@ import org.jgroups.protocols.AUTOCONF;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -244,12 +242,20 @@ public class JGroupsBus implements Bus
         return rv;
     }
 
-    public void go(TaskId taskId, String inputProcessorClassName) throws Exception
+    public void go(AssignResponse[] servers, GoMessage goMessage) throws Exception
     {
+        List list = new ArrayList(servers.length);
+        for (int i = 0; i < servers.length; i++)
+        {
+            AssignResponse server = servers[i];
+            if (server != null && server.accepted())
+                list.add(server.getServer());
+        }
+        NodeAddress[] addrs = (NodeAddress[]) list.toArray(new NodeAddress[list.size()]);
         dispatcher.broadcastWithExceptionCheck(
-                null, "_go",
-                new Object[]{taskId, inputProcessorClassName},
-                new Class[]{taskId.getClass(), String.class},
+                addrs, "_go",
+                new Object[]{goMessage},
+                new Class[]{goMessage.getClass()},
                 GroupRequest.GET_ALL, TIMEOUT);
     }
 

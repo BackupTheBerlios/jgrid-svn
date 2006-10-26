@@ -3,10 +3,7 @@ package org.jegrid.jgroups;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
 import org.jegrid.*;
-import org.jegrid.impl.AssignResponse;
-import org.jegrid.impl.ClientImplementor;
-import org.jegrid.impl.GridImplementor;
-import org.jegrid.impl.Server;
+import org.jegrid.impl.*;
 
 /**
  * Handles RPCs from the RpcDispatcher in the JGroupsBus.
@@ -83,7 +80,7 @@ public class RpcHandler
         }
     }
 
-    public void _go(TaskId id, String className)
+    public void _go(GoMessage goMessage)
     {
         Server server = grid.getServer();
         // Ignore go messages to non-servers.
@@ -91,7 +88,7 @@ public class RpcHandler
         {
             if (log.isDebugEnabled())
                 log.debug("_go");
-            server.onGo(id, className);
+            server.onGo(goMessage);
         }
     }
 

@@ -41,10 +41,9 @@ public interface Server
     /**
      * A client is allowing the worker on this task to proceed.
      *
-     * @param id
-     * @param className
+     * @param goMessage
      */
-    void onGo(TaskId id, String className);
+    void onGo(GoMessage goMessage);
 
     /**
      * Invoked by the client when it considers a task complete (errored, or successful)

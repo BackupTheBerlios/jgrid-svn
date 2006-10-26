@@ -25,6 +25,7 @@ abstract class AbstractInputProcessingWorker extends Worker
     private static final long GO_TIMEOUT = 10000;
     private boolean released;
     private String inputProcessorClassName;
+    private Serializable sharedInput;
 
     public AbstractInputProcessingWorker(ServerImpl server, TaskId id)
     {
@@ -33,7 +34,7 @@ abstract class AbstractInputProcessingWorker extends Worker
         this.goLatch = new Latch();
     }
 
-    protected void doWork()
+    private void waitForGoThenProcess()
     {
         // Get the next input from the client's queue of inputs for the task.
         try
@@ -42,12 +43,9 @@ abstract class AbstractInputProcessingWorker extends Worker
             boolean okay = goLatch.attempt(GO_TIMEOUT);
             if (!okay)
                 throw new GridException("Timeout waiting for 'go' from client.");
-
             // Paranoid checking.
             if (id.getClient() == null)
                 throw new GridException("No client address!");
-            if (inputProcessorClassName == null)
-                throw new GridException("No task class name!");
             processInput();
         }
         catch (GridException e)
@@ -61,9 +59,11 @@ abstract class AbstractInputProcessingWorker extends Worker
         }
     }
 
-    private void processInput()
+    protected void processInput()
             throws Exception
     {
+        if (inputProcessorClassName == null)
+            throw new GridException("No task class name!");
         if (log.isDebugEnabled())
             log.debug("Worker started on " + id);
         // Priming read.
@@ -135,7 +135,7 @@ abstract class AbstractInputProcessingWorker extends Worker
         pushLoggingContext();
         try
         {
-            doWork();
+            waitForGoThenProcess();
         }
         finally
         {
@@ -169,11 +169,12 @@ abstract class AbstractInputProcessingWorker extends Worker
         this.exception = exception;
     }
 
-    public void go(TaskId id, String className)
+    public void go(GoMessage goMessage)
     {
-        if (!id.equals(this.id))
-            setException(new IllegalStateException("Go task " + id + " is not the same as assigned task " + this.id));
-        this.inputProcessorClassName = className;
+        if (!goMessage.getTaskId().equals(this.id))
+            setException(new IllegalStateException("Go task " + goMessage + " is not the same as assigned task " + this.id));
+        this.inputProcessorClassName = goMessage.getProcessorClassName();
+        this.sharedInput = goMessage.getSharedInput();
         goLatch.release();
     }
 }

@@ -38,6 +38,8 @@ public interface Task
 
     /**
      * Process all the inputs on the grid with the specified task class.
+     * The inputs will be processed in paralell, and the output will be aggregated by a
+     * single, stateful aggregator.
      *
      * @param inputProcessorClass The name of the task class, which implements InputProcessor and will be used by the workers
      *                            to process the input and produce the output.

@@ -12,15 +12,15 @@ import java.io.Serializable;
  */
 public class AssignResponse implements Serializable
 {
-    private static final long serialVersionUID = -7748290096805543623L;
-    
     private int threadsRemaining;
     private NodeAddress server;
+    private boolean accepted;
 
-    public AssignResponse(NodeAddress server, int freeThreads)
+    public AssignResponse(NodeAddress server, int freeThreads, boolean accepted)
     {
         this.server = server;
         this.threadsRemaining = freeThreads;
+        this.accepted = accepted;
     }
 
     public int getThreadsRemaining()
@@ -38,6 +38,12 @@ public class AssignResponse implements Serializable
         return "AssignResponse{" +
                 "threadsRemaining=" + threadsRemaining +
                 ", server=" + server +
+                ", accepted=" + accepted +
                 '}';
+    }
+
+    public boolean accepted()
+    {
+        return accepted;
     }
 }

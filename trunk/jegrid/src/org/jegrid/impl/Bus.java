@@ -20,7 +20,7 @@ public interface Bus
     AssignResponse[] assign(NodeAddress[] servers, TaskId taskId)
             ;
 
-    void go(TaskId id, String inputProcessorClassName) throws Exception
+    void go(AssignResponse[] servers, GoMessage goMessage) throws Exception
             ;
 
     NodeStatus[] getGridStatus()

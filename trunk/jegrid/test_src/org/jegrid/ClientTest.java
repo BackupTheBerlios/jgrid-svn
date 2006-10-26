@@ -62,6 +62,24 @@ public class ClientTest extends TestCase
         log.info("output : " + output.showResult());
     }
 
+    public void testSimpleClientWithLocal() throws Exception
+    {
+        GridConfiguration config = new GridConfiguration();
+        config.setGridName("test");
+        config.setType(Grid.TYPE_CLIENT);
+        Grid grid = config.configure();
+        grid.connect();
+        Client client = grid.getClient();
+        Task task = client.createTask();
+        for (int i = 0; i < 10; i++)
+            task.addInput(new MonteCarloPi.Input(17 * i + 1, 10000));
+        final MonteCarloPi.Output output = new MonteCarloPi.Output();
+        MonteCarloPi.MCPiAggregator aggregator = new MonteCarloPi.MCPiAggregator();
+        aggregator.setAggregate(output);
+        task.run(MonteCarloPi.class.getName(), aggregator, 10, true);
+        log.info("output : " + output.showResult());
+    }
+
     public void testBackgroundTask() throws Exception
     {
         GridConfiguration config = new GridConfiguration();

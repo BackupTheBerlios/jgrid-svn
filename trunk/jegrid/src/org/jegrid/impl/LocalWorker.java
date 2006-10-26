@@ -17,11 +17,21 @@ public class LocalWorker extends AbstractInputProcessingWorker
     private static Logger log = Logger.getLogger(LocalWorker.class);
     private TaskImpl taskImpl;
     private Aggregator aggregator;
+    private boolean processInput;
 
     public LocalWorker(TaskImpl taskImpl)
     {
         super(null, taskImpl.getTaskId());
         this.taskImpl = taskImpl;
+    }
+
+
+    protected void processInput() throws Exception
+    {
+        if (processInput)   // Process and aggregate.
+            super.processInput();
+        else                // Just aggregate until the end of the output queue.
+            taskImpl.aggregateOutput(aggregator);
     }
 
     protected TaskData nextInput(TaskData output) throws RpcTimeoutException, InterruptedException
@@ -36,8 +46,8 @@ public class LocalWorker extends AbstractInputProcessingWorker
     protected void done() throws InterruptedException
     {
         log.info("Local worker done.");
-        // If there is any output, aggregate it.
-        taskImpl.drainOutputQueue(aggregator);
+        // If there is any output left, aggregate it.
+        taskImpl.aggregateOutput(aggregator);
     }
 
     protected void handleException(GridException ge)
@@ -54,5 +64,15 @@ public class LocalWorker extends AbstractInputProcessingWorker
     public void setAggregator(Aggregator aggregator)
     {
         this.aggregator = aggregator;
+    }
+
+    /**
+     * Process input with this worker if the flag is true.
+     *
+     * @param flag true - process input, false - aggregate only
+     */
+    public void setProcessInput(boolean flag)
+    {
+        processInput = flag;
     }
 }

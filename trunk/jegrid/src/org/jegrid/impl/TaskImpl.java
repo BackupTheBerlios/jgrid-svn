@@ -29,6 +29,7 @@ public class TaskImpl implements Task
     private TaskId id;
     private String inputProcessorClassName;
     private Mutex mutex;
+    private Serializable sharedInput;   // The shared input for the task.
     private List inputQueue;            // Queue of TaskData for workers.
     private Set unfinishedInputIds;     // Input ids that are queued, or in progress.
     private Set serverAddresses;        // The server addresses from the assignment.
@@ -37,9 +38,9 @@ public class TaskImpl implements Task
     private GridException failure;
     private int maxRetries = DEFAULT_MAX_RETRIES;
     private boolean running;            // True if we're already running.
+    private boolean done;               // True if we're done.
     private GridImplementor grid;
     private LocalWorker localWorker;    // The local worker.
-
 
     public TaskImpl(GridImplementor grid, ClientImpl client, int taskId, String inputProcesorClassName)
     {
@@ -53,6 +54,7 @@ public class TaskImpl implements Task
         this.inprogress = new HashMap();
         this.serverAddresses = new HashSet();
         this.outputQueue = new LinkedQueue();
+        localWorker = new LocalWorker(this);
     }
 
     public TaskId getTaskId()
@@ -198,6 +200,7 @@ public class TaskImpl implements Task
     public void run(String inputProcessorClassName, Aggregator aggregator, int maxWorkers, boolean useLocalWorker)
     {
         Bus bus = client.getBus();
+        AssignResponse[] responses = new AssignResponse[0];
         acquireMutex();
         try
         {
@@ -211,10 +214,11 @@ public class TaskImpl implements Task
             int serverCount = Math.min(maxWorkers, inputQueue.size());
             if (serverCount == 0)
                 throw new GridException("Zero servers required.");
-            sendAssign(serverCount, bus, useLocalWorker);
+            responses = sendAssign(serverCount, bus, useLocalWorker);
             if (serverAddresses.size() == 0)
                 throw new GridException("No available workers.");
             running = true; // We're running now.
+            done = false;   // We're not done.
             failure = null;
         }
         finally
@@ -222,27 +226,17 @@ public class TaskImpl implements Task
             mutex.release();
         }
 
-        // Now, send the go message.
-        go(bus);
+        // Now, send the go message.  Only send it to nodes we got a response from.
+        go(bus, responses);
 
-        if (localWorker == null)
-        {
-            // Aggregate outputs from the queue using the caller's thread
-            // until the 'END_OF_OUTPUT' is reached.
-            aggregateOutput(aggregator);
-        }
-        else
-        {
-            // We're using a local worker, so it will process the input
-            // and aggregate.
-            localWorker.setAggregator(aggregator);
-            localWorker.run();
-        }
-
+        // Use the local worker to aggregate, and optionally process input.
+        localWorker.setAggregator(aggregator);
+        localWorker.run();
         acquireMutex();
         try
         {
             running = false;
+            done = true;
             // If there was an exception, throw it.
             if (failure != null)
                 throw failure;
@@ -253,13 +247,14 @@ public class TaskImpl implements Task
         }
     }
 
-    private void go(Bus bus)
+    private void go(Bus bus, AssignResponse[] responses)
     {
+        GoMessage goMessage = new GoMessage(id, inputProcessorClassName, sharedInput);
         if (localWorker != null)
-            localWorker.go(id, inputProcessorClassName);
+            localWorker.go(goMessage);
         try
         {
-            bus.go(id, inputProcessorClassName);
+            bus.go(responses, goMessage);
         }
         catch (Exception e)
         {
@@ -267,8 +262,25 @@ public class TaskImpl implements Task
         }
     }
 
-    private void aggregateOutput(Aggregator aggregator)
+    /**
+     * Aggregate all outputs, wait for it to finish.
+     *
+     * @param aggregator the aggregator object
+     */
+    void aggregateOutput(Aggregator aggregator)
     {
+        // Return if we're done already.
+        acquireMutex();
+        try
+        {
+            if (done)
+                return;
+        }
+        finally
+        {
+            mutex.release();
+        }
+
         // Aggregate outputs from the queue.
         boolean loop = true;
         while (loop)
@@ -305,7 +317,18 @@ public class TaskImpl implements Task
         {
             TaskData output = (TaskData) o;
             if (output.getInputId() == END_OF_OUTPUT) // This signals the end.
+            {
+                acquireMutex();
+                try
+                {
+                    done = true;
+                }
+                finally
+                {
+                    mutex.release();
+                }
                 return false;
+            }
             else if (aggregator != null)
                 aggregator.aggregate(output);
         }
@@ -375,17 +398,17 @@ public class TaskImpl implements Task
         releaseTask(null);
     }
 
-    private int sendAssign(int serverCount, Bus bus, boolean useLocalWorker)
+    private AssignResponse[] sendAssign(int serverCount, Bus bus, boolean useLocalWorker)
     {
+        localWorker.setProcessInput(useLocalWorker);
         if (useLocalWorker)
         {
             serverCount--;
             serverAddresses.add(getLocalAddress());
-            localWorker = new LocalWorker(this);
         }
         NodeAddress[] servers = client.getSeverAddresses(serverCount);
         if (servers == null || servers.length == 0)
-            return 0;
+            return null;
         // Send the assign message while we have the mutex so
         // nobody can get input until we've processed the responses.
         AssignResponse[] responses = bus.assign(servers, id);
@@ -394,14 +417,14 @@ public class TaskImpl implements Task
         for (int i = 0; i < responses.length; i++)
         {
             AssignResponse response = responses[i];
-            if (response != null)
+            if (response != null && response.accepted())
             {
                 if (log.isDebugEnabled())
                     log.debug("#" + i + " " + responses[i].getServer().toString());
                 serverAddresses.add(response.getServer());
             }
         }
-        return serverAddresses.size();
+        return responses;
     }
 
     private void acquireMutex()

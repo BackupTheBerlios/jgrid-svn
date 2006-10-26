@@ -28,7 +28,7 @@ public class ServerImpl implements Server
         poolSize = config.getThreadPoolSize();
         this.bus = bus;
         this.grid = grid;
-        this.pool = new WorkerThreadPool(poolSize);
+        this.pool = new WorkerThreadPool(poolSize, grid);
         shutdownLatch = new Latch();
         workers = new WorkerMap();
     }
@@ -51,13 +51,13 @@ public class ServerImpl implements Server
         return poolSize;
     }
 
-    public void onGo(TaskId id, String className)
+    public void onGo(GoMessage goMessage)
     {
-        InputProcessingWorker worker = findWorker(id);
+        InputProcessingWorker worker = findWorker(goMessage.getTaskId());
         if (worker != null)
-            worker.go(id, className);
+            worker.go(goMessage);
         else
-            log.info("Not working on " + id);
+            log.info("Not working on " + goMessage);
     }
 
     public void onRelease(TaskId id)
@@ -114,7 +114,7 @@ public class ServerImpl implements Server
         {
             int freeThreads = _freeThreads();
             if (freeThreads <= 0)
-                return null;
+                return new AssignResponse(bus.getAddress(), _freeThreads(), false);
             if (workers.contains(id))
                 throw new GridException("Already working on " + id);
             workers.addWorker(id, worker);
@@ -135,7 +135,7 @@ public class ServerImpl implements Server
                 throw new GridException(e);
             }
             bus.broadcastNodeStatus();
-            return new AssignResponse(bus.getAddress(), _freeThreads());
+            return new AssignResponse(bus.getAddress(), _freeThreads(), true);
         }
     }
 

@@ -1,8 +1,9 @@
 package org.jegrid.impl;
 
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
+import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
 import org.apache.log4j.Logger;
-import org.jegrid.GridException;
+import org.jegrid.Grid;
 
 /**
  * The pool of worker threads that execute the jobs accepted by a server.  This is just like
@@ -14,21 +15,22 @@ import org.jegrid.GridException;
  * <br>User: Joshua Davis
  * <br>Date: Oct 24, 2005 Time: 9:10:59 AM
  */
-class WorkerThreadPool extends PooledExecutor implements PooledExecutor.BlockedExecutionHandler
+class WorkerThreadPool extends PooledExecutor
 {
     private static Logger log = Logger.getLogger(WorkerThreadPool.class);
 
-    public WorkerThreadPool(int poolSize)
+    private int nextThread = 1;
+    private Grid grid;
+
+    public WorkerThreadPool(int poolSize, Grid grid)
     {
         super(poolSize);
+        this.grid = grid;
         // Set up the thread pool so it will throw ServerBusyException when
         // it cannot accept the job.
-        setBlockedExecutionHandler(this);
-    }
-
-    public boolean blockedAction(Runnable command)
-    {
-        throw new ServerBusyException("Server thread pool is busy!");
+        setBlockedExecutionHandler(new BlockedExecHandler());
+        // Also, use this class as a thread factory.
+        setThreadFactory(new Factory());
     }
 
     public void execute(Runnable command) throws InterruptedException
@@ -40,5 +42,28 @@ class WorkerThreadPool extends PooledExecutor implements PooledExecutor.BlockedE
     protected synchronized void workerDone(Worker w)
     {
         super.workerDone(w);
+    }
+
+    /**
+     * Handles blocked execution by throwing an exception.
+     */
+    private class BlockedExecHandler implements BlockedExecutionHandler
+    {
+        public boolean blockedAction(Runnable command) throws InterruptedException
+        {
+            throw new ServerBusyException("Server thread pool is busy!");
+        }
+    }
+
+    private class Factory implements ThreadFactory
+    {
+        public Thread newThread(Runnable command)
+        {
+            Thread thread = new Thread(command, "Pool-" + grid.getLocalAddress() + "-" + nextThread++);
+            // Set the priority to *almost* the lowest possible value
+            // The workers need to yield to the networking threads. 
+            thread.setPriority(Thread.MIN_PRIORITY + 1);
+            return thread;
+        }
     }
 }
