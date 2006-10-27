@@ -2,7 +2,6 @@ package org.jegrid.impl;
 
 import EDU.oswego.cs.dl.util.concurrent.Channel;
 import EDU.oswego.cs.dl.util.concurrent.LinkedQueue;
-import EDU.oswego.cs.dl.util.concurrent.Mutex;
 import org.apache.log4j.Logger;
 import org.jegrid.*;
 
@@ -21,9 +20,6 @@ public class TaskImpl implements Task
 
 
     private Logger log = Logger.getLogger(TaskImpl.class);
-
-    private static final int END_OF_OUTPUT = -1;
-    private static final TaskData END = new TaskData(END_OF_OUTPUT, null);
 
     private ClientImpl client;
     private TaskId id;
@@ -64,7 +60,7 @@ public class TaskImpl implements Task
 
     public void addInput(Serializable input)
     {
-        acquireMutex();
+        mutex.acquire();
         try
         {
             int inputId = inputQueue.size();
@@ -72,6 +68,19 @@ public class TaskImpl implements Task
             TaskInput is = new TaskInput(data);
             inputQueue.add(is);
             unfinishedInputIds.add(is.getInputId());
+        }
+        finally
+        {
+            mutex.release();
+        }
+    }
+
+    public void setSharedInput(Serializable sharedInput)
+    {
+        mutex.acquire();
+        try
+        {
+            this.sharedInput = sharedInput;
         }
         finally
         {
@@ -89,7 +98,7 @@ public class TaskImpl implements Task
      */
     public TaskData getNextInput(NodeAddress server, TaskData output)
     {
-        acquireMutex();
+        mutex.acquire();
         try
         {
 
@@ -188,7 +197,7 @@ public class TaskImpl implements Task
         inputQueue.clear();
         try
         {
-            outputQueue.put(END);
+            outputQueue.put(TaskData.END);
         }
         catch (InterruptedException e1)
         {
@@ -201,7 +210,7 @@ public class TaskImpl implements Task
     {
         Bus bus = client.getBus();
         AssignResponse[] responses = new AssignResponse[0];
-        acquireMutex();
+        mutex.acquire();
         try
         {
             if (running)
@@ -232,7 +241,7 @@ public class TaskImpl implements Task
         // Use the local worker to aggregate, and optionally process input.
         localWorker.setAggregator(aggregator);
         localWorker.run();
-        acquireMutex();
+        mutex.acquire();
         try
         {
             running = false;
@@ -270,7 +279,7 @@ public class TaskImpl implements Task
     void aggregateOutput(Aggregator aggregator)
     {
         // Return if we're done already.
-        acquireMutex();
+        mutex.acquire();
         try
         {
             if (done)
@@ -316,9 +325,9 @@ public class TaskImpl implements Task
         if (o != null && o instanceof TaskData)
         {
             TaskData output = (TaskData) o;
-            if (output.getInputId() == END_OF_OUTPUT) // This signals the end.
+            if (output.getInputId() == TaskData.END_OF_OUTPUT) // This signals the end.
             {
-                acquireMutex();
+                mutex.acquire();
                 try
                 {
                     done = true;
@@ -339,7 +348,7 @@ public class TaskImpl implements Task
 
     private void setFailure(Exception e)
     {
-        acquireMutex();
+        mutex.acquire();
         try
         {
             releaseTask(e);
@@ -355,7 +364,7 @@ public class TaskImpl implements Task
         // A little like a pre-assignment.  Send the assign message, but since we don't know the task class yet
         // nor do we have any inputs we're not going to send the 'go' message.
         Bus bus = client.getBus();
-        acquireMutex();
+        mutex.acquire();
         try
         {
             // Get one server, send the assign message.  The worker will wait for the 'go' message.
@@ -427,21 +436,9 @@ public class TaskImpl implements Task
         return responses;
     }
 
-    private void acquireMutex()
-    {
-        try
-        {
-            mutex.acquire();
-        }
-        catch (InterruptedException e)
-        {
-            throw new GridException(e);
-        }
-    }
-
     public void onFailure(GridException e)
     {
-        acquireMutex();
+        mutex.acquire();
         try
         {
             releaseTask(e);
@@ -454,7 +451,7 @@ public class TaskImpl implements Task
 
     public void onMembershipChange(Set joined, Set left)
     {
-        acquireMutex();
+        mutex.acquire();
         try
         {
             // If any server left that we care about, then

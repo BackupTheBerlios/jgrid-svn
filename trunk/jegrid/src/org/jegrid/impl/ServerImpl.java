@@ -206,6 +206,11 @@ public class ServerImpl implements Server
         bus.broadcastNodeStatus();
     }
 
+    public Client getClient()
+    {
+        return grid.getClient();
+    }
+
     class WorkerMap
     {
         private Map workerMapByClient = new HashMap();

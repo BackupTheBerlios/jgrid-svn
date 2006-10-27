@@ -3,6 +3,7 @@ package org.jegrid.impl;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
 import org.jegrid.*;
+import org.jegrid.log.LogEventPump;
 
 import java.util.*;
 

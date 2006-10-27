@@ -11,9 +11,11 @@ import java.io.Serializable;
 public class TaskData implements Serializable
 {
     private static final long serialVersionUID = -2681038030949504077L;
-    
+
     private int inputId;
     private Serializable data;
+    public static final int END_OF_OUTPUT = -1;
+    public static final TaskData END = new TaskData(END_OF_OUTPUT, null);
 
     public TaskData(int inputId, Serializable inputData)
     {

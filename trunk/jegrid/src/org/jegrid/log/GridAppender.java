@@ -1,4 +1,4 @@
-package org.jegrid.impl;
+package org.jegrid.log;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.AppenderSkeleton;
@@ -7,6 +7,8 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.spi.Filter;
 import org.apache.log4j.spi.LoggingEvent;
 import org.jegrid.TaskId;
+import org.jegrid.impl.Bus;
+import org.jegrid.impl.RpcTimeoutException;
 
 /**
  * A Log4J Appender that sends logging events back to the client.

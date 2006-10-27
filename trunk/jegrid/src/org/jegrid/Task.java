@@ -8,7 +8,8 @@ import java.io.Serializable;
  * <ol>
  * <li>An input processor class name - This class must implement InputProcessor.  It will be used
  * to process the input.</li>
- * <li>A list of inputs - These objects will form a queue that is fed to the InputProcessor on the grid for processing.</li>
+ * <li>A list of inputs - These objects will form a queue that is fed to the InputProcessor on the
+ * grid for processing.  The inputs will be processed in parallel by the workers.</li>
  * <li>An aggregator - This object will aggregate the results of each input as they happen.</li>
  * <li>maxWorkers - The maximum number of servers that will be used to process the input.</li>
  * </ol>
@@ -37,9 +38,19 @@ public interface Task
             ;
 
     /**
+     * Sets the shared input that will be broadcast to every worker.
+     * NOTE: Changes made to this object after the workers are started will not
+     * be replicated across the grid, so it is recommended that this object be
+     * treated as immutable.
+     *
+     * @param sharedInput the (immutable) shared input for every worker
+     */
+    void setSharedInput(Serializable sharedInput);
+
+    /**
      * Process all the inputs on the grid with the specified task class.
      * The inputs will be processed in paralell, and the output will be aggregated by a
-     * single, stateful aggregator.
+     * single, stateful aggregator.  This is the 'Task Parallel' pattern.
      *
      * @param inputProcessorClass The name of the task class, which implements InputProcessor and will be used by the workers
      *                            to process the input and produce the output.

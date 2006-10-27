@@ -1,4 +1,4 @@
-package org.jegrid.impl;
+package org.jegrid.log;
 
 import EDU.oswego.cs.dl.util.concurrent.Channel;
 import EDU.oswego.cs.dl.util.concurrent.LinkedQueue;

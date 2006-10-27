@@ -6,6 +6,7 @@ import org.jegrid.GridException;
 import org.jegrid.InputProcessor;
 import org.jegrid.TaskData;
 import org.jegrid.TaskId;
+import org.jegrid.log.GridAppender;
 
 /**
  * A runnable that performs the work on a server.  It instantiates the task class and begins processing input from the

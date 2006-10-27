@@ -269,10 +269,10 @@ public class MonteCarloPi implements InputProcessor
         public void aggregate(TaskData output)
         {
             Output out = (Output) output.getData();
-            log.info("# " + output.getInputId() + " : " + out.showResult());
             if (aggregate == null)
                 aggregate = new Output();
             aggregate.aggregate(out);
+            log.info("# " + output.getInputId() + " : " + out.showResult() + " so far " + aggregate.showResult());
         }
     }
 

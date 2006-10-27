@@ -3,20 +3,17 @@ package org.jegrid.impl;
 import EDU.oswego.cs.dl.util.concurrent.Latch;
 import org.apache.log4j.Logger;
 import org.apache.log4j.NDC;
-import org.jegrid.GridException;
-import org.jegrid.InputProcessor;
-import org.jegrid.TaskData;
-import org.jegrid.TaskId;
+import org.jegrid.*;
 
 import java.io.Serializable;
 
 /**
- * TODO: Add class level javadoc.
+ * Common behavior and state for the local and 'server' workers.
  * <br>User: Joshua Davis
  * Date: Oct 22, 2006
  * Time: 8:40:41 AM
  */
-abstract class AbstractInputProcessingWorker extends Worker
+abstract class AbstractInputProcessingWorker extends Worker implements TaskContext
 {
     private static Logger log = Logger.getLogger(AbstractInputProcessingWorker.class);
     protected final TaskId id;
@@ -176,5 +173,21 @@ abstract class AbstractInputProcessingWorker extends Worker
         this.inputProcessorClassName = goMessage.getProcessorClassName();
         this.sharedInput = goMessage.getSharedInput();
         goLatch.release();
+    }
+
+
+    public TaskId getTaskId()
+    {
+        return id;
+    }
+
+    public Object getSharedInput()
+    {
+        return sharedInput;
+    }
+
+    public Client getClient()
+    {
+        return server.getClient();
     }
 }

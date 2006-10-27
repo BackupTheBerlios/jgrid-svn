@@ -1,7 +1,6 @@
 package org.jegrid.impl;
 
 import EDU.oswego.cs.dl.util.concurrent.CondVar;
-import EDU.oswego.cs.dl.util.concurrent.Mutex;
 import org.apache.log4j.Logger;
 import org.jegrid.*;
 
@@ -39,7 +38,7 @@ class Membership implements GridStatus
 
     public void waitForMembershipChange(int mark, long timeout)
     {
-        acquireMutex();
+        membershipMutex.acquire();
         try
         {
             unsyncWaitForMembershipChange(mark, timeout);
@@ -52,7 +51,7 @@ class Membership implements GridStatus
 
     public void onMembershipChange(Set joined, Set left)
     {
-        acquireMutex();
+        membershipMutex.acquire();
         try
         {
             log.info("--- NODE " + grid.getLocalAddress() + " MEMBERSHIP CHANGE #" + numberOfMembershipChanges + " ---");
@@ -132,7 +131,7 @@ class Membership implements GridStatus
 
     public Collection getNodeStatus()
     {
-        acquireMutex();
+        membershipMutex.acquire();
         try
         {
             unsyncWaitForMembershipChange(1, TIMEOUT_FOR_FIRST_MEMBERSHIP_CHANGE);
@@ -146,7 +145,7 @@ class Membership implements GridStatus
 
     public int nextMembershipChange()
     {
-        acquireMutex();
+        membershipMutex.acquire();
         try
         {
             return numberOfMembershipChanges + 1;
@@ -183,21 +182,9 @@ class Membership implements GridStatus
         }
     }
 
-    private void acquireMutex()
-    {
-        try
-        {
-            membershipMutex.acquire();
-        }
-        catch (InterruptedException e)
-        {
-            throw new GridException(e);
-        }
-    }
-
     public void onNodeStatus(NodeStatus from)
     {
-        acquireMutex();
+        membershipMutex.acquire();
         try
         {
             updateStatus(from);
@@ -210,7 +197,7 @@ class Membership implements GridStatus
 
     public void refreshStatus(NodeStatus[] ns)
     {
-        acquireMutex();
+        membershipMutex.acquire();
         try
         {
             for (int i = 0; i < ns.length; i++)
@@ -249,7 +236,7 @@ class Membership implements GridStatus
 
     public int getNumberOfNodes()
     {
-        acquireMutex();
+        membershipMutex.acquire();
         try
         {
             return allNodesByAddress.size();
@@ -265,7 +252,7 @@ class Membership implements GridStatus
         // Copy the node statuses into a list and use that for the iterator to avoid
         // concurrent modification exceptions, etc.
         List list = new LinkedList();
-        acquireMutex();
+        membershipMutex.acquire();
         try
         {
             list.addAll(allNodesByAddress.values());
@@ -290,7 +277,7 @@ class Membership implements GridStatus
 
     public int getNumberOfUnknownNodes()
     {
-        acquireMutex();
+        membershipMutex.acquire();
         try
         {
             return unknownNodes.size();
@@ -303,7 +290,7 @@ class Membership implements GridStatus
 
     public void waitForServers() throws InterruptedException
     {
-        acquireMutex();
+        membershipMutex.acquire();
         try
         {
             serversNotFull.await();
