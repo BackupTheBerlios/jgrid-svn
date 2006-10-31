@@ -1,7 +1,7 @@
 <project name="jegrid" default="all">
 
     <property name="lib.dir" value="${basedir}/../lib"/>
-
+    <property name="build.dir" value="${basedir}/build"/>
     <path id="main.classpath">
         <fileset dir="${lib.dir}">
             <patternset id="libs">
@@ -17,50 +17,91 @@
 
     <path id="test.classpath">
         <path refid="main.classpath"/>
-        <pathelement location="${basedir}/classes"/>
+        <pathelement location="${build.dir}/classes"/>
         <fileset dir="${lib.dir}">
             <include name="junit*.jar"/>
         </fileset>
     </path>
 
     <target name="clean">
-        <delete dir="${basedir}/classes" failonerror="false"/>
-        <delete file="jegrid.jar" failonerror="false"/>
-        <delete file="jegrid.tar.gz" failonerror="false"/>
+        <delete dir="${build.dir}/classes" failonerror="false"/>
+        <delete file="${build.dir}/dist/jegrid.jar" failonerror="false"/>
+        <delete file="${build.dir}/jegrid.tar.gz" failonerror="false"/>
     </target>
 
     <target name="compile" description="Compile all the java code.">
-        <mkdir dir="${basedir}/classes"/>
-        <javac srcdir="${basedir}/src" destdir="${basedir}/classes">
+        <mkdir dir="${build.dir}/classes"/>
+        <javac srcdir="${basedir}/src" destdir="${build.dir}/classes">
             <classpath refid="main.classpath"/>
         </javac>
-        <mkdir dir="${basedir}/test_classes"/>
-        <javac srcdir="${basedir}/test_src" destdir="${basedir}/test_classes">
+        <mkdir dir="${build.dir}/test_classes"/>
+        <javac srcdir="${basedir}/test_src" destdir="${build.dir}/test_classes">
             <classpath refid="test.classpath"/>
         </javac>
     </target>
 
     <target name="jar" depends="compile">
-        <jar jarfile="jegrid.jar">
-            <fileset dir="${basedir}/classes" includes="**"/>
-            <fileset dir="${basedir}/test_classes" includes="**"/>
-            <fileset dir="${basedir}/src" includes="**/*.xml"/>
-            <fileset dir="${basedir}/test_src" includes="**/*.properties"/>
+        <mkdir dir="${build.dir}/dist"/>
+        <jar jarfile="${build.dir}/dist/jegrid.jar">
+            <fileset dir="${build.dir}/classes" includes="**"/>
+            <fileset dir="${build.dir}/test_classes" includes="**"/>
+            <fileset dir="src" includes="**/*.xml"/>
+            <fileset dir="test_src" includes="**/*.properties"/>
         </jar>
     </target>
 
-    <target name="tarball" depends="jar">
-        <tar compression="gzip" tarfile="jegrid.tar.gz">
+    <target name="srczip">
+        <mkdir dir="${build.dir}/dist"/>
+        <zip zipfile="${build.dir}/dist/jegrid-src.zip">
+            <fileset dir="src" includes="**"/>
+            <fileset dir="test_src" includes="**"/>
+        </zip>
+    </target>
+
+    <target name="javadoc">
+        <mkdir dir="${build.dir}/dist/docs/api"/>
+        <javadoc packagenames="org.*"
+                 sourcepath="src"
+                 defaultexcludes="yes"
+                 destdir="${build.dir}/dist/docs/api"
+                 author="true"
+                 version="true"
+                 use="true"
+                 windowtitle="JEGrid API">
+            <doctitle><![CDATA[<h1>JEGrid API</h1>]]></doctitle>
+            <bottom><![CDATA[<i>Copyright &#169; 2005-2006 JEGrid Developers.</i>]]></bottom>
+            <tag name="todo" scope="all" description="To do:"/>
+        </javadoc>
+    </target>
+
+    <target name="tarball" depends="jar,srczip,javadoc">
+        <mkdir dir="${build.dir}"/>
+        <tar compression="gzip" tarfile="${build.dir}/jegrid.tar.gz">
             <tarfileset dir="${basedir}" mode="755">
                 <include name="*.sh"/>
             </tarfileset>
             <tarfileset dir="${lib.dir}" prefix="lib">
                 <patternset refid="libs"/>
             </tarfileset>
-            <tarfileset dir="${basedir}">
+            <tarfileset dir="${build.dir}/dist">
                 <include name="jegrid.jar"/>
+                <include name="jegrid-src.zip"/>
             </tarfileset>
+            <tarfileset dir="${build.dir}/dist/docs/api" prefix="apidocs"/>
         </tar>
+        <zip zipfile="${build.dir}/jegrid.zip">
+            <zipfileset dir="${basedir}">
+                <include name="*.sh"/>
+            </zipfileset>
+            <zipfileset dir="${lib.dir}" prefix="lib">
+                <patternset refid="libs"/>
+            </zipfileset>
+            <zipfileset dir="${build.dir}/dist">
+                <include name="jegrid.jar"/>
+                <include name="jegrid-src.zip"/>
+            </zipfileset>
+            <zipfileset dir="${build.dir}/dist/docs/api" prefix="apidocs"/>
+        </zip>
     </target>
 
     <target name="all" depends="clean,tarball"/>
