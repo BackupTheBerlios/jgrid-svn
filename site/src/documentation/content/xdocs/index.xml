@@ -1,80 +1,141 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
 <document>
-	<header>
-		<title>JEGrid - Enterprise Grid Computing for Java</title>
-	</header>
-	<body>
-		<section id="intro">
-			<title>Introduction</title>
-			<p>
-      JEGrid is a light weight <strong>enterprise grid framework for Java</strong> that provides
-      <strong>federation</strong> (clustering), <strong>coarse-grained SIMD parallelism</strong>, and
-      <strong>load balancing</strong>.
-      Using the coarse-grained parallelism features, super-computer performance can be realized with
-      commodity-off-the-shelf hardware which is more economical, more scaleable, and
-      more familiar to IT personell.
-      </p>
-		</section>
-		<section id="features">
-			<title>Features</title>
-				<ul>
-				    <li><strong>Single Instruction Multiple Data parallelism</strong> -
+    <header>
+        <title>JEGrid - Enterprise Grid Computing for Java</title>
+    </header>
+    <body>
+        <section id="intro">
+            <title>Introduction</title>
+            <p>
+                JEGrid is a light weight
+                <strong>enterprise grid framework for Java</strong>
+                that provides
+                <strong>federation</strong>
+                (clustering),
+                <strong>coarse-grained SIMD parallelism</strong>
+                , and
+                <strong>load balancing</strong>
+                .
+                Using the coarse-grained parallelism features, super-computer performance can be realized with
+                commodity-off-the-shelf hardware which is more economical, more scaleable, and
+                more familiar to IT personell.
+            </p>
+        </section>
+        <section>
+            <title>News</title>
+            <ul>
+                <li>
+                    <strong>2006-10-31 JEGrid 0.1.0 Released</strong>
+                    <br/>
+                    The initial alpha version of JEGrid is now available for downloading
+                    <a href="ext:projectfiles">here</a>
+                    .
+                </li>
+            </ul>
+        </section>
+        <section id="features">
+            <title>Features</title>
+            <ul>
+                <li>
+                    <strong>Single Instruction Multiple Data parallelism</strong>
+                    -
                     JEGrid allows a developer to run the same code on a set of input data elements in parallel.
                     It handles all the network communication and multithreading, which allows the developer to
-                    focus on the algorithm and how it should be parallelized.</li>
-					<li><strong>Fast, with a minimal API</strong> - JEGrid has very minimal network overhead for maximum speed.
-                    The simple API requires only a few lines of code to take advantage of parallelism.</li>
-					<li><strong>Automatic clustering and failure detection</strong> - Servers, clients and observers
-                    automatically join the grid cluster.   If any node fails all nodes depending on it will be
-                    notified and take appropriate action.</li>
-				    <li><strong>Flexible networking</strong> - Can use IP Multicast, UDP,
-                    or TCP as it's underlying protocol.</li>
-                    <li><strong>Centralized Logging</strong> - Log messages from the distributed nodes
-                    messages can be concentrated onto a single JVM for easier debugging and troubleshooting.</li>
-                </ul>
-		</section>
+                    focus on the algorithm and how it should be parallelized.
+                </li>
+                <li>
+                    <strong>Fast, with a minimal API</strong>
+                    - JEGrid has very minimal network overhead for maximum speed.
+                    The simple API requires only a few lines of code to take advantage of parallelism.
+                </li>
+                <li>
+                    <strong>Automatic clustering and failure detection</strong>
+                    - Servers, clients and observers
+                    automatically join the grid cluster. If any node fails all nodes depending on it will be
+                    notified and take appropriate action.
+                </li>
+                <li>
+                    <strong>Flexible networking</strong>
+                    - Can use IP Multicast, UDP,
+                    or TCP as it's underlying protocol.
+                </li>
+                <li>
+                    <strong>Centralized Logging</strong>
+                    - Log messages from the distributed nodes
+                    messages can be concentrated onto a single JVM for easier debugging and troubleshooting.
+                </li>
+            </ul>
+        </section>
         <section id="applications">
             <title>What can JEGrid be used for?</title>
             <ul>
-                <li><strong>Finanical Calculations</strong> - "Monte Carlo" simulations and other optimizing techniques
-                can be parallelized relatively easily with JEGrid.</li>
-                <li><strong>Scientific and Engineering Simulations</strong> - Simulated Annealing, genetic algorithms,
-                neural network simulations... anything that can be processed with SIMD parallelism.</li>
+                <li>
+                    <strong>Finanical Calculations</strong>
+                    - "Monte Carlo" simulations and other optimizing techniques
+                    can be parallelized relatively easily with JEGrid.
+                </li>
+                <li>
+                    <strong>Scientific and Engineering Simulations</strong>
+                    - Simulated Annealing, genetic algorithms,
+                    neural network simulations... anything that can be processed with SIMD parallelism.
+                </li>
             </ul>
         </section>
         <section>
             <title>How does JEGrid compare to...</title>
             <p>
-            Certainly there are competitive projects out there.
-            <a
-                href="ext:jini">JINI/Java Spaces</a> is now gaining momentum because it has been Open Sourced.
+                Certainly there are competitive projects out there.
+                <a
+                        href="ext:jini">JINI/Java Spaces
+                </a>
+                is now gaining momentum because it has been Open Sourced.
                 There are also other Java-based parallel systems out there.
-                The main reason for this new project is that <strong>it has to be simple</strong>.
+                The main reason for this new project is that
+                <strong>it has to be simple</strong>
+                .
                 If you look around out there, you will find that most of the Java parallel systems are definitely not
-                as simple as, for example Google's <a href="ext:mapreduce">MapReduce</a> API which this framework is
+                as simple as, for example Google's
+                <a href="ext:mapreduce">MapReduce</a>
+                API which this framework is
                 loosely based on.
             </p>
             <p>How does JEGrid compare to other frameworks for doing parallel processing?
-            Mainly, it's simpler and lighter weight.</p>
-<ul>
-<li><a href="http://lucene.apache.org/hadoop">Hadoop</a> is an OpenSource version of MapReduce.  However, like map reduce it relies heavily on a
-distributed file system.  JEGrid is much smaller and lighter because it doesn't need a distributed file system
-(although this is something that may be added in a future release).</li>
-<li><a href="ext:jini">JINI/JavaSpaces</a> JINI does a lot more than JEGrid and it has a more complex API.
-    In a way, JINI Is more like a network infrastructure for building a grid framework.
-                However, do you really need all that for simple parallelism in a controlled environment?
-                Why do you need a proxy / service lookup / dynamic RMI stub generation when you just want
-                to run some Java code on a few (even 50) small machines?  Most of the enterprise software I have
-                seen in my career did not need this flexibility.
-                That said, <a href="http://jan.netcomp.monash.edu.au/java/jini/tutorial/Jini.xml">here is a good JINI tutorial</a>
-                take a look and decide for yourself.
-    </li>
-<li><a href="http://www.hpjava.org/">HPJava</a> Like JavaParty, HPJava is not Java, it's a new language which requires recoding.</li>
-<li><a href="http://www.ipd.uka.de/JavaParty/">Java Party</a> Party is actually a new language based on Java.
-    In order to use it, you need to re-code in JavaParty and compile it with JPC.
-    JEGrid is a library, so it will work with existing code.</li>
-</ul>            
+                Mainly, it's simpler and lighter weight.
+            </p>
+            <ul>
+                <li>
+                    <a href="http://lucene.apache.org/hadoop">Hadoop</a>
+                    is an OpenSource version of MapReduce. However, like map reduce it relies heavily on a
+                    distributed file system. JEGrid is much smaller and lighter because it doesn't need a distributed
+                    file system
+                    (although this is something that may be added in a future release).
+                </li>
+                <li>
+                    <a href="ext:jini">JINI/JavaSpaces</a>
+                    JINI does a lot more than JEGrid and it has a more complex API.
+                    In a way, JINI Is more like a network infrastructure for building a grid framework.
+                    However, do you really need all that for simple parallelism in a controlled environment?
+                    Why do you need a proxy / service lookup / dynamic RMI stub generation when you just want
+                    to run some Java code on a few (even 50) small machines? Most of the enterprise software I have
+                    seen in my career did not need this flexibility.
+                    That said,
+                    <a href="http://jan.netcomp.monash.edu.au/java/jini/tutorial/Jini.xml">here is a good JINI
+                        tutorial
+                    </a>
+                    take a look and decide for yourself.
+                </li>
+                <li>
+                    <a href="http://www.hpjava.org/">HPJava</a>
+                    Like JavaParty, HPJava is not Java, it's a new language which requires recoding.
+                </li>
+                <li>
+                    <a href="http://www.ipd.uka.de/JavaParty/">Java Party</a>
+                    Party is actually a new language based on Java.
+                    In order to use it, you need to re-code in JavaParty and compile it with JPC.
+                    JEGrid is a library, so it will work with existing code.
+                </li>
+            </ul>
         </section>
     </body>
 </document>
