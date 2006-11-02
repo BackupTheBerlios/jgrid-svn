@@ -3,6 +3,7 @@ package org.jegrid.impl;
 import org.jegrid.NodeAddress;
 import org.jegrid.NodeStatus;
 import org.jegrid.Grid;
+import org.jegrid.util.DateUtil;
 
 import java.io.Serializable;
 
@@ -23,21 +24,31 @@ public class NodeStatusImpl implements NodeStatus, Serializable
     private long totalMemory;
     private int freeThreads;
     private int totalThreads;
+    private long startTime;
+    private int tasksAccepted;
+    private long lastTaskAccepted;
+    private long statusAsOf;
 
     public NodeStatusImpl(NodeAddress address)
     {
         this.address = address;
     }
 
-    public NodeStatusImpl(NodeAddress address, int type, NodeAddress coordinator, long freeMemory, long totalMemory, int freeThreads, int totalThreads)
+    public NodeStatusImpl(NodeAddress address, int type, NodeAddress coordinator,
+                          long freeMemory, long totalMemory, int freeThreads, int totalThreads,
+                          long startTime, int tasksAccepted, long lastTaskAccepted)
     {
         this.address = address;
         this.type = type;
-        this.coordinator = address;
+        this.coordinator = coordinator;
         this.freeMemory = freeMemory;
         this.totalMemory = totalMemory;
         this.freeThreads = freeThreads;
         this.totalThreads = totalThreads;
+        this.startTime = startTime;
+        this.tasksAccepted = tasksAccepted;
+        this.lastTaskAccepted = lastTaskAccepted;
+        this.statusAsOf = System.currentTimeMillis();
     }
 
     public NodeAddress getNodeAddress()
@@ -70,6 +81,31 @@ public class NodeStatusImpl implements NodeStatus, Serializable
         return freeMemory;
     }
 
+    public long getTotalMemory()
+    {
+        return totalMemory;
+    }
+
+    public long getStartTime()
+    {
+        return startTime;
+    }
+
+    public int getTasksAccepted()
+    {
+        return tasksAccepted;
+    }
+
+    public long getLastTaskAccepted()
+    {
+        return lastTaskAccepted;
+    }
+
+    public long getStatusAsOf()
+    {
+        return statusAsOf;
+    }
+
     private String getNodeType()
     {
         switch (type)
@@ -91,12 +127,16 @@ public class NodeStatusImpl implements NodeStatus, Serializable
     {
         return "NodeStatusImpl{" +
                 "address=" + address +
-                ", type=" + getNodeType() +
                 ", coordinator=" + coordinator +
+                ", type=" + getNodeType() +
                 ", freeMemory=" + freeMemory +
                 ", totalMemory=" + totalMemory +
                 ", freeThreads=" + freeThreads +
                 ", totalThreads=" + totalThreads +
+                ", startTime=" + DateUtil.formatTime(startTime) +
+                ", tasksAccepted=" + tasksAccepted +
+                ", lastTaskAccepted=" + DateUtil.formatTime(lastTaskAccepted) +
+                ", statusAsOf=" + DateUtil.formatTime(statusAsOf) +
                 '}';
     }
 }

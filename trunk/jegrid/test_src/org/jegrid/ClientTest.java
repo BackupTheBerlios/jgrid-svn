@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * TODO: Add class level javadoc.
+ * Some basic client side tests.
  * <br>User: Joshua Davis
  * Date: Oct 8, 2006
  * Time: 10:04:52 AM
@@ -21,17 +21,19 @@ public class ClientTest extends TestCase
 
     public void testServerComparator() throws Exception
     {
+        long startTime = 0;
         // Nodes with zero free threads go to the bottom.
         // Nodes with a larger percentage of free threads are preferred.
         // Nodes with a larger percentage of free memory per free thread are preferred.
+        long lastTaskAccepted = 0;
         NodeStatusImpl[] nodes = new NodeStatusImpl[]{
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 0, 20),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 0, 10),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 19, 25),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 9, 10),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 200, 200, 10, 10),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 10, 10),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 8, 10),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 0, 20, startTime, 0, lastTaskAccepted),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 0, 10, startTime, 0, lastTaskAccepted),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 19, 25, startTime, 0, lastTaskAccepted),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 9, 10, startTime, 0, lastTaskAccepted),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 200, 200, 10, 10, startTime, 0, lastTaskAccepted),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 10, 10, startTime, 0, lastTaskAccepted),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 8, 10, startTime, 0, lastTaskAccepted),
         };
         Arrays.sort(nodes, new ServerComparator());
         assertEquals(10, nodes[0].getAvailableWorkers());

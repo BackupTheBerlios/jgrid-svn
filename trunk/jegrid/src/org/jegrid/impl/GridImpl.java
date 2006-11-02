@@ -21,7 +21,7 @@ public class GridImpl implements GridImplementor
     private Bus bus;
     private Server server;
     private ClientImplementor client;
-    private NodeStatusImpl localStatus;
+    private long startTime;
 
     public GridImpl(GridConfiguration config)
     {
@@ -57,6 +57,7 @@ public class GridImpl implements GridImplementor
 
     public void connect()
     {
+        startTime = System.currentTimeMillis();
         bus.connect();
     }
 
@@ -75,6 +76,8 @@ public class GridImpl implements GridImplementor
         Runtime rt = Runtime.getRuntime();
         int freeThreads = (server == null) ? 0 : server.freeThreads();
         int totalThreads = (server == null) ? 0 : server.totalThreads();
+        int tasksAccepted = (server == null) ? 0 : server.tasksAccepted();
+        long lastTaskAccepted = (server == null) ? 0 : server.lastTaskAccepted();
         return new NodeStatusImpl(
                 bus.getAddress(),
                 config.getType(),
@@ -82,8 +85,10 @@ public class GridImpl implements GridImplementor
                 rt.freeMemory(),
                 rt.totalMemory(),
                 freeThreads,
-                totalThreads
-        );
+                totalThreads,
+                startTime,
+                tasksAccepted,
+                lastTaskAccepted);
     }
 
     public GridStatus getGridStatus(boolean cached)
@@ -100,6 +105,7 @@ public class GridImpl implements GridImplementor
     {
         if (server == null)
             throw new GridException("This node is not configured as a server.");
+        log.info("Starting server...");
         server.run();
     }
 

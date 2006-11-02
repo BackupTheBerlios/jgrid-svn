@@ -14,7 +14,7 @@ public interface Server
     /**
      * Client wants to reserve a worker thread for a particular task.
      *
-     * @param id
+     * @param id the task id
      * @return A response indicating whether this server can reserve a thread.
      */
     AssignResponse onAssign(TaskId id);
@@ -41,7 +41,7 @@ public interface Server
     /**
      * A client is allowing the worker on this task to proceed.
      *
-     * @param goMessage
+     * @param goMessage the go message
      */
     void onGo(GoMessage goMessage);
 
@@ -59,5 +59,18 @@ public interface Server
      * @return true if it was accepted, false if not
      */
     boolean onAssignTask(TaskRequest request)
+            ;
+
+    /**
+     * Returns the number of tasks accepted by this server.
+     * @return the number of tasks accepted by this server.
+     */
+    int tasksAccepted()
+            ;
+
+    /**
+     * @return the timestamp of the last accepted task
+     */
+    long lastTaskAccepted()
             ;
 }

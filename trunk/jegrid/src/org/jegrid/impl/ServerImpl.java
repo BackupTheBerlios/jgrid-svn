@@ -22,6 +22,8 @@ public class ServerImpl implements Server
     private GridImplementor grid;
     private int poolSize;
     private final WorkerMap workers;
+    private int tasksAccepted;
+    private long lastTaskAccepted;
 
     public ServerImpl(GridConfiguration config, Bus bus, GridImplementor grid)
     {
@@ -33,12 +35,9 @@ public class ServerImpl implements Server
         workers = new WorkerMap();
     }
 
-    public int freeThreads()
+    public synchronized int freeThreads()
     {
-        synchronized (this)
-        {
-            return _freeThreads();
-        }
+        return _freeThreads();
     }
 
     private int _freeThreads()
@@ -96,6 +95,16 @@ public class ServerImpl implements Server
         }
     }
 
+    public synchronized int tasksAccepted()
+    {
+        return tasksAccepted;
+    }
+
+    public synchronized long lastTaskAccepted()
+    {
+        return lastTaskAccepted;
+    }
+
     private synchronized InputProcessingWorker findWorker(TaskId id)
     {
         return workers.findWorker(id);
@@ -134,6 +143,8 @@ public class ServerImpl implements Server
                 workers.removeWorker(id);
                 throw new GridException(e);
             }
+            tasksAccepted++;
+            lastTaskAccepted = System.currentTimeMillis();
             bus.broadcastNodeStatus();
             return new AssignResponse(bus.getAddress(), _freeThreads(), true);
         }

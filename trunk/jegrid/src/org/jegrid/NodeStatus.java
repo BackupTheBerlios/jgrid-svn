@@ -52,4 +52,31 @@ public interface NodeStatus
      */
     long getFreeMemory()
             ;
+
+    /**
+     * @return The total amount of heap space on the node, in bytes.
+     */
+    long getTotalMemory()
+            ;
+
+    /**
+     * @return the start time of the node, in millis since the epoch.
+     */
+    long getStartTime()
+            ;
+
+    /**
+     * @return the number of tasks accepted so far
+     */
+    int getTasksAccepted()
+            ;
+
+    /**
+     * @return the time the last task was accepted, in millis since the epoch
+     */
+    long getLastTaskAccepted()
+            ;
+
+    long getStatusAsOf()
+            ;
 }
