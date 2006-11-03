@@ -67,6 +67,11 @@ public class GridConfiguration
         gridName = s;
     }
 
+    public void setThreadPoolSize(int threadPoolSize)
+    {
+        this.threadPoolSize = threadPoolSize;
+    }
+
     /**
      * Creates the main Grid implementation.  Use this object to observe or submit jobs to the grid.  Each
      * call will create a new instance, so be careful.  Usually an application will want to have only one instance
