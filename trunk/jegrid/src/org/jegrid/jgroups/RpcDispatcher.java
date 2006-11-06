@@ -3,8 +3,13 @@ package org.jegrid.jgroups;
 import org.jegrid.GridException;
 import org.jegrid.NodeAddress;
 import org.jegrid.impl.RpcTimeoutException;
-import org.jgroups.*;
+import org.jgroups.Address;
+import org.jgroups.Channel;
+import org.jgroups.SuspectedException;
+import org.jgroups.TimeoutException;
 import org.jgroups.blocks.GridMethodCall;
+import org.jgroups.blocks.GridRpcDispatcher;
+import org.jgroups.blocks.MarshallingException;
 import org.jgroups.blocks.MethodCall;
 import org.jgroups.util.Rsp;
 import org.jgroups.util.RspList;
@@ -23,16 +28,11 @@ import java.util.Vector;
  * Date: Oct 22, 2006
  * Time: 1:18:04 PM
  */
-public class RpcDispatcher extends org.jgroups.blocks.RpcDispatcher
+public class RpcDispatcher extends GridRpcDispatcher
 {
     public RpcDispatcher(Channel channel, JGroupsListener listener, RpcHandler handler)
     {
         super(channel, listener, listener, handler);
-    }
-
-    public Object handle(Message req)
-    {
-        return super.handle(req);
     }
 
     public RspList callRemoteMethods(Vector dests, String method_name, Object[] args, Class[] types, int mode, long timeout)
@@ -54,7 +54,7 @@ public class RpcDispatcher extends org.jgroups.blocks.RpcDispatcher
     {
         throw new UnsupportedOperationException("callRemoteMethod()");
     }
-
+    
     public Object call(NodeAddress address, String methodName,
                        Object[] args,
                        Class[] types,
@@ -88,6 +88,8 @@ public class RpcDispatcher extends org.jgroups.blocks.RpcDispatcher
 
     private MethodCall createMethodCall(String methodName, Object[] args, Class[] types)
     {
+        // Create the JEGrid method call that has some more safety checks on the
+        // server side.
         return new GridMethodCall(methodName, args, types);
     }
 
@@ -106,7 +108,15 @@ public class RpcDispatcher extends org.jgroups.blocks.RpcDispatcher
     public List broadcast(NodeAddress[] addresses, String methodName,
                           Object[] args, Class[] types, int mode, long timeout)
     {
-        RspList responses = doBroadcast(addresses, methodName, args, types, mode, timeout);
+        RspList responses = null;
+        try
+        {
+            responses = doBroadcast(addresses, methodName, args, types, mode, timeout);
+        }
+        catch (MarshallingException e)
+        {
+            throw new GridException(e);
+        }
         int numberOfResponses = responses.size();
         List rv = new ArrayList(numberOfResponses);
         for (int i = 0; i < numberOfResponses; i++)
@@ -133,7 +143,7 @@ public class RpcDispatcher extends org.jgroups.blocks.RpcDispatcher
         return rv;
     }
 
-    private RspList doBroadcast(NodeAddress[] addresses, String methodName, Object[] args, Class[] types, int mode, long timeout)
+    private RspList doBroadcast(NodeAddress[] addresses, String methodName, Object[] args, Class[] types, int mode, long timeout) throws MarshallingException
     {
         Vector dests = null;
         if (addresses != null && addresses.length > 0)

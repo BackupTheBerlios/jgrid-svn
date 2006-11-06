@@ -139,8 +139,8 @@ public class TaskImpl implements Task
             // Remember the input status in the map in case we have a failure
             // during processing.  It can then be put back on the queue.
             inprogress.put(is.getInputId(), is);
-            if (log.isDebugEnabled())
-                log.debug("Input id " + is.getInputId() + " given to server " + server + ", " + inputQueue.size() + " remain.");
+//            if (log.isDebugEnabled())
+//                log.debug("Input id " + is.getInputId() + " given to server " + server + ", " + inputQueue.size() + " remain.");
             return is.getInput();
         }
     }
@@ -151,8 +151,8 @@ public class TaskImpl implements Task
         inprogress.remove(key);
         if (unfinishedInputIds.remove(key))
         {
-            if (log.isDebugEnabled())
-                log.debug("putOutput() : " + output.getInputId() + " finished, " + unfinishedInputIds.size() + " remain.");
+//            if (log.isDebugEnabled())
+//                log.debug("putOutput() : " + output.getInputId() + " finished, " + unfinishedInputIds.size() + " remain.");
             // Put the output on the queue for the aggregator thread.
             // We're on the reciever thread now, so we want to return as quickly as possible.
             try
@@ -313,8 +313,8 @@ public class TaskImpl implements Task
         Object o;
         while ((o = outputQueue.poll(0)) != null)
         {
-            if (log.isDebugEnabled())
-                log.debug("drainOutputQueue() : aggregating.");
+//            if (log.isDebugEnabled())
+//                log.debug("drainOutputQueue() : aggregating.");
             aggregateOneOutput(aggregator, o);
         }
     }

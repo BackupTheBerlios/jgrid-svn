@@ -2,11 +2,9 @@ package org.jegrid;
 
 import junit.framework.TestCase;
 
-import javax.naming.InitialContext;
-import javax.naming.Context;
 import javax.jms.*;
-//import javax.transaction.TransactionManager;
-//import javax.transaction.UserTransaction;
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import java.util.Hashtable;
 
 /**

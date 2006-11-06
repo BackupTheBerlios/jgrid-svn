@@ -1,13 +1,12 @@
 package org.jegrid;
 
 import junit.framework.TestCase;
+import org.jegrid.util.StreamCopier;
 
-import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.Arrays;
-
-import org.jegrid.util.StreamCopier;
 
 /**
  * Tests classes:

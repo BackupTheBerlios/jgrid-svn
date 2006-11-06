@@ -92,7 +92,7 @@ public class ClientTest extends TestCase
         Client client = grid.getClient();
         List input = new ArrayList();
         for (int i = 0; i < 10; i++)
-            input.add(new MonteCarloPi.Input(17 * i + 1, 10000));
+            input.add(new MonteCarloPi.Input(17 * i + 1, 1000));
         TaskRequest request = new TaskRequest(
                 MonteCarloPi.class.getName(),
                 MonteCarloPi.MCPiAggregator.class.getName(),
@@ -104,5 +104,4 @@ public class ClientTest extends TestCase
         log.info("Background task 3...");
         client.background(request);
     }
-
 }

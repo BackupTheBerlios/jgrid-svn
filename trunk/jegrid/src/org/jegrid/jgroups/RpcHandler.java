@@ -6,7 +6,7 @@ import org.jegrid.*;
 import org.jegrid.impl.*;
 
 /**
- * Handles RPCs from the RpcDispatcher in the JGroupsBus.
+ * Handles RPCs from the GridRpcDispatcher in the JGroupsBus.
  * <br> User: jdavis
  * Date: Oct 7, 2006
  * Time: 11:06:40 AM
@@ -108,8 +108,6 @@ public class RpcHandler
 
     public TaskData _nextInput(TaskId taskId, NodeAddress server, TaskData output)
     {
-        if (log.isDebugEnabled())
-            log.debug("_nextInput");
         ClientImplementor client = (ClientImplementor) grid.getClient();
         if (client == null)
         {

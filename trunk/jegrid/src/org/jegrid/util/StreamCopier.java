@@ -221,8 +221,9 @@ public class StreamCopier implements Runnable
      * Reads the specified file into a byte array.
      * @param file The file to read.
      * @throws java.io.IOException When something happens while reading the stream.
+     * @return the byte array
      */
-    public static final byte[] readByteArray(File file)
+    public static byte[] readByteArray(File file)
             throws IOException
     {
         return StreamCopier.readByteArray(new BufferedInputStream(
@@ -233,8 +234,9 @@ public class StreamCopier implements Runnable
      * Reads the specified file into a byte array.
      * @param fileName The file name to read.
      * @throws java.io.IOException When something happens while reading the stream.
+     * @return the byte array
      */
-    public static final byte[] readFileIntoByteArray(String fileName)
+    public static byte[] readFileIntoByteArray(String fileName)
             throws IOException
     {
         return StreamCopier.readByteArray(new File(fileName));
@@ -244,8 +246,9 @@ public class StreamCopier implements Runnable
      * Serializes the object into an array of bytes.
      * @param o The object to serialize.
      * @return An array of bytes that contiains the serialized object.
+     * @throws java.io.IOException if something goes wrong.
      */
-    public static final byte[] serializeObject(Object o) throws IOException
+    public static byte[] serializeObject(Object o) throws IOException
     {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);

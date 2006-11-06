@@ -11,10 +11,7 @@ import org.jgroups.JChannel;
 import org.jgroups.blocks.GroupRequest;
 import org.jgroups.protocols.AUTOCONF;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 
 /**
@@ -118,23 +115,6 @@ public class JGroupsBus implements Bus
     {
         try
         {
-            StringBuffer buf = new StringBuffer();
-            buf.append("--- Network interfaces ---\n");
-            Enumeration en = NetworkInterface.getNetworkInterfaces();
-            while (en.hasMoreElements())
-            {
-                NetworkInterface i = (NetworkInterface) en.nextElement();
-                buf.append(i.toString());
-            }
-            InetAddress[] addresses = InetAddress.getAllByName(null);
-            for (int i = 0; i < addresses.length; i++)
-            {
-                if (i > 0)
-                    buf.append("\n");
-                buf.append("address[").append(i).append("]=");
-                buf.append(addresses[i].toString());
-            }
-            log.debug(buf.toString());
             log.info("Auto detecting fragment size...");
             int size = AUTOCONF.senseMaxFragSizeStatic();
             log.info("maxFragSize=" + size);

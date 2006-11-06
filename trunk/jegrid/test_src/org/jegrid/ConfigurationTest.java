@@ -3,7 +3,6 @@ package org.jegrid;
 import junit.framework.TestCase;
 import org.jegrid.impl.GridImplementor;
 
-import java.util.Collection;
 import java.util.Iterator;
 
 /**

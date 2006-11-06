@@ -6,7 +6,9 @@ import java.lang.reflect.Method;
 
 /**
  * Patches up the JGroups building block for MethodCall so that it
- * throws an exception if the target doesn't acutally have the method.
+ * throws an exception if the target (server) doesn't acutally have the method.
+ * Unfortunately, this needs to be in the org.jgroups.blocks package because it
+ * needs to have access to package local methods in MethodCall.
  * <br>User: Joshua Davis
  * Date: Oct 22, 2006
  * Time: 1:52:27 PM
@@ -24,7 +26,6 @@ public class GridMethodCall extends MethodCall implements Externalizable
     {
         super(methodName, args, types);
     }
-
 
     public Object invoke(Object target) throws Throwable
     {
@@ -70,6 +71,9 @@ public class GridMethodCall extends MethodCall implements Externalizable
             }
             else
             {
+                // This is the patch: The JGroups code logs an error message.
+                // if(log.isErrorEnabled()) log.error("method " + method_name + " not found");
+                // Instead, throw an exeption that will be sent back to the caller.
                 throw new NoSuchMethodException("method " + method_name + " not found");
             }
             return retval;

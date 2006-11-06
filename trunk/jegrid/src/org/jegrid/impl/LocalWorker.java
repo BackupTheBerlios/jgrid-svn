@@ -1,6 +1,7 @@
 package org.jegrid.impl;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.NDC;
 import org.jegrid.Aggregator;
 import org.jegrid.GridException;
 import org.jegrid.InputProcessor;
@@ -64,6 +65,17 @@ public class LocalWorker extends AbstractInputProcessingWorker
     public void setAggregator(Aggregator aggregator)
     {
         this.aggregator = aggregator;
+    }
+
+
+    protected void popLoggingContext()
+    {
+        NDC.pop();
+    }
+
+    protected void pushLoggingContext()
+    {
+        NDC.push("Local-"+id.getTaskId());
     }
 
     /**

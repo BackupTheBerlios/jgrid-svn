@@ -35,7 +35,8 @@ public class GridConfiguration
     private int type = Grid.TYPE_OBSERVER;
     private int threadPoolSize = DEFAULT_THREAD_POOL_SIZE;
     private String busConfiguration = DEFAULT_BUS_CONFIG;
-
+    private boolean distributedLoggingEnabled = false;
+    
     public String getBusConfiguration()
     {
         return busConfiguration;
@@ -67,9 +68,25 @@ public class GridConfiguration
         gridName = s;
     }
 
+    public int getThreadPoolSize()
+    {
+        return threadPoolSize;
+    }
+
     public void setThreadPoolSize(int threadPoolSize)
     {
         this.threadPoolSize = threadPoolSize;
+    }
+
+
+    public boolean isDistributedLoggingEnabled()
+    {
+        return distributedLoggingEnabled;
+    }
+
+    public void setDistributedLoggingEnabled(boolean distributedLoggingEnabled)
+    {
+        this.distributedLoggingEnabled = distributedLoggingEnabled;
     }
 
     /**
@@ -94,11 +111,6 @@ public class GridConfiguration
         // Perform the rest of the initialization that cannot be done with DI.
         grid.initialize(mc);
         return grid;
-    }
-
-    public int getThreadPoolSize()
-    {
-        return threadPoolSize;
     }
 
     public GridConfiguration setBusConfiguration(String busConfiguration)

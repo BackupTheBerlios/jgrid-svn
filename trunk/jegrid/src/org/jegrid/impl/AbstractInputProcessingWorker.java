@@ -155,7 +155,7 @@ abstract class AbstractInputProcessingWorker extends Worker implements TaskConte
 
     protected void pushLoggingContext()
     {
-        NDC.push(id.toString());
+        NDC.push("[" + id.toString() + "]");
     }
 
     protected abstract void done() throws InterruptedException

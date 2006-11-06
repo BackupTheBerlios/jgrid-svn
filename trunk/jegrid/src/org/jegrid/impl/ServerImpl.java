@@ -20,13 +20,15 @@ public class ServerImpl implements Server
     private Bus bus;
     private Latch shutdownLatch;
     private GridImplementor grid;
-    private int poolSize;
     private final WorkerMap workers;
     private int tasksAccepted;
     private long lastTaskAccepted;
+    private GridConfiguration config;
+    private int poolSize;
 
     public ServerImpl(GridConfiguration config, Bus bus, GridImplementor grid)
     {
+        this.config = config;
         poolSize = config.getThreadPoolSize();
         if (poolSize == 0)
             throw new GridException("Cannot start a server with zero threads!");
@@ -122,7 +124,7 @@ public class ServerImpl implements Server
         // Allocate a thread from the pool and run the InputProcessingWorker.  This will loop
         // until there is no more input available from the client.
         // The worker will remain waiting for the 'go' command from the client.
-        InputProcessingWorker worker = new InputProcessingWorker(this, id, bus);
+        InputProcessingWorker worker = new InputProcessingWorker(this, id, bus, config.isDistributedLoggingEnabled());
         synchronized (this)
         {
             int freeThreads = _freeThreads();

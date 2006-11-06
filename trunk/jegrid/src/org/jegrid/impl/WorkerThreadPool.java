@@ -59,7 +59,7 @@ class WorkerThreadPool extends PooledExecutor
     {
         public Thread newThread(Runnable command)
         {
-            Thread thread = new Thread(command, "Pool-" + grid.getLocalAddress() + "-" + nextThread++);
+            Thread thread = new Thread(command, "Worker-" + nextThread++);
             // Set the priority to *almost* the lowest possible value
             // The workers need to yield to the networking threads. 
             thread.setPriority(Thread.MIN_PRIORITY + 1);

@@ -54,6 +54,8 @@ public class GridAppender extends AsyncAppender implements Appender
                     return DENY;
                 else if (name.indexOf("org.jgroups") > 0)
                     return DENY;
+                else if (name.indexOf("org.jegrid.log") > 0)
+                    return DENY;
                 else if (name.indexOf("org.jegrid.jgroups") > 0)
                     return DENY;
                 else if (name.indexOf("org.jegrid.impl") > 0)
@@ -72,6 +74,8 @@ public class GridAppender extends AsyncAppender implements Appender
         {
             try
             {
+                if (log.isDebugEnabled())
+                    log.debug("Sending event to " + id.getClient() + " for task " + id.getTaskId());
                 bus.apppend(id, event);
             }
             catch (RpcTimeoutException e)

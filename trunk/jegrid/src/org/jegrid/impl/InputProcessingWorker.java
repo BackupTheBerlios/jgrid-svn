@@ -22,11 +22,13 @@ public class InputProcessingWorker extends AbstractInputProcessingWorker
 
     private Bus bus;
     private Appender appender;
+    private boolean distributedLoggingEnabled;
 
-    public InputProcessingWorker(ServerImpl server, TaskId task, Bus bus)
+    public InputProcessingWorker(ServerImpl server, TaskId task, Bus bus, boolean distributedLoggingEnabled)
     {
         super(server, task);
         this.bus = bus;
+        this.distributedLoggingEnabled = distributedLoggingEnabled;
     }
 
     protected void done()
@@ -56,19 +58,26 @@ public class InputProcessingWorker extends AbstractInputProcessingWorker
     protected void pushLoggingContext()
     {
         super.pushLoggingContext();
-        // Add a new appender to the root category that sends messages to the client.
-        if (appender == null)
+        if (distributedLoggingEnabled)
         {
-            appender = new GridAppender(bus, id);
+            // Add a new appender to the root category that sends messages to the client.
+            if (appender == null)
+            {
+                appender = new GridAppender(bus, id);
+            }
+            Logger.getRootLogger().addAppender(appender);
         }
-        Logger.getRootLogger().addAppender(appender);
     }
 
 
     protected void popLoggingContext()
     {
-        // Remove the appender
-        Logger.getRootLogger().removeAppender(appender);
+        if (distributedLoggingEnabled)
+        {
+            // Remove the appender
+            Logger.getRootLogger().removeAppender(appender);
+            appender = null;
+        }
         super.popLoggingContext();
     }
 
@@ -83,6 +92,4 @@ public class InputProcessingWorker extends AbstractInputProcessingWorker
         }
         return bus.getNextInput(id, output);
     }
-
-
 }

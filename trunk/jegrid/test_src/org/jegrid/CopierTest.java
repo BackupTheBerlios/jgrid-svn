@@ -1,14 +1,13 @@
 package org.jegrid;
 
 import junit.framework.TestCase;
+import org.jegrid.util.Copier;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.CharArrayReader;
 import java.io.CharArrayWriter;
-import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
-
-import org.jegrid.util.Copier;
 
 /**
  * Test the Copier class

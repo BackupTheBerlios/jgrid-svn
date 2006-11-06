@@ -1,6 +1,5 @@
 package org.jegrid.impl;
 
-import org.apache.log4j.NDC;
 import org.jegrid.Client;
 import org.jegrid.Task;
 import org.jegrid.TaskId;
@@ -28,14 +27,12 @@ public class RemoteTaskWorker extends Worker
 
     public void run()
     {
-        NDC.push(taskId.getClient().toString() + "-" + task.getTaskId());
         try
         {
             task.run(request, true);
         }
         finally
         {
-            NDC.pop();
             server.done(taskId);
         }
     }
