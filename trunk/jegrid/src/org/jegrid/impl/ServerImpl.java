@@ -28,6 +28,10 @@ public class ServerImpl implements Server
     public ServerImpl(GridConfiguration config, Bus bus, GridImplementor grid)
     {
         poolSize = config.getThreadPoolSize();
+        if (poolSize == 0)
+            throw new GridException("Cannot start a server with zero threads!");
+        
+        log.info("Starting server with " + poolSize + " threads.");
         this.bus = bus;
         this.grid = grid;
         this.pool = new WorkerThreadPool(poolSize, grid);
