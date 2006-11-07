@@ -115,9 +115,11 @@ public class GridRpcDispatcher extends MessageDispatcher implements ChannelListe
         if (dests != null && dests.size() == 0)
         {
             // don't send if dest list is empty
+/*
             if (log.isTraceEnabled())
                 log.trace(new StringBuffer("destination list of ").append(method_call.getName()).
                         append("() is empty: no need to send message"));
+*/
             return new RspList();
         }
 
@@ -141,7 +143,7 @@ public class GridRpcDispatcher extends MessageDispatcher implements ChannelListe
 
         Message msg = new Message(null, null, buf);
         RspList retval = super.castMessage(dests, msg, mode, timeout);
-        if (log.isTraceEnabled()) log.trace("responses: " + retval);
+//        if (log.isTraceEnabled()) log.trace("responses: " + retval);
         return retval;
     }
 
@@ -186,7 +188,7 @@ public class GridRpcDispatcher extends MessageDispatcher implements ChannelListe
 
         msg = new Message(dest, null, buf);
         retval = super.sendMessage(msg, mode, timeout);
-        if (log.isTraceEnabled()) log.trace("retval: " + retval);
+//        if (log.isTraceEnabled()) log.trace("retval: " + retval);
         return retval;
     }
 
