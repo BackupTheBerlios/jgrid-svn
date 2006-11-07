@@ -67,4 +67,7 @@ public interface GridImplementor extends Grid
 
     void waitForServers() throws InterruptedException
             ;
+
+    Object instantiateObject(String clazz)
+            ;
 }

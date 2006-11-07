@@ -8,10 +8,10 @@ package org.jegrid.impl;
  */
 abstract class Worker implements Runnable
 {
-    protected final ServerImpl server;
+    protected final GridImplementor grid;
 
-    public Worker(ServerImpl server)
+    public Worker(GridImplementor grid)
     {
-        this.server = server;
+        this.grid = grid;
     }
 }

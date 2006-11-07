@@ -12,7 +12,7 @@ import java.util.Random;
  * Date: Dec 31, 2005
  * Time: 5:39:01 PM
  */
-public class MonteCarloPi implements InputProcessor
+public class MonteCarloPi implements InputProcessor, LifecycleAware
 {
     private static Logger log = Logger.getLogger(MonteCarloPi.class);
 
@@ -164,6 +164,16 @@ public class MonteCarloPi implements InputProcessor
         return new Output(n, hits, l, d);
     }
 
+    public void initialize()
+    {
+        log.info("initialize()");
+    }
+
+    public void terminate()
+    {
+        log.info("terminate()");
+    }
+
     public static class Input implements Serializable
     {
         private long seed;
@@ -273,6 +283,11 @@ public class MonteCarloPi implements InputProcessor
                 aggregate = new Output();
             aggregate.aggregate(out);
             log.info("# " + output.getInputId() + " : " + out.showResult() + " so far " + aggregate.showResult());
+        }
+
+        public void done()
+        {
+            log.info("DONE: " + aggregate.showResult());
         }
     }
 

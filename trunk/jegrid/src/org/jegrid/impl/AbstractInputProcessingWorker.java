@@ -24,9 +24,9 @@ abstract class AbstractInputProcessingWorker extends Worker implements TaskConte
     private String inputProcessorClassName;
     private Serializable sharedInput;
 
-    public AbstractInputProcessingWorker(ServerImpl server, TaskId id)
+    public AbstractInputProcessingWorker(GridImplementor grid, TaskId id)
     {
-        super(server);
+        super(grid);
         this.id = id;
         this.goLatch = new Latch();
     }
@@ -69,22 +69,39 @@ abstract class AbstractInputProcessingWorker extends Worker implements TaskConte
         {
             // Create the task instance and run until there isn't any more input.
             InputProcessor inputProcessor = instantiateInputProcessor();
-            while (shouldRun(input))
+            try
             {
-                int inputId = input.getInputId();
-                Serializable data;
-                NDC.push("#" + inputId);
-                try
-                {
-                    data = inputProcessor.processInput(inputId, input.getData());
-                }
-                finally
-                {
-                    NDC.pop();
-                }
-                TaskData output = new TaskData(inputId, data);
-                input = nextInput(output);
+                loop(input, inputProcessor);
             }
+            finally
+            {
+                if (inputProcessor instanceof LifecycleAware)
+                {
+                    LifecycleAware lifecycleAware = (LifecycleAware) inputProcessor;
+                    lifecycleAware.terminate();
+                }
+            }
+        }
+    }
+
+    private void loop(TaskData input, InputProcessor inputProcessor)
+            throws Exception
+    {
+        while (shouldRun(input))
+        {
+            int inputId = input.getInputId();
+            Serializable data;
+            NDC.push("#" + inputId);
+            try
+            {
+                data = inputProcessor.processInput(inputId, input.getData());
+            }
+            finally
+            {
+                NDC.pop();
+            }
+            TaskData output = new TaskData(inputId, data);
+            input = nextInput(output);
         }
     }
 
@@ -93,9 +110,12 @@ abstract class AbstractInputProcessingWorker extends Worker implements TaskConte
         return inputProcessorClassName;
     }
 
-    protected abstract InputProcessor instantiateInputProcessor()
+    protected InputProcessor instantiateInputProcessor()
             throws IllegalAccessException, InstantiationException, ClassNotFoundException
-            ;
+    {
+
+        return (InputProcessor) grid.instantiateObject(getInputProcessorClassName());
+    }
 
     private boolean shouldRun(TaskData input) throws Exception
     {
@@ -188,6 +208,6 @@ abstract class AbstractInputProcessingWorker extends Worker implements TaskConte
 
     public Client getClient()
     {
-        return server.getClient();
+        return grid.getClient();
     }
 }

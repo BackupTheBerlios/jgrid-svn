@@ -3,6 +3,10 @@ package org.jegrid.util;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoContainer;
 import org.picocontainer.defaults.*;
+import org.jegrid.GridSingletonDescriptor;
+import org.jegrid.GridException;
+
+import java.util.Map;
 
 /**
  * Wrapper around PicoContainer.
@@ -36,6 +40,22 @@ public class MicroContainer
                 new CachingComponentAdapter(
                         new ConstructorInjectionComponentAdapter(
                                 key, implementation)));
+    }
+
+    public void registerSingleton(Object key, Class implementation, Map properties)
+    {
+        // Once an implementation has been created, the same one should be returned
+        // every time.  This is what CachingComponentAdapter does (see javadocs for
+        // ConstructorInjectionComponentAdapter.
+        ConstructorInjectionComponentAdapter componentAdapter =
+                new ConstructorInjectionComponentAdapter(
+                        key, implementation);
+        BeanPropertyComponentAdapter beanAdaptor =
+                new BeanPropertyComponentAdapter(componentAdapter);
+        beanAdaptor.setProperties(properties);
+        getPico().registerComponent(
+                new CachingComponentAdapter(
+                        beanAdaptor));
     }
 
     private MutablePicoContainer getPico()

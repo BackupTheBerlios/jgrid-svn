@@ -22,7 +22,10 @@ public class JmsTaskPump implements Runnable
 {
     private static Logger log = Logger.getLogger(JmsTaskPump.class);
 
-    private GridConfiguration config;
+    private Hashtable contextEnvironment;
+    private String jmsDestinationName;
+    private String jmsConnectionFactoryName;
+
     private InitialContext ic;
     private QueueConnectionFactory connectionFactory;
     private Queue queue;
@@ -31,10 +34,23 @@ public class JmsTaskPump implements Runnable
     private QueueReceiver consumer;
     private Client client;
 
-    public JmsTaskPump(GridConfiguration config, Client client)
+    public JmsTaskPump(Client client)
     {
-        this.config = config;
-        this.client = client;
+    }
+
+    public void setContextEnvironment(Hashtable contextEnvironment)
+    {
+        this.contextEnvironment = contextEnvironment;
+    }
+
+    public void setJmsDestinationName(String jmsDestinationName)
+    {
+        this.jmsDestinationName = jmsDestinationName;
+    }
+
+    public void setJmsConnectionFactoryName(String jmsConnectionFactoryName)
+    {
+        this.jmsConnectionFactoryName = jmsConnectionFactoryName;
     }
 
     public void run()
@@ -42,8 +58,8 @@ public class JmsTaskPump implements Runnable
         try
         {
             ic = getInitialContext();
-            queue = (Queue) ic.lookup(config.getJmsDestinationName());
-            connectionFactory = (QueueConnectionFactory) ic.lookup(config.getJmsConnectionFactoryName());
+            queue = (Queue) ic.lookup(jmsDestinationName);
+            connectionFactory = (QueueConnectionFactory) ic.lookup(jmsConnectionFactoryName);
             connection = connectionFactory.createQueueConnection();
             session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
             consumer = session.createReceiver(queue);
@@ -54,7 +70,7 @@ public class JmsTaskPump implements Runnable
                 task.acquire();
                 try
                 {
-                    Message m = consumer.receive(config.getJmsReceiveTimeout());
+                    Message m = consumer.receive();
                     if (m != null && m instanceof ObjectMessage)
                     {
                         ObjectMessage objectMessage = (ObjectMessage) m;
@@ -82,7 +98,6 @@ public class JmsTaskPump implements Runnable
     private InitialContext getInitialContext()
             throws NamingException
     {
-        Hashtable contextEnvironment = config.getInitialContextEnvironment();
         InitialContext initialContext = (contextEnvironment == null) ?
                 new InitialContext() :
                 new InitialContext(contextEnvironment);

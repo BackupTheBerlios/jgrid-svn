@@ -119,4 +119,6 @@ public class ConfigurationTest extends TestCase
     {
         assertNull(grid.getClient());
     }
+
+
 }

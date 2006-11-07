@@ -2,10 +2,7 @@ package org.jegrid.impl;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.NDC;
-import org.jegrid.Aggregator;
-import org.jegrid.GridException;
-import org.jegrid.InputProcessor;
-import org.jegrid.TaskData;
+import org.jegrid.*;
 
 /**
  * A local worker that proceses input on the client.
@@ -25,7 +22,6 @@ public class LocalWorker extends AbstractInputProcessingWorker
         super(null, taskImpl.getTaskId());
         this.taskImpl = taskImpl;
     }
-
 
     protected void processInput() throws Exception
     {
@@ -49,6 +45,12 @@ public class LocalWorker extends AbstractInputProcessingWorker
         log.info("Local worker done.");
         // If there is any output left, aggregate it.
         taskImpl.aggregateOutput(aggregator);
+        if (aggregator instanceof LifecycleAware)
+        {
+            LifecycleAware lifecycleAware = (LifecycleAware) aggregator;
+            lifecycleAware.terminate();
+        }
+        aggregator = null;
     }
 
     protected void handleException(GridException ge)
@@ -56,17 +58,10 @@ public class LocalWorker extends AbstractInputProcessingWorker
         throw ge;
     }
 
-    protected InputProcessor instantiateInputProcessor() throws IllegalAccessException, InstantiationException, ClassNotFoundException
-    {
-        Class aClass = Thread.currentThread().getContextClassLoader().loadClass(taskImpl.getInputProcessorClassName());
-        return (InputProcessor) aClass.newInstance();
-    }
-
     public void setAggregator(Aggregator aggregator)
     {
         this.aggregator = aggregator;
     }
-
 
     protected void popLoggingContext()
     {

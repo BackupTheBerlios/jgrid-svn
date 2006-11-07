@@ -16,10 +16,12 @@ public class RemoteTaskWorker extends Worker
     private TaskRequest request;
     private Task task;
     private TaskId taskId;
+    private ServerImpl server;
 
     public RemoteTaskWorker(ServerImpl server, Client client, TaskRequest request, TaskId taskId)
     {
-        super(server);
+        super(server.getGrid());
+        this.server = server;
         this.taskId = taskId;
         this.request = request;
         task = client.createTask();

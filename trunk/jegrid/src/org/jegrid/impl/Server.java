@@ -73,4 +73,5 @@ public interface Server
      */
     long lastTaskAccepted()
             ;
+
 }

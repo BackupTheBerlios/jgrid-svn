@@ -5,6 +5,8 @@ import org.jegrid.*;
 import org.jegrid.util.MicroContainer;
 
 import java.util.Set;
+import java.util.List;
+import java.util.Iterator;
 
 /**
  * Implements a connection to the grid based on the Bus abstraction, manages
@@ -22,11 +24,13 @@ public class GridImpl implements GridImplementor
     private Server server;
     private ClientImplementor client;
     private long startTime;
+    private MicroContainer singletons;
 
     public GridImpl(GridConfiguration config)
     {
         this.config = config;
         membership = new Membership(this);
+        singletons = new MicroContainer();
     }
 
     public void initialize(MicroContainer mc)
@@ -135,11 +139,53 @@ public class GridImpl implements GridImplementor
 
     public void onNewCoordinator(NodeAddress address)
     {
+        // If I am the coordinator, then I should try to instantiate all the grid singletons
+        if (address.equals(getLocalAddress()))
+        {
+            log.info("*** I am the coordinator ***");
+            List list = config.getGridSingletonDescriptors();
+            for (Iterator iterator = list.iterator(); iterator.hasNext();)
+            {
+                GridSingletonDescriptor descriptor = (GridSingletonDescriptor) iterator.next();
+                singletons.registerSingleton(descriptor.getKey(),descriptor.getImpl());
+            }
+            // Now create them all.
+            for (Iterator iterator = list.iterator(); iterator.hasNext();)
+            {
+                GridSingletonDescriptor descriptor = (GridSingletonDescriptor) iterator.next();
+                Object component = singletons.getComponentInstance(descriptor.getKey());
+                if (component instanceof LifecycleAware)
+                {
+                    LifecycleAware lifecycleAware = (LifecycleAware) component;
+                    lifecycleAware.initialize();
+                }
+            }
+        }
         membership.onNewCoordinator(address);
     }
 
     public void waitForServers() throws InterruptedException
     {
         membership.waitForServers();
+    }
+
+    public Object instantiateObject(String clazz)
+    {
+        Object o = null;
+        try
+        {
+            Class aClass = Thread.currentThread().getContextClassLoader().loadClass(clazz);
+            o = aClass.newInstance();
+            if (o instanceof LifecycleAware)
+            {
+                LifecycleAware lifecycleAware = (LifecycleAware) o;
+                lifecycleAware.initialize();
+            }
+        }
+        catch (Exception e)
+        {
+            throw new GridException(e);
+        }
+        return o;
     }
 }

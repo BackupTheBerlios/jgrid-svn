@@ -9,4 +9,7 @@ package org.jegrid;
 public interface Aggregator
 {
     void aggregate(TaskData output);
+
+    void done()
+            ;
 }

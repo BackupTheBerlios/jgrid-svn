@@ -190,14 +190,6 @@ public class ServerImpl implements Server
         }
     }
 
-    public InputProcessor instantiateInputProcessor(String taskClass)
-            throws IllegalAccessException, InstantiationException, ClassNotFoundException
-    {
-
-        Class aClass = Thread.currentThread().getContextClassLoader().loadClass(taskClass);
-        return (InputProcessor) aClass.newInstance();
-    }
-
     public void onMembershipChange(Set joined, Set left)
     {
         synchronized (this)
@@ -223,9 +215,9 @@ public class ServerImpl implements Server
         bus.broadcastNodeStatus();
     }
 
-    public Client getClient()
+    public GridImplementor getGrid()
     {
-        return grid.getClient();
+        return grid;
     }
 
     class WorkerMap

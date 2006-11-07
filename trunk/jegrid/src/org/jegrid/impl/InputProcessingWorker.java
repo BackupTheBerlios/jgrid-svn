@@ -23,10 +23,12 @@ public class InputProcessingWorker extends AbstractInputProcessingWorker
     private Bus bus;
     private Appender appender;
     private boolean distributedLoggingEnabled;
+    private ServerImpl server;
 
     public InputProcessingWorker(ServerImpl server, TaskId task, Bus bus, boolean distributedLoggingEnabled)
     {
-        super(server, task);
+        super(server.getGrid(), task);
+        this.server = server;
         this.bus = bus;
         this.distributedLoggingEnabled = distributedLoggingEnabled;
     }
@@ -34,12 +36,6 @@ public class InputProcessingWorker extends AbstractInputProcessingWorker
     protected void done()
     {
         server.done(id);
-    }
-
-    protected InputProcessor instantiateInputProcessor()
-            throws IllegalAccessException, InstantiationException, ClassNotFoundException
-    {
-        return server.instantiateInputProcessor(getInputProcessorClassName());
     }
 
     protected void handleException(GridException ge)

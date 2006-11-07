@@ -331,6 +331,7 @@ public class TaskImpl implements Task
                 try
                 {
                     done = true;
+                    aggregator.done();
                 }
                 finally
                 {
@@ -390,16 +391,7 @@ public class TaskImpl implements Task
 
     Aggregator instantiateAggregator(String className)
     {
-
-        try
-        {
-            Class aClass = Thread.currentThread().getContextClassLoader().loadClass(className);
-            return (Aggregator) aClass.newInstance();
-        }
-        catch (Exception e)
-        {
-            throw new GridException(e);
-        }
+        return (Aggregator) grid.instantiateObject(className);
     }
 
     public void release()

@@ -6,6 +6,9 @@ import org.jegrid.impl.Server;
 import org.jegrid.util.MicroContainer;
 
 import java.util.Hashtable;
+import java.util.List;
+import java.util.LinkedList;
+import java.util.Iterator;
 
 /**
  * Holds configuration properties for JEGrid.<br>
@@ -36,6 +39,7 @@ public class GridConfiguration
     private int threadPoolSize = DEFAULT_THREAD_POOL_SIZE;
     private String busConfiguration = DEFAULT_BUS_CONFIG;
     private boolean distributedLoggingEnabled = false;
+    private List singletonDescriptors = new LinkedList();
     
     public String getBusConfiguration()
     {
@@ -106,6 +110,7 @@ public class GridConfiguration
         mc.registerSingleton(Client.class, clientImplClass);
         // Register this configuration with the container.
         mc.registerComponentInstance(this);
+        
         // This will perform the constructor dependency injection.
         GridImplementor grid = (GridImplementor) mc.getComponentInstance(Grid.class);
         // Perform the rest of the initialization that cannot be done with DI.
@@ -119,23 +124,13 @@ public class GridConfiguration
         return this;
     }
 
-    public Hashtable getInitialContextEnvironment()
+    public void addGridSingletonDescriptor(GridSingletonDescriptor gridSingletonDescriptor)
     {
-        return null;
+        singletonDescriptors.add(gridSingletonDescriptor);
     }
 
-    public String getJmsConnectionFactoryName()
+    public List getGridSingletonDescriptors()
     {
-        return "jms/ConnectionFactory";
-    }
-
-    public String getJmsDestinationName()
-    {
-        return "";
-    }
-
-    public long getJmsReceiveTimeout()
-    {
-        return 0;
+        return singletonDescriptors;
     }
 }
