@@ -4,9 +4,8 @@ import org.apache.log4j.Logger;
 import org.jegrid.*;
 import org.jegrid.util.MicroContainer;
 
-import java.util.Set;
 import java.util.List;
-import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Implements a connection to the grid based on the Bus abstraction, manages
@@ -30,7 +29,6 @@ public class GridImpl implements GridImplementor
     {
         this.config = config;
         membership = new Membership(this);
-        singletons = new MicroContainer();
     }
 
     public void initialize(MicroContainer mc)
@@ -47,6 +45,8 @@ public class GridImpl implements GridImplementor
             default:
                 break;
         }
+        // Make a child micro-container.
+        singletons = new MicroContainer(mc);
     }
 
     public Client getClient()
@@ -143,25 +143,16 @@ public class GridImpl implements GridImplementor
         if (address.equals(getLocalAddress()))
         {
             log.info("*** I am the coordinator ***");
-            List list = config.getGridSingletonDescriptors();
-            for (Iterator iterator = list.iterator(); iterator.hasNext();)
-            {
-                GridSingletonDescriptor descriptor = (GridSingletonDescriptor) iterator.next();
-                singletons.registerSingleton(descriptor.getKey(),descriptor.getImpl());
-            }
-            // Now create them all.
-            for (Iterator iterator = list.iterator(); iterator.hasNext();)
-            {
-                GridSingletonDescriptor descriptor = (GridSingletonDescriptor) iterator.next();
-                Object component = singletons.getComponentInstance(descriptor.getKey());
-                if (component instanceof LifecycleAware)
-                {
-                    LifecycleAware lifecycleAware = (LifecycleAware) component;
-                    lifecycleAware.initialize();
-                }
-            }
+            initializeGridSingletons();
         }
         membership.onNewCoordinator(address);
+    }
+
+    private void initializeGridSingletons()
+    {
+        log.info("*** INITIALIZING GRID SINGLETONS ***");
+        List list = config.getGridSingletonDescriptors();
+        singletons.initializeFromDescriptors(list);
     }
 
     public void waitForServers() throws InterruptedException
@@ -171,16 +162,13 @@ public class GridImpl implements GridImplementor
 
     public Object instantiateObject(String clazz)
     {
-        Object o = null;
+        Object o;
         try
         {
+            // TODO: Use the micro container?
             Class aClass = Thread.currentThread().getContextClassLoader().loadClass(clazz);
             o = aClass.newInstance();
-            if (o instanceof LifecycleAware)
-            {
-                LifecycleAware lifecycleAware = (LifecycleAware) o;
-                lifecycleAware.initialize();
-            }
+            MicroContainer.initializeComponent(o);
         }
         catch (Exception e)
         {

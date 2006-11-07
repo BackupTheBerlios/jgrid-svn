@@ -50,7 +50,7 @@ public class TaskImpl implements Task
         this.inprogress = new HashMap();
         this.serverAddresses = new HashSet();
         this.outputQueue = new LinkedQueue();
-        localWorker = new LocalWorker(this);
+        localWorker = new LocalWorker(grid,this);
     }
 
     public TaskId getTaskId()
@@ -185,7 +185,7 @@ public class TaskImpl implements Task
         }
         if (e != null)
         {
-            log.warn("Task failure: " + e);
+            log.error("Task failure: " + e);
             if (e instanceof GridException)
                 failure = (GridException) e;
             else
@@ -259,8 +259,7 @@ public class TaskImpl implements Task
     private void go(Bus bus, AssignResponse[] responses)
     {
         GoMessage goMessage = new GoMessage(id, inputProcessorClassName, sharedInput);
-        if (localWorker != null)
-            localWorker.go(goMessage);
+        localWorker.go(goMessage);
         try
         {
             bus.go(responses, goMessage);
@@ -313,8 +312,6 @@ public class TaskImpl implements Task
         Object o;
         while ((o = outputQueue.poll(0)) != null)
         {
-//            if (log.isDebugEnabled())
-//                log.debug("drainOutputQueue() : aggregating.");
             aggregateOneOutput(aggregator, o);
         }
     }

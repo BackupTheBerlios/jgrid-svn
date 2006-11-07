@@ -23,4 +23,13 @@ public interface Client
      * @param request The task request, including all the input, etc.
      */
     void background(TaskRequest request);
+
+    /**
+     * Waits for at most specified number of servers to become available.
+     * @param max  The maximum number of servers needed.
+     * @return An array of server addresses.
+     * @throws InterruptedException if the thread is interrupted.
+     */
+    NodeAddress[] waitForServers(int max) throws InterruptedException
+            ;
 }

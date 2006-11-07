@@ -3,7 +3,6 @@ package org.jegrid.impl;
 import org.apache.log4j.Appender;
 import org.apache.log4j.Logger;
 import org.jegrid.GridException;
-import org.jegrid.InputProcessor;
 import org.jegrid.TaskData;
 import org.jegrid.TaskId;
 import org.jegrid.log.GridAppender;
@@ -43,7 +42,8 @@ public class InputProcessingWorker extends AbstractInputProcessingWorker
         //noinspection EmptyCatchBlock
         try
         {
-            bus.taskFailed(id, ge);
+            log.error("Task " + id + " failed: " + ge,ge);
+            bus.taskFailed(id, ge); // Broadcast the exception.
         }
         catch (Exception ignore)
         {

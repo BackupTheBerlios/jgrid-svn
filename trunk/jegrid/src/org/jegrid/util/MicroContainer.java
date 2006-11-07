@@ -1,11 +1,14 @@
 package org.jegrid.util;
 
+import org.apache.log4j.Logger;
+import org.jegrid.GridSingletonDescriptor;
+import org.jegrid.LifecycleAware;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoContainer;
 import org.picocontainer.defaults.*;
-import org.jegrid.GridSingletonDescriptor;
-import org.jegrid.GridException;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -15,15 +18,23 @@ import java.util.Map;
  */
 public class MicroContainer
 {
+    private static Logger log = Logger.getLogger(MicroContainer.class);
+
     private MutablePicoContainer pico;
 
     public MicroContainer()
     {
+        pico = new DefaultPicoContainer();
+    }
+
+    public MicroContainer(MicroContainer parent)
+    {
+        pico = new DefaultPicoContainer(parent.pico);
     }
 
     public Object getComponentInstance(Object key)
     {
-        return getPico().getComponentInstance(key);
+        return pico.getComponentInstance(key);
     }
 
     public Class loadImplementation(String className) throws ClassNotFoundException
@@ -33,42 +44,44 @@ public class MicroContainer
 
     public void registerSingleton(Object key, Class implementation)
     {
-        // Once an implementation has been created, the same one should be returned
-        // every time.  This is what CachingComponentAdapter does (see javadocs for
-        // ConstructorInjectionComponentAdapter.
-        getPico().registerComponent(
-                new CachingComponentAdapter(
-                        new ConstructorInjectionComponentAdapter(
-                                key, implementation)));
+        registerSingleton(key,implementation,null);
     }
 
     public void registerSingleton(Object key, Class implementation, Map properties)
     {
-        // Once an implementation has been created, the same one should be returned
-        // every time.  This is what CachingComponentAdapter does (see javadocs for
-        // ConstructorInjectionComponentAdapter.
-        ConstructorInjectionComponentAdapter componentAdapter =
-                new ConstructorInjectionComponentAdapter(
-                        key, implementation);
-        BeanPropertyComponentAdapter beanAdaptor =
-                new BeanPropertyComponentAdapter(componentAdapter);
-        beanAdaptor.setProperties(properties);
-        getPico().registerComponent(
-                new CachingComponentAdapter(
-                        beanAdaptor));
-    }
-
-    private MutablePicoContainer getPico()
-    {
-        if (pico == null)
-            pico = new DefaultPicoContainer();
-        return pico;
+        // No properties? Just do the normal registration.
+        if (properties == null || properties.size() == 0)
+        {
+            // Once an implementation has been created, the same one should be returned
+            // every time.  This is what CachingComponentAdapter does (see javadocs for
+            // ConstructorInjectionComponentAdapter.
+            log.info("Registering " + key + "->" + implementation.getName());        
+            pico.registerComponent(
+                    new CachingComponentAdapter(
+                            new ConstructorInjectionComponentAdapter(
+                                    key, implementation)));
+        }
+        else
+        {
+            // Otherwise, add the Bean adapter to inject all the properties
+            // into the object using setters after it is constructed.
+            log.info("Registering " + key + "->" + implementation.getName() + " with bean properties.");        
+            ConstructorInjectionComponentAdapter componentAdapter =
+                    new ConstructorInjectionComponentAdapter(
+                            key, implementation);
+            BeanPropertyComponentAdapter beanAdaptor =
+                    new BeanPropertyComponentAdapter(componentAdapter);
+            beanAdaptor.setProperties(properties);
+            pico.registerComponent(
+                    new CachingComponentAdapter(
+                            beanAdaptor));
+        }
     }
 
     public void registerComponentInstance(Object object)
     {
         // Regsisters an instance where it's class is the key.
-        getPico().registerComponentInstance(object);
+        pico.registerComponentInstance(object);
     }
 
     public void registerSingleton(Object key, String implementationName) throws ClassNotFoundException
@@ -79,12 +92,34 @@ public class MicroContainer
 
     public void registerEmptySingleton(Object key)
     {
-        getPico().registerComponent(new EmptyComponentAdapter(key));
+        pico.registerComponent(new EmptyComponentAdapter(key));
     }
 
-    public interface Initializer
+    public static void initializeComponent(Object component)
     {
-        void initialize(MicroContainer microContainer);
+        if (component instanceof LifecycleAware)
+        {
+            LifecycleAware lifecycleAware = (LifecycleAware) component;
+            lifecycleAware.initialize();
+        }
+    }
+
+    public void initializeFromDescriptors(List list)
+    {
+        for (Iterator iterator = list.iterator(); iterator.hasNext();)
+        {
+            GridSingletonDescriptor descriptor = (GridSingletonDescriptor) iterator.next();
+            registerSingleton(descriptor.getKey(),descriptor.getImpl(),descriptor.getProperties());
+        }
+        // Now create them all.
+        for (Iterator iterator = list.iterator(); iterator.hasNext();)
+        {
+            GridSingletonDescriptor descriptor = (GridSingletonDescriptor) iterator.next();
+            Object key = descriptor.getKey();
+            log.info("Instantiating " + key + " ...");
+            Object component = getComponentInstance(key);
+            MicroContainer.initializeComponent(component);
+        }
     }
 
     private class EmptyComponentAdapter extends InstanceComponentAdapter

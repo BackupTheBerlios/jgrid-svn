@@ -93,6 +93,23 @@ public class ClientImpl implements ClientImplementor
         return task;
     }
 
+    public NodeAddress[] waitForServers(int max) throws InterruptedException
+    {
+        while (true)
+        {
+            NodeAddress[] addresses = getSeverAddresses(max);
+            if (addresses == null || addresses.length == 0)
+            {
+                // Wait for a membership change.
+                if (log.isDebugEnabled())
+                    log.debug("waitForServers() : No servers, waiting...");
+                grid.waitForServers();
+            }
+            else
+                return addresses;
+        }
+    }
+
     public void background(TaskRequest request)
     {
         boolean loop = true;
@@ -100,16 +117,7 @@ public class ClientImpl implements ClientImplementor
         {
             try
             {
-                // Get a list of servers.
-                NodeAddress[] addresses = getSeverAddresses(-1);
-                if (addresses == null || addresses.length == 0)
-                {
-                    // Wait for a membership change.
-                    if (log.isDebugEnabled())
-                        log.debug("background() : No servers, waiting...");
-                    grid.waitForServers();
-                    continue;
-                }
+                NodeAddress[] addresses = waitForServers(-1);
                 // Try to assign a worker thread to this task.
                 for (int i = 0; i < addresses.length; i++)
                 {
@@ -125,6 +133,8 @@ public class ClientImpl implements ClientImplementor
                         break;
                     }
                 }
+                // If loop is still true, that means no server accepted the work so continue...
+                log.info("No servers accepted, retrying...");
             }
             catch (RpcTimeoutException e)
             {
@@ -136,7 +146,6 @@ public class ClientImpl implements ClientImplementor
             }
         }
     }
-
 
     public TaskData getNextInput(TaskId taskId, NodeAddress server, TaskData output)
     {

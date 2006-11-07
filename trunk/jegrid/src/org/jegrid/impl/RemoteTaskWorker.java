@@ -1,5 +1,6 @@
 package org.jegrid.impl;
 
+import org.apache.log4j.Logger;
 import org.jegrid.Client;
 import org.jegrid.Task;
 import org.jegrid.TaskId;
@@ -13,6 +14,8 @@ import org.jegrid.TaskRequest;
  */
 public class RemoteTaskWorker extends Worker
 {
+    private static Logger log = Logger.getLogger(RemoteTaskWorker.class);
+
     private TaskRequest request;
     private Task task;
     private TaskId taskId;
@@ -32,6 +35,10 @@ public class RemoteTaskWorker extends Worker
         try
         {
             task.run(request, true);
+        }
+        catch (Exception e)
+        {
+            log.error(e,e);
         }
         finally
         {

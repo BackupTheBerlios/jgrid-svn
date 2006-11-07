@@ -13,5 +13,7 @@ abstract class Worker implements Runnable
     public Worker(GridImplementor grid)
     {
         this.grid = grid;
+        if (grid == null)
+            throw new IllegalArgumentException("No grid?");
     }
 }

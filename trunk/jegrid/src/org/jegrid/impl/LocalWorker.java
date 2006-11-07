@@ -2,7 +2,10 @@ package org.jegrid.impl;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.NDC;
-import org.jegrid.*;
+import org.jegrid.Aggregator;
+import org.jegrid.GridException;
+import org.jegrid.LifecycleAware;
+import org.jegrid.TaskData;
 
 /**
  * A local worker that proceses input on the client.
@@ -17,9 +20,9 @@ public class LocalWorker extends AbstractInputProcessingWorker
     private Aggregator aggregator;
     private boolean processInput;
 
-    public LocalWorker(TaskImpl taskImpl)
+    public LocalWorker(GridImplementor grid,TaskImpl taskImpl)
     {
-        super(null, taskImpl.getTaskId());
+        super(grid, taskImpl.getTaskId());
         this.taskImpl = taskImpl;
     }
 
@@ -55,6 +58,7 @@ public class LocalWorker extends AbstractInputProcessingWorker
 
     protected void handleException(GridException ge)
     {
+        log.error("Local worker " + id + " failed: " + ge,ge);
         throw ge;
     }
 

@@ -121,9 +121,11 @@ public class GridRpcDispatcher extends MessageDispatcher implements ChannelListe
             return new RspList();
         }
 
+/*
         if (log.isTraceEnabled())
             log.trace(new StringBuffer("dests=").append(dests).append(", method_call=").append(method_call).
                     append(", mode=").append(mode).append(", timeout=").append(timeout));
+*/
 
         byte[] buf;
         try
@@ -167,8 +169,10 @@ public class GridRpcDispatcher extends MessageDispatcher implements ChannelListe
         Message msg = null;
         Object retval = null;
 
+/*
         if (log.isTraceEnabled())
             log.trace("dest=" + dest + ", method_call=" + method_call + ", mode=" + mode + ", timeout=" + timeout);
+*/
 
         try
         {
@@ -227,8 +231,10 @@ public class GridRpcDispatcher extends MessageDispatcher implements ChannelListe
 
         try
         {
+/*
             if (log.isTraceEnabled())
                 log.trace("[sender=" + req.getSrc() + "], method_call: " + method_call);
+*/
 
             if (method_call.getMode() == MethodCall.ID)
             {

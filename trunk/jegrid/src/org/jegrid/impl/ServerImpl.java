@@ -211,6 +211,7 @@ public class ServerImpl implements Server
 
     synchronized void done(TaskId id)
     {
+        log.info("done() " + id);        
         workers.removeWorker(id);
         bus.broadcastNodeStatus();
     }
