@@ -9,6 +9,7 @@
     </abstract>
     </header>
   <body> 
+   <fixme author="jsd">Please note that this documentation is a work in progress, it is not complete.</fixme>
    <section id="architecture">
        <title>Architecture</title>
        <section><title>Grid</title></section>

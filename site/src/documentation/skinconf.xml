@@ -109,7 +109,7 @@ which will be used to configure the chosen Forrest skin.
   <toc max-depth="2" min-sections="1" location="page,menu"/>
 
   <!-- Heading types can be clean|underlined|boxed  -->
-  <headings type="boxed"/>
+  <headings type="underlined"/>
   
   <!-- The optional feedback element will be used to construct a
     feedback link in the footer with the page pathname appended:
@@ -173,6 +173,10 @@ which will be used to configure the chosen Forrest skin.
       margin-left: 2em;
       margin-right: 2em;
       }
+
+      .boxed      { background-color: #E5E4D9;}
+      .underlined_5     {border-bottom: solid 5px #b7b59f;}
+      .underlined_10     {border-bottom: solid 10px #b7b59f;}
 
     <!-- Heading 4 looks better bold -->
     h4     {
@@ -380,7 +384,7 @@ which will be used to configure the chosen Forrest skin.
       <color name="dialog" value="#CFDCED"/>
       <color name="body" value="#ffffff" />
 
-      <color name="table" value="#ccc"/>
+      <color name="table" value="#999999"/>
       <color name="table-cell" value="#ffffff"/>
       <color name="highlight" value="#ffff00"/>
       <color name="fixme" value="#cc6600"/>

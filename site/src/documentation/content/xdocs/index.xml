@@ -13,8 +13,8 @@
                 that provides
                 <strong>federation</strong>
                 (clustering),
-                <strong>coarse-grained SIMD parallelism</strong>
-                , and
+                <strong>coarse-grained Task Parallel support</strong>
+                 and
                 <strong>load balancing</strong>
                 .
                 Using the coarse-grained parallelism features, super-computer performance can be realized with
@@ -24,7 +24,13 @@
         </section>
         <section>
             <title>News</title>
+            <p/>
             <ul>
+                <li>
+                    <strong>2006-11-09 Grid Singleton and JMS Task Pump Development</strong>
+                    <br/>
+                    Development of the Grid Singleton concept and the JMS Task Pump is nearly complete.
+                </li>
                 <li>
                     <strong>2006-10-31 JEGrid 0.1.0 Released</strong>
                     <br/>
@@ -36,9 +42,10 @@
         </section>
         <section id="features">
             <title>Features</title>
+            <p/>
             <ul>
                 <li>
-                    <strong>Single Instruction Multiple Data parallelism</strong>
+                    <strong>Task Parallel support</strong>
                     -
                     JEGrid allows a developer to run the same code on a set of input data elements in parallel.
                     It handles all the network communication and multithreading, which allows the developer to
@@ -65,10 +72,20 @@
                     - Log messages from the distributed nodes
                     messages can be concentrated onto a single JVM for easier debugging and troubleshooting.
                 </li>
+                <li>
+                    <strong>Stateless Grid Singletons</strong> -
+                    Stateless singleton pattern object can be defined for simple, high availablity services
+                    that can run on any grid node.
+                </li>
+                <li>
+                    <strong>JMS Message Pump</strong> - A pre-defined stateless singleton that
+                    pumps tasks from a JMS can be set up for easy and highly available J2EE integration.
+                </li>
             </ul>
         </section>
         <section id="applications">
             <title>What can JEGrid be used for?</title>
+            <p/>
             <ul>
                 <li>
                     <strong>Finanical Calculations</strong>

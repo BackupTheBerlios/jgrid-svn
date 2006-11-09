@@ -9,6 +9,7 @@
         </abstract>
     </header>
     <body>
+        <fixme author="jsd">Please note that this documentation is a work in progress, it is not complete.</fixme>
         <section id="download">
             <title>Downloading JEGrid</title>
             <p>Download the latest binary distribution <a href="ext:projectfiles">here</a>.

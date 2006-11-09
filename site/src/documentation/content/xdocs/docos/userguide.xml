@@ -9,6 +9,41 @@
         </abstract>
     </header>
     <body>
+        <fixme author="jsd">Please note that this documentation is a work in progress, it is not complete.</fixme>
+        <section id="classpath">
+            <title>Setting up your project with JEGrid</title>
+            <p>JEGrid is an ordinary Java library that can be included in your ANT build script and/or Java IDE.
+            To begin using JEGrid in an application, you need the following:</p>
+            <ol>
+                <li>JDK 1.4 or higher.  JEGrid cannot be used with JDKs prior to 1.4.</li>
+                <li><code>jegrid.jar</code> in your classpath</li>
+                <li>JEGrid's dependant libraries in your classpath:
+                    <ul>
+                        <li>jgroups-all-2.2.9.4.jar</li>
+                        <li>picocontainer-1.1.jar</li>
+                        <li>jgroups-all-2.2.9.4.jar</li>
+                        <li>log4j-1.2.13.jar</li>
+                        <li>commons-logging-1.0.4.jar</li>
+                    </ul>
+                </li>
+                <li>Your application classes in the classpath.</li>
+                <li>Optional: If you are going to use the JMS task pump, you will need the JMS API in your classpath at
+            compile time, and whatever is required for your JMS provider at run-time.</li>
+            </ol>
+            <p>Once the class path is set up, you can begin working with JEGrid.  Your application code will
+                consist of the following:
+            </p>
+            <ol>
+                <li>An implementation of InputProcessor and Aggregator for each parallelized algorithm.</li>
+                <li>Serializable or Externalizable objects for the input and output of the algorithm.</li>
+                <li>Client <a href="#configuration">configuration</a> / connection code that will configure the client nodes and connect
+                to the grid.</li>
+                <li>Client code that creates Tasks or TaskRequests and runs them on the grid.</li>
+                <li>A server launching program that will <a href="#configuration">configure</a> the server node, connect to the grid, and run the
+                    server loop.  This is usually a Java command line program.   You can also the built in
+                    server launcher: <code>org.jegrid.ServerMain</code>).</li>
+            </ol>
+        </section>
         <section id="configuration">
             <title>Configuring JEGrid</title>
             <p>
@@ -18,10 +53,10 @@
                 any parameters, then call the <code>configure()</code> method to get a Grid object. For example:
             </p>
             <source>
-                GridConfiguration config = new GridConfiguration();
-                config.setGridName("mygrid");
-                Grid grid = config.configure();
-                grid.connect();
+GridConfiguration config = new GridConfiguration();
+config.setGridName("mygrid");
+Grid grid = config.configure();
+grid.connect();
             </source>
             <p>This creates a grid node of the default node type
                 <code>Grid.OBSERVER</code>
@@ -46,7 +81,7 @@
                 </p>
             </section>
             <section id="busconfig">
-                <title>Bus Configuration</title>
+                <title>Networking - Bus Configuration</title>
                 <p>This is the name of an XML resource that will be used to configure the network
                     layer, JGroups. It can also be a JGroups 'properties' string as well. This tells
                     JGroups whether to use IP multicast or not, for example.
@@ -77,6 +112,16 @@
                         </td>
                     </tr>
                 </table>
+            </section>
+            <section><title>IPv6 and IPv4</title>
+                <p>When Java is running on newer Linux distributions it will tend to prefer to use
+                IPv6 addresses.  This works well if all the machines in your grid (clients <em>and</em> servers)
+                are using IPv6.   However, if you have for example clients running Windows and servers running on Linux
+                then the grid will not federate properly because Windows prefers IPv4.  To fix this use the following
+                system property setting when launching any of the JVMS in the application:</p>
+<source>-Djava.net.preferIPv4Stack=true</source>
+                <p>This system property setting causes Java to use the older IPv4 address style, which
+                should be fine for any JEGrid applications because they will typically run on a LAN.</p>
             </section>
             <section id="multicast">
                 <title>Multicast IP</title>
@@ -154,8 +199,23 @@
                 <title>The configure() method</title>
                 <p>
                     The configure() method creates the internal micro-container and sets up all the components
-                    necessary for the node type specified in the configuration.
+                    necessary for the node type specified in the configuration.  It returns a <code>Grid</code>
+                    interface.
                 </p>
+            </section>
+        </section>
+        <section><title>Starting a Server</title>
+            <p>Every grid needs at least one server process on each of the hosts that are designated for
+            performing computations.  There are two ways to do this:
+            </p>
+            <ol>
+            <li>Use the ServerMain program, which is a command line Java stub that runs a server.</li>
+            <li>Write your own server launching program, or integrate it into an existing one.</li>
+            </ol>
+            <section><title>Starting a server with ServerMain</title>
+                <source>
+java -classpath {classpath} org.jegrid.ServerMain {gridname} {numberofthreads}
+                </source>
             </section>
         </section>
     </body>
