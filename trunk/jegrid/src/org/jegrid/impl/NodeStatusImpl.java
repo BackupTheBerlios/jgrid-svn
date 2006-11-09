@@ -1,8 +1,8 @@
 package org.jegrid.impl;
 
+import org.jegrid.Grid;
 import org.jegrid.NodeAddress;
 import org.jegrid.NodeStatus;
-import org.jegrid.Grid;
 import org.jegrid.util.DateUtil;
 
 import java.io.Serializable;
@@ -17,6 +17,7 @@ public class NodeStatusImpl implements NodeStatus, Serializable
 {
     private static final long serialVersionUID = -8698235516175764007L;
 
+    private String hostName;
     private NodeAddress address;
     private NodeAddress coordinator;
     private int type = Grid.TYPE_UNKNOWN;
@@ -36,7 +37,7 @@ public class NodeStatusImpl implements NodeStatus, Serializable
 
     public NodeStatusImpl(NodeAddress address, int type, NodeAddress coordinator,
                           long freeMemory, long totalMemory, int freeThreads, int totalThreads,
-                          long startTime, int tasksAccepted, long lastTaskAccepted)
+                          long startTime, int tasksAccepted, long lastTaskAccepted, String hostName)
     {
         this.address = address;
         this.type = type;
@@ -49,6 +50,7 @@ public class NodeStatusImpl implements NodeStatus, Serializable
         this.tasksAccepted = tasksAccepted;
         this.lastTaskAccepted = lastTaskAccepted;
         this.statusAsOf = System.currentTimeMillis();
+        this.hostName = hostName;
     }
 
     public NodeAddress getNodeAddress()
@@ -123,10 +125,16 @@ public class NodeStatusImpl implements NodeStatus, Serializable
         }
     }
 
+    public String getHostName()
+    {
+        return hostName;
+    }
+
     public String toString()
     {
         return "NodeStatusImpl{" +
                 "address=" + address +
+                ", hostName="+ hostName +
                 ", coordinator=" + coordinator +
                 ", type=" + getNodeType() +
                 ", freeMemory=" + freeMemory +

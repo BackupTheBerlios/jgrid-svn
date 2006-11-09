@@ -4,6 +4,8 @@ import org.apache.log4j.Logger;
 import org.jegrid.*;
 import org.jegrid.util.MicroContainer;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Set;
 
@@ -24,11 +26,21 @@ public class GridImpl implements GridImplementor
     private ClientImplementor client;
     private long startTime;
     private MicroContainer singletons;
+    private String hostName;
 
     public GridImpl(GridConfiguration config)
     {
         this.config = config;
         membership = new Membership(this);
+        try
+        {
+            hostName = InetAddress.getLocalHost().getHostName();
+        }
+        catch (UnknownHostException e)
+        {
+            log.warn("Unable to get host name due to: " + e);
+            hostName = "<unknown>";
+        }
     }
 
     public void initialize(MicroContainer mc)
@@ -77,22 +89,34 @@ public class GridImpl implements GridImplementor
 
     public NodeStatus getLocalStatus()
     {
+        int freeThreads = 0;
+        int totalThreads = 0;
+        int tasksAccepted = 0;
+        long lastTaskAccepted = 0;
+        // If there is a server on this node, get it's stats.
+        if (server != null)
+        {
+            freeThreads = server.freeThreads();
+            totalThreads = server.totalThreads();
+            tasksAccepted = server.tasksAccepted();
+            lastTaskAccepted = server.lastTaskAccepted();            
+        }
         Runtime rt = Runtime.getRuntime();
-        int freeThreads = (server == null) ? 0 : server.freeThreads();
-        int totalThreads = (server == null) ? 0 : server.totalThreads();
-        int tasksAccepted = (server == null) ? 0 : server.tasksAccepted();
-        long lastTaskAccepted = (server == null) ? 0 : server.lastTaskAccepted();
+        long freeMemory = rt.freeMemory();
+        long totalMemory = rt.totalMemory();
         return new NodeStatusImpl(
                 bus.getAddress(),
                 config.getType(),
                 membership.getCoordinator(),
-                rt.freeMemory(),
-                rt.totalMemory(),
+                freeMemory,
+                totalMemory,
                 freeThreads,
                 totalThreads,
                 startTime,
                 tasksAccepted,
-                lastTaskAccepted);
+                lastTaskAccepted,
+                hostName
+                );
     }
 
     public GridStatus getGridStatus(boolean cached)

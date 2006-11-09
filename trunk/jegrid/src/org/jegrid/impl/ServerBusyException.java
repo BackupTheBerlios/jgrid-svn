@@ -7,11 +7,6 @@ package org.jegrid.impl;
  */
 public class ServerBusyException extends RuntimeException
 {
-    public ServerBusyException(String message, Throwable cause)
-    {
-        super(message, cause);
-    }
-
     public ServerBusyException(String message)
     {
         super(message);

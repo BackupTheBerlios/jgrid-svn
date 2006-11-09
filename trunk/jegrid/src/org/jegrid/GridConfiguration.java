@@ -4,11 +4,10 @@ import org.jegrid.impl.Bus;
 import org.jegrid.impl.GridImplementor;
 import org.jegrid.impl.Server;
 import org.jegrid.util.MicroContainer;
+import org.w3c.dom.Element;
 
-import java.util.Hashtable;
-import java.util.List;
 import java.util.LinkedList;
-import java.util.Iterator;
+import java.util.List;
 
 /**
  * Holds configuration properties for JEGrid.<br>
@@ -18,6 +17,16 @@ import java.util.Iterator;
  */
 public class GridConfiguration
 {
+    /**
+     * The default bus (JGroups) configuration resource. 
+     */
+    public static final String DEFAULT_BUS_CONFIG = "org/jegrid/jgroups/default.xml";
+
+    /**
+     * The default server thread pool size.
+     */
+    public static final int DEFAULT_THREAD_POOL_SIZE = 2;
+
     // Implementations
     private static final String GRID_IMPL = "org.jegrid.impl.GridImpl";
     private static final String BUS_IMPL = "org.jegrid.jgroups.JGroupsBus";
@@ -31,19 +40,27 @@ public class GridConfiguration
 
     // Properties
 
-    private static final int DEFAULT_THREAD_POOL_SIZE = 2;
-    private static final String DEFAULT_BUS_CONFIG = "org/jegrid/jgroups/default.xml";
-
     private String gridName;
     private int type = Grid.TYPE_OBSERVER;
     private int threadPoolSize = DEFAULT_THREAD_POOL_SIZE;
     private String busConfiguration = DEFAULT_BUS_CONFIG;
+    private Element busConfigurationElement;
     private boolean distributedLoggingEnabled = false;
     private List singletonDescriptors = new LinkedList();
     
     public String getBusConfiguration()
     {
         return busConfiguration;
+    }
+
+    public Element getBusConfigurationElement()
+    {
+        return busConfigurationElement;
+    }
+
+    public void setBusConfigurationElement(Element busConfigurationElement)
+    {
+        this.busConfigurationElement = busConfigurationElement;
     }
 
     /**
@@ -99,6 +116,7 @@ public class GridConfiguration
      * of Grid per JVM.
      *
      * @return the main Grid implementation
+     * @throws ClassNotFoundException if something goes wrong
      */
     public Grid configure() throws ClassNotFoundException
     {

@@ -77,6 +77,15 @@ public interface NodeStatus
     long getLastTaskAccepted()
             ;
 
+    /**
+     * @return the time the last status message was received in millis since the epoch
+     */
     long getStatusAsOf()
+            ;
+
+    /**
+     * @return the name of the host the node is running on
+     */
+    String getHostName()
             ;
 }

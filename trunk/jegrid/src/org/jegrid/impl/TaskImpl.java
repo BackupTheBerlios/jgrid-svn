@@ -401,9 +401,14 @@ public class TaskImpl implements Task
         localWorker.setProcessInput(useLocalWorker);
         if (useLocalWorker)
         {
+            // If we're processing input on the current thread add this node as a 'server'.
             serverCount--;
             serverAddresses.add(getLocalAddress());
+            // If no more workers are required, skip the assign part.
+            if (serverCount == 0)
+                return null;
         }
+        // Get a sorted list of servers.
         NodeAddress[] servers = client.getSeverAddresses(serverCount);
         if (servers == null || servers.length == 0)
             return null;

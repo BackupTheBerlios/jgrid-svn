@@ -51,7 +51,7 @@ class WorkerThreadPool extends PooledExecutor
     {
         public boolean blockedAction(Runnable command) throws InterruptedException
         {
-            throw new ServerBusyException("Server thread pool is busy!");
+            throw new ServerBusyException("Server " + grid.getLocalAddress() + " : Thread pool is busy!");
         }
     }
 
@@ -63,6 +63,7 @@ class WorkerThreadPool extends PooledExecutor
             // Set the priority to *almost* the lowest possible value
             // The workers need to yield to the networking threads. 
             thread.setPriority(Thread.MIN_PRIORITY + 1);
+            log.info("New thread created: " + thread.getName());
             return thread;
         }
     }

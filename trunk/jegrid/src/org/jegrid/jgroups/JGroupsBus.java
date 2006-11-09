@@ -73,7 +73,11 @@ public class JGroupsBus implements Bus
             {
                 // Before we create the JChannel, make sure UDP is working.
                 checkUDP();
-                channel = new JChannel(config.getBusConfiguration());
+                // Use the DOM element configuration if it exists.
+                if (config.getBusConfigurationElement() != null)
+                    channel = new JChannel(config.getBusConfigurationElement());
+                else // Otherwise use the configuration resource name.
+                    channel = new JChannel(config.getBusConfiguration());
             }
             channel.setOpt(Channel.VIEW, Boolean.TRUE);
             channel.setOpt(Channel.GET_STATE_EVENTS, Boolean.TRUE);
@@ -210,10 +214,15 @@ public class JGroupsBus implements Bus
         {
             Object o = responses.get(i);
             if (log.isDebugEnabled())
-                log.debug("assign() : Rsp #" + i + " " + o.toString());
+                log.debug("assign() : Rsp #" + i + " " + o);
             rv[i] = null;
             if (o instanceof AssignResponse)
                 rv[i] = (AssignResponse) o;
+            else if (o instanceof ServerBusyException)
+            {
+                ServerBusyException sbe = (ServerBusyException) o;
+                log.warn(sbe.getMessage());
+            }
             else if (o instanceof Exception)
             {
                 log.error(o, (Exception) o);

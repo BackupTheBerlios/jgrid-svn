@@ -21,7 +21,7 @@
                     <ul>
                         <li>jgroups-all-2.2.9.4.jar</li>
                         <li>picocontainer-1.1.jar</li>
-                        <li>jgroups-all-2.2.9.4.jar</li>
+                        <li>concurrent.jar</li>
                         <li>log4j-1.2.13.jar</li>
                         <li>commons-logging-1.0.4.jar</li>
                     </ul>
@@ -217,6 +217,21 @@ grid.connect();
 java -classpath {classpath} org.jegrid.ServerMain {gridname} {numberofthreads}
                 </source>
             </section>
+            <section><title>Creating your own server launching program</title>
+                <fixme author="jsd">TBD</fixme>
+            </section>
+        </section>
+        <section id="singleton"><title>Grid Singletons</title>
+            <p>Grid singletons are stateless POJOs that will be instantiated on one and only one
+                grid node at a time.  This can be useful for running jobs using a timer facility such as
+                Quartz, or for running the JMS Task Pump.  Grid singletons are specified as part of the grid configuration using the
+                <code>addGridSingletonDescriptor(GridSingletonDescriptor gridSingletonDescriptor)</code>.
+                This descriptor should added to the configuration to every node.
+            </p>
+            <fixme author="jsd">Add more detail here...</fixme>
+        </section>
+        <section id="jmstaskpump"><title>JMS Task Pump</title>
+            <p>The JMSTaskPump is a stateless grid singleton that comes with JEGrid.</p>
         </section>
     </body>
 </document>

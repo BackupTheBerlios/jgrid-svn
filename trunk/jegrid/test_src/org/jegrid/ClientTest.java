@@ -27,13 +27,13 @@ public class ClientTest extends TestCase
         // Nodes with a larger percentage of free memory per free thread are preferred.
         long lastTaskAccepted = 0;
         NodeStatusImpl[] nodes = new NodeStatusImpl[]{
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 0, 20, startTime, 0, lastTaskAccepted),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 0, 10, startTime, 0, lastTaskAccepted),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 19, 25, startTime, 0, lastTaskAccepted),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 9, 10, startTime, 0, lastTaskAccepted),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 200, 200, 10, 10, startTime, 0, lastTaskAccepted),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 10, 10, startTime, 0, lastTaskAccepted),
-                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 8, 10, startTime, 0, lastTaskAccepted),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 0, 20, startTime, 0, lastTaskAccepted, null),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 0, 10, startTime, 0, lastTaskAccepted, null),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 19, 25, startTime, 0, lastTaskAccepted, null),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 9, 10, startTime, 0, lastTaskAccepted, null),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 200, 200, 10, 10, startTime, 0, lastTaskAccepted, null),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 10, 10, startTime, 0, lastTaskAccepted, null),
+                new NodeStatusImpl(null, Grid.TYPE_SERVER, null, 100, 100, 8, 10, startTime, 0, lastTaskAccepted, null),
         };
         Arrays.sort(nodes, new ServerComparator());
         assertEquals(10, nodes[0].getAvailableWorkers());
