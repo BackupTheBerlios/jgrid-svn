@@ -19,7 +19,7 @@ public class JmsTest extends TestCase
     {
         Hashtable env = new Hashtable();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "org.jboss.naming.NamingContextFactory");
-        env.put(Context.PROVIDER_URL, "jnp://192.168.0.5:1099");
+        env.put(Context.PROVIDER_URL, "jnp://localhost:1099");
         env.put(Context.URL_PKG_PREFIXES, "org.jboss.naming:org.jnp.interfaces");
         InitialContext ic = new InitialContext(env);
 

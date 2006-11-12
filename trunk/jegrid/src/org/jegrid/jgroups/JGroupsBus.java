@@ -138,12 +138,10 @@ public class JGroupsBus implements Bus
             if (!running)
                 return;
 
-            String localAddress = getAddress().toString();
-            sayGoodbye();
-
             // Close the channel.
             if (channel != null)
             {
+                channel.disconnect();
                 channel.close();
                 channel = null;
             }
@@ -281,6 +279,16 @@ public class JGroupsBus implements Bus
                 0);
     }
 
+    public void shutdownServers()
+    {
+        log.info("*** Sending _shutdownServers ... ***");
+        dispatcher.broadcast(null, "_shutdownServers",
+                new Object[0],
+                new Class[0],
+                GroupRequest.GET_NONE,
+                0);
+    }
+
     public NodeStatus[] getGridStatus()
     {
         List responses = null;
@@ -297,10 +305,14 @@ public class JGroupsBus implements Bus
         {
             throw new GridException(e);
         }
-        NodeStatus[] rv = new NodeStatus[responses.size()];
-        for (int i = 0; i < rv.length; i++)
-            rv[i] = (NodeStatus) responses.get(i);
-        return rv;
+        List list = new ArrayList(responses.size());
+        for (int i = 0; i < responses.size(); i++)
+        {
+            NodeStatus ns = (NodeStatus) responses.get(i);
+            if (ns != null)
+                list.add(ns);
+        }
+        return (NodeStatus[]) list.toArray(new NodeStatus[list.size()]);
     }
 
     Address getJGroupsAddress()

@@ -70,4 +70,7 @@ public interface GridImplementor extends Grid
 
     Object instantiateObject(String clazz)
             ;
+
+    void doShutdownServers()
+            ;
 }

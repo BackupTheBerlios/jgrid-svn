@@ -137,6 +137,16 @@ public class GridImpl implements GridImplementor
         server.run();
     }
 
+    public void shutdownServers()
+    {
+        bus.shutdownServers();
+    }
+
+    public String getGridName()
+    {
+        return config.getGridName();
+    }
+
     public int nextMembershipChange()
     {
         return membership.nextMembershipChange();
@@ -199,5 +209,11 @@ public class GridImpl implements GridImplementor
             throw new GridException(e);
         }
         return o;
+    }
+
+    public void doShutdownServers()
+    {
+        if (server != null)
+            server.doShutdown();
     }
 }

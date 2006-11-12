@@ -20,7 +20,7 @@ public interface Server
     AssignResponse onAssign(TaskId id);
 
     /**
-     * Runs the server loop.  Returns only on shutdown.
+     * Runs the server loop.  Returns only on shutdownServers.
      */
     void run();
 
@@ -74,4 +74,6 @@ public interface Server
     long lastTaskAccepted()
             ;
 
+    void doShutdown()
+            ;
 }

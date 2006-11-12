@@ -25,6 +25,7 @@ public class ServerImpl implements Server
     private long lastTaskAccepted;
     private GridConfiguration config;
     private int poolSize;
+    private Thread runThread;
 
     public ServerImpl(GridConfiguration config, Bus bus, GridImplementor grid)
     {
@@ -111,6 +112,22 @@ public class ServerImpl implements Server
         return lastTaskAccepted;
     }
 
+    public void doShutdown()
+    {
+        pool.shutdownNow();
+        try
+        {
+            pool.awaitTerminationAfterShutdown();
+        }
+        catch (InterruptedException e)
+        {
+            log.warn("Interrupted.");
+        }
+        if (runThread != null)
+            runThread.interrupt();
+        shutdownLatch.release();
+    }
+
     private synchronized InputProcessingWorker findWorker(TaskId id)
     {
         return workers.findWorker(id);
@@ -159,11 +176,12 @@ public class ServerImpl implements Server
     public void run()
     {
         bus.connect();
-
+        NodeAddress addr = bus.getAddress();
         try
         {
-            log.info("Server running...");
-            // Spin and wait for shutdown.
+            runThread = Thread.currentThread();
+            log.info("*** SERVER " + addr + " RUNNING ***");
+            // Spin and wait for shutdownServers.
             long wait = 0;
             long lastwait = wait;
             while (!shutdownLatch.attempt(wait))
@@ -186,7 +204,7 @@ public class ServerImpl implements Server
         }
         finally
         {
-            bus.disconnect();
+            log.info("*** SERVER " + addr + " STOPPED ***");
         }
     }
 

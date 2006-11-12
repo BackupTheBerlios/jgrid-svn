@@ -22,6 +22,8 @@ public class RpcHandler
         this.grid = grid;
     }
 
+    // === General messages ===
+
     public String _status(NodeStatus from)
     {
         grid.onNodeStatus(from);
@@ -38,6 +40,11 @@ public class RpcHandler
     public NodeStatus _localStatus()
     {
         return grid.getLocalStatus();
+    }
+
+    public void _shutdownServers()
+    {
+        grid.doShutdownServers();
     }
 
     // === Server messages ===

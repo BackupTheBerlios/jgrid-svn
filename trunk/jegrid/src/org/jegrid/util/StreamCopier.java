@@ -32,7 +32,6 @@ public class StreamCopier implements Runnable
     private boolean complete = false;
     private static final int DEFAULT_BYTE_ARRAY_BUFSZ = 128;
     private static final int UNLIMITED = -1;
-    private static final int EOS = -1;
 
     /**
      * Copies the input stream into the output stream in a thread safe and
@@ -43,9 +42,10 @@ public class StreamCopier implements Runnable
      * @param bufsz The size of the buffer to use.
      * @return int The number of bytes copied.
      * @throws java.io.IOException When the stream could not be copied.
-     **/
-    public static final int copy(InputStream in, OutputStream out, int bufsz)
-            throws IOException
+     * @throws InterruptedException if the copy was interrupted
+     */
+    public static int copy(InputStream in, OutputStream out, int bufsz)
+            throws IOException, InterruptedException
     {
         // From Java I/O, page 43
         // Do not allow other threads to read from the input or write to the
@@ -76,9 +76,10 @@ public class StreamCopier implements Runnable
      * @param bufsz The size of the buffer to use.
      * @return int The number of bytes copied.
      * @throws java.io.IOException When the stream could not be copied.
-     **/
-    public final static int unsyncCopy(InputStream in, OutputStream out,
-                                       int bufsz) throws IOException
+     * @throws InterruptedException if the copy was interrupted
+     */
+    public static int unsyncCopy(InputStream in, OutputStream out,
+                                       int bufsz) throws IOException, InterruptedException
     {
         return StreamCopier.unsyncCopy(in, out, bufsz, StreamCopier.UNLIMITED);
     }
@@ -95,8 +96,9 @@ public class StreamCopier implements Runnable
      * until the end of the input stream.
      * @return int The number of bytes copied.
      * @throws java.io.IOException When the stream could not be copied.
-     **/
-    public static int unsyncCopy(InputStream in, OutputStream out, int bufsz, int limit) throws IOException
+     * @throws InterruptedException if the copy was interrupted
+     */
+    public static int unsyncCopy(InputStream in, OutputStream out, int bufsz, int limit) throws IOException, InterruptedException
     {
         return Copier.copy(in,out,bufsz,limit);
     }
@@ -127,9 +129,10 @@ public class StreamCopier implements Runnable
      * discarded, similar to piping to /dev/null on UN*X.
      * @return int The number of bytes copied.
      * @throws java.io.IOException When the stream could not be copied.
-     **/
-    public static final int copy(InputStream in, OutputStream out)
-            throws IOException
+     * @throws InterruptedException if the copy was interrupted
+     */
+    public static int copy(InputStream in, OutputStream out)
+            throws IOException, InterruptedException
     {
         return StreamCopier.copy(in, out, StreamCopier.DEFAULT_BUFFER_SIZE);
     }
@@ -144,13 +147,13 @@ public class StreamCopier implements Runnable
      * @return ArrayList - An array list of byte arrays.
      * @throws java.io.IOException When something happens while reading the stream.
      */
-    public static final ArrayList readBlocks(InputStream in, int blocksz)
+    public static ArrayList readBlocks(InputStream in, int blocksz)
             throws IOException
     {
         ArrayList list = new ArrayList();
-        byte[] chunk = null;
+        byte[] chunk;
         byte[] buf = new byte[blocksz];
-        int bytesRead = 0;
+        int bytesRead;
         while (true)
         {
             bytesRead = in.read(buf);
@@ -168,9 +171,11 @@ public class StreamCopier implements Runnable
      * Reads the entire input stream into a byte array.
      * @param in The input stream.
      * @throws java.io.IOException When something happens while reading the stream.
+     * @throws InterruptedException if the copy was interrupted
+     * @return the byte array
      */
-    public static final byte[] readByteArray(InputStream in)
-            throws IOException
+    public static byte[] readByteArray(InputStream in)
+            throws IOException, InterruptedException
     {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         StreamCopier.unsyncCopy(in,baos,StreamCopier.DEFAULT_BYTE_ARRAY_BUFSZ);
@@ -180,11 +185,12 @@ public class StreamCopier implements Runnable
     /** Reads the entire input stream into a byte array with a limit.
      * @param in The input reader
      * @param limit The number of bytes to read.
-     * @exception java.io.IOException Thrown if there was an error while copying.
      * @return An array of bytes read from the input.
+     * @throws java.io.IOException When something happens while reading the stream.
+     * @throws InterruptedException if the copy was interrupted
      */
     public static byte[] readByteArray(InputStream in,int limit)
-        throws IOException
+            throws IOException, InterruptedException
     {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         StreamCopier.unsyncCopy(in,baos,StreamCopier.DEFAULT_BUFFER_SIZE,limit);
@@ -221,10 +227,11 @@ public class StreamCopier implements Runnable
      * Reads the specified file into a byte array.
      * @param file The file to read.
      * @throws java.io.IOException When something happens while reading the stream.
+     * @throws InterruptedException if the copy was interrupted
      * @return the byte array
      */
     public static byte[] readByteArray(File file)
-            throws IOException
+            throws IOException, InterruptedException
     {
         return StreamCopier.readByteArray(new BufferedInputStream(
                 new FileInputStream(file),StreamCopier.DEFAULT_BUFFER_SIZE));
@@ -234,10 +241,11 @@ public class StreamCopier implements Runnable
      * Reads the specified file into a byte array.
      * @param fileName The file name to read.
      * @throws java.io.IOException When something happens while reading the stream.
+     * @throws InterruptedException if the copy was interrupted
      * @return the byte array
      */
     public static byte[] readFileIntoByteArray(String fileName)
-            throws IOException
+            throws IOException, InterruptedException
     {
         return StreamCopier.readByteArray(new File(fileName));
     }
@@ -264,7 +272,7 @@ public class StreamCopier implements Runnable
      * @throws java.io.IOException if there was a problem reading the input.
      * @throws ClassNotFoundException if the class of the object in the input was not found.
      */
-    public static final Object unserializeObject(byte[] bytes) throws IOException, ClassNotFoundException
+    public static Object unserializeObject(byte[] bytes) throws IOException, ClassNotFoundException
     {
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
         ObjectInputStream ois = new ObjectInputStream(bais);
@@ -318,12 +326,16 @@ public class StreamCopier implements Runnable
         catch (IOException e)
         {
             // Log the exception!
-            StreamCopier.log.error("Unexpected: " + e.getMessage(), e);
+            log.error("Unexpected: " + e.getMessage(), e);
             // Remember the exception, just in case anyone cares.
             synchronized (this)
             {
                 exception = e;
             }
+        }
+        catch (InterruptedException e)
+        {
+            log.error("Interrupted: " + e.getMessage());
         }
     }
 

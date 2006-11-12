@@ -55,7 +55,7 @@ public class MicroContainer
             // Once an implementation has been created, the same one should be returned
             // every time.  This is what CachingComponentAdapter does (see javadocs for
             // ConstructorInjectionComponentAdapter.
-            log.info("Registering " + key + "->" + implementation.getName());        
+            // log.debug("Registering " + key + "->" + implementation.getName());        
             pico.registerComponent(
                     new CachingComponentAdapter(
                             new ConstructorInjectionComponentAdapter(
@@ -104,6 +104,15 @@ public class MicroContainer
         }
     }
 
+    public static void destroyComponent(Object component)
+    {
+        if (component instanceof LifecycleAware)
+        {
+            LifecycleAware lifecycleAware = (LifecycleAware) component;
+            lifecycleAware.terminate();
+        }
+    }
+
     public void initializeFromDescriptors(List list)
     {
         for (Iterator iterator = list.iterator(); iterator.hasNext();)
@@ -122,6 +131,20 @@ public class MicroContainer
         }
     }
 
+    public void destroyFromDescriptors(List list)
+    {
+        // Destroy them all.
+        for (Iterator iterator = list.iterator(); iterator.hasNext();)
+        {
+            GridSingletonDescriptor descriptor = (GridSingletonDescriptor) iterator.next();
+            Object key = descriptor.getKey();
+            log.info("Destroying " + key + " ...");
+            Object component = getComponentInstance(key);
+            destroyComponent(component);
+        }
+        pico.dispose();
+
+    }
     private class EmptyComponentAdapter extends InstanceComponentAdapter
     {
 

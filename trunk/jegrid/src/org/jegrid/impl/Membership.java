@@ -214,6 +214,11 @@ class Membership implements GridStatus
         if (nodeStatus == null)
             return;
         NodeAddress address = nodeStatus.getNodeAddress();
+        if (address == null)
+        {
+            log.warn("Node status with no address? " + nodeStatus);
+            throw new RuntimeException("Node status with no address? " + nodeStatus);
+        }
 
         // Don't use the status for the local node.  If the
         // address is mine, then use my own status.
@@ -266,7 +271,7 @@ class Membership implements GridStatus
 
     public void onNewCoordinator(NodeAddress address)
     {
-        log.info("=== NEW COORDINATOR: " + address + " ===");
+        log.info("Coordinator is " + address);
         coordinator = address;
     }
 

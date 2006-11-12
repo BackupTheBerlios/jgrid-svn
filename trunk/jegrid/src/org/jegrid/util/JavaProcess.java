@@ -2,6 +2,7 @@ package org.jegrid.util;
 
 import org.apache.log4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -23,6 +24,8 @@ public class JavaProcess
     private String[] args;
     private OutputStream out;
     private OutputStream err;
+    private Thread outThread;
+    private Thread errThread;
 
     public JavaProcess(String mainClass)
     {
@@ -55,6 +58,12 @@ public class JavaProcess
         this.classpath = classpath;
     }
 
+    public void appendClasspath(String classpath)
+    {
+        String old = getClasspath();
+        setClasspath(old + File.pathSeparator + classpath);
+    }
+    
     public void setArgs(String[] args)
     {
         this.args = args;
@@ -63,33 +72,65 @@ public class JavaProcess
     public void start() throws IOException
     {
         if (process != null)
-            throw new IllegalStateException("Process already running!");
+            stopIt();
         Runtime rt = Runtime.getRuntime();
         List commandLine = new ArrayList();
-        commandLine.add("java");
+        commandLine.add(getJavaCommand());
         commandLine.add("-classpath");
-        commandLine.add(getClasspath());
+        String cp = getClasspath();
+        // TODO: Chop the classpath up and remove duplicates.
+        commandLine.add(cp);
         commandLine.add(mainClass);
 
         if (args != null && args.length > 0)
             commandLine.addAll(Arrays.asList(args));
         
         String[] cmdarray = (String[]) commandLine.toArray(new String[commandLine.size()]);
+        
         process = rt.exec(cmdarray);
 
         StreamCopier stdout = new StreamCopier(process.getInputStream(), out);
         StreamCopier stderr = new StreamCopier(process.getErrorStream(), err);
-        Thread errThread = new Thread(stderr);
+        errThread = new Thread(stderr);
+        errThread.setDaemon(true);
+        errThread.setPriority(Thread.MIN_PRIORITY);
         errThread.start();
-        Thread outThread = new Thread(stdout);
+        outThread = new Thread(stdout);
+        outThread.setDaemon(true);
+        outThread.setPriority(Thread.MIN_PRIORITY);
         outThread.start();
         log.info("Process started.");
     }
 
+    private String getJavaCommand()
+    {
+        return Util.getJavaCommand();
+    }
+
     public void kill()
     {
-        process.destroy();
+        log.info("Kill...");
+        stopIt();
         process = null;
+    }
+
+    private void stopIt()
+    {
+        if (errThread != null)
+        {
+            errThread.interrupt();
+            errThread = null;
+        }
+        if (outThread != null)
+        {
+            outThread.interrupt();
+            outThread = null;
+        }
+        if (process != null)
+        {
+            process.destroy();
+            process = null;
+        }
     }
 
     /**
@@ -99,8 +140,11 @@ public class JavaProcess
      */
     public int waitFor() throws InterruptedException
     {
+        if (process == null)
+            throw new RuntimeException("No process!");
         log.info("Waiting ...");
         int rc = process.waitFor();
+        stopIt();
         log.info("Process completed.  return code = " + rc);
         return rc;
     }

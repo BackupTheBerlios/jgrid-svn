@@ -4,6 +4,7 @@ import junit.framework.TestCase;
 import org.apache.log4j.Logger;
 import org.jegrid.impl.NodeStatusImpl;
 import org.jegrid.impl.ServerComparator;
+import org.jegrid.util.Util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,6 +47,33 @@ public class ClientTest extends TestCase
         assertEquals(0, nodes[nodes.length - 1].getAvailableWorkers());
     }
 
+    public void testStartStopServers() throws Exception
+    {
+        GridConfiguration config = new GridConfiguration();
+        config.setGridName("test");
+        config.setType(Grid.TYPE_CLIENT);
+        Grid grid = config.configure();
+        grid.connect();
+
+        // Create server JVMs.
+        ServerJvms jvms = new ServerJvms(grid,3);
+        jvms.start();
+
+        try
+        {
+            Util.sleep(1000);
+
+            grid.shutdownServers();
+
+            jvms.waitFor();
+        }
+        finally
+        {
+            jvms.stop();
+        }
+
+    }
+
     public void testSimpleClient() throws Exception
     {
         GridConfiguration config = new GridConfiguration();
@@ -53,14 +81,32 @@ public class ClientTest extends TestCase
         config.setType(Grid.TYPE_CLIENT);
         Grid grid = config.configure();
         grid.connect();
-        Client client = grid.getClient();
-        Task task = client.createTask();
-        for (int i = 0; i < 10; i++)
-            task.addInput(new MonteCarloPi.Input(17 * i + 1, 10000));
-        final MonteCarloPi.Output output = new MonteCarloPi.Output();
-        MonteCarloPi.MCPiAggregator aggregator = new MonteCarloPi.MCPiAggregator();
-        aggregator.setAggregate(output);
-        task.run(MonteCarloPi.class.getName(), aggregator, 10, false);
+
+        // Create two server JVMs.
+        ServerJvms jvms = new ServerJvms(grid,2);
+        jvms.start();
+
+        final MonteCarloPi.Output output;
+        try
+        {
+            Client client = grid.getClient();
+            Task task = client.createTask();
+            for (int i = 0; i < 10; i++)
+                task.addInput(new MonteCarloPi.Input(17 * i + 1, 1000));
+            output = new MonteCarloPi.Output();
+            MonteCarloPi.MCPiAggregator aggregator = new MonteCarloPi.MCPiAggregator();
+            aggregator.setAggregate(output);
+            NodeAddress[] servers = client.waitForServers(1);
+            for (int i = 0; i < servers.length; i++)
+            {
+                log.info(servers[i]);
+            }
+            task.run(MonteCarloPi.class.getName(), aggregator, 10, false);
+        }
+        finally
+        {
+            jvms.stop();
+        }
         log.info("output : " + output.showResult());
     }
 
@@ -78,7 +124,19 @@ public class ClientTest extends TestCase
         final MonteCarloPi.Output output = new MonteCarloPi.Output();
         MonteCarloPi.MCPiAggregator aggregator = new MonteCarloPi.MCPiAggregator();
         aggregator.setAggregate(output);
-        task.run(MonteCarloPi.class.getName(), aggregator, 10, true);
+
+        // Create two server JVMs.
+        ServerJvms jvms = new ServerJvms(grid,2);
+        jvms.start();
+
+        try
+        {
+            task.run(MonteCarloPi.class.getName(), aggregator, 10, true);
+        }
+        finally
+        {
+            jvms.stop();
+        }
         log.info("output : " + output.showResult());
     }
 
@@ -97,11 +155,23 @@ public class ClientTest extends TestCase
                 MonteCarloPi.class.getName(),
                 MonteCarloPi.MCPiAggregator.class.getName(),
                 10, input);
-        log.info("Background task 1...");
-        client.background(request);
-        log.info("Background task 2...");
-        client.background(request);
-        log.info("Background task 3...");
-        client.background(request);
+
+        // Create two server JVMs.
+        ServerJvms jvms = new ServerJvms(grid,2);
+        jvms.start();
+
+        try
+        {
+            log.info("Background task 1...");
+            client.background(request);
+            log.info("Background task 2...");
+            client.background(request);
+            log.info("Background task 3...");
+            client.background(request);
+        }
+        finally
+        {
+            jvms.stop();
+        }            
     }
 }

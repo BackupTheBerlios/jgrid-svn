@@ -29,17 +29,21 @@ public class Copier
      * until the end of the input stream.
      * @return int The number of bytes copied.
      * @throws java.io.IOException When the stream could not be copied.
+     * @throws InterruptedException if the copy is interrupted
      **/
-    public static int copy(InputStream in, OutputStream out, int bufsz, int limit) throws IOException
+    public static int copy(InputStream in, OutputStream out, int bufsz, int limit) throws IOException, InterruptedException
     {
         if (bufsz <= 0)
             throw new IllegalArgumentException("Buffer size must be > 0");
         byte[] buf = new byte[bufsz];
-        int bytesRead = 0;
+        int bytesRead;
         int total = 0;
         int readLimit = bufsz;
+        Thread thread = Thread.currentThread();
         while (true)
         {
+            if (thread.isInterrupted())
+                throw new InterruptedException("Copier interrupted.");
             // If a limit was specified, calculate the number of bytes
             // that should be read by the next read operation.
             if (limit > 0)
@@ -78,7 +82,7 @@ public class Copier
         if (bufsz <= 0)
             throw new IllegalArgumentException("Buffer size must be > 0");
         char[] buf = new char[bufsz];
-        int bytesRead = 0;
+        int bytesRead;
         int total = 0;
         int readLimit = bufsz;
         while (true)
@@ -108,8 +112,9 @@ public class Copier
      * @param in The input stream
      * @return The contents of the input stream as a byte array.
      * @throws java.io.IOException if something goes wrong while copying.
+     * @throws InterruptedException if the copy is interrupted
      */
-    public static final byte[] toByteArray(InputStream in) throws IOException
+    public static byte[] toByteArray(InputStream in) throws IOException, InterruptedException
     {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Copier.copy(in,baos,Copier.DEFAULT_BUFFER_SIZE,-1);

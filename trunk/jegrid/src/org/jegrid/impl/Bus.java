@@ -43,4 +43,8 @@ public interface Bus
 
     void apppend(TaskId id, LoggingEvent event) throws RpcTimeoutException
             ;
+
+    void shutdownServers()
+            ;
+
 }

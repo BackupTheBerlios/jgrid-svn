@@ -73,4 +73,16 @@ public interface Grid
      * shut down.
      */
     void runServer();
+
+    /**
+     * Stop all servers.
+     */
+    void shutdownServers()
+            ;
+
+    /**
+     * @return the name of the grid
+     */
+    String getGridName()
+            ;
 }
