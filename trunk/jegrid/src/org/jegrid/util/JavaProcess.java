@@ -111,7 +111,6 @@ public class JavaProcess
     {
         log.info("Kill...");
         stopIt();
-        process = null;
     }
 
     private void stopIt()
@@ -129,7 +128,6 @@ public class JavaProcess
         if (process != null)
         {
             process.destroy();
-            process = null;
         }
     }
 

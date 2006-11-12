@@ -335,7 +335,7 @@ public class StreamCopier implements Runnable
         }
         catch (InterruptedException e)
         {
-            log.error("Interrupted: " + e.getMessage());
+            log.info("Interrupted: " + e.getMessage());
         }
     }
 
