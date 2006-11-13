@@ -56,7 +56,7 @@ public class ClientTest extends TestCase
         grid.connect();
 
         // Create server JVMs.
-        ServerJvms jvms = new ServerJvms(grid,3);
+        ServerJvms jvms = new ServerJvms(grid,3,2);
         jvms.start();
 
         try
@@ -83,7 +83,7 @@ public class ClientTest extends TestCase
         grid.connect();
 
         // Create two server JVMs.
-        ServerJvms jvms = new ServerJvms(grid,2);
+        ServerJvms jvms = new ServerJvms(grid,2,2);
         jvms.start();
 
         final MonteCarloPi.Output output;
@@ -120,13 +120,13 @@ public class ClientTest extends TestCase
         Client client = grid.getClient();
         Task task = client.createTask();
         for (int i = 0; i < 10; i++)
-            task.addInput(new MonteCarloPi.Input(17 * i + 1, 10000));
+            task.addInput(new MonteCarloPi.Input(17 * i + 1, 1000));
         final MonteCarloPi.Output output = new MonteCarloPi.Output();
         MonteCarloPi.MCPiAggregator aggregator = new MonteCarloPi.MCPiAggregator();
         aggregator.setAggregate(output);
 
         // Create two server JVMs.
-        ServerJvms jvms = new ServerJvms(grid,2);
+        ServerJvms jvms = new ServerJvms(grid,2,2);
         jvms.start();
 
         try
@@ -150,14 +150,14 @@ public class ClientTest extends TestCase
         Client client = grid.getClient();
         List input = new ArrayList();
         for (int i = 0; i < 10; i++)
-            input.add(new MonteCarloPi.Input(17 * i + 1, 1000));
+            input.add(new MonteCarloPi.Input(17 * i + 1, 10000));
         TaskRequest request = new TaskRequest(
                 MonteCarloPi.class.getName(),
                 MonteCarloPi.MCPiAggregator.class.getName(),
                 10, input);
 
         // Create two server JVMs.
-        ServerJvms jvms = new ServerJvms(grid,2);
+        ServerJvms jvms = new ServerJvms(grid,2,2);
         jvms.start();
 
         try
@@ -174,4 +174,41 @@ public class ClientTest extends TestCase
             jvms.stop();
         }            
     }
+
+    public void testBackgroundTaskSingleThreaded() throws Exception
+    {
+        GridConfiguration config = new GridConfiguration();
+        config.setGridName("test");
+        config.setType(Grid.TYPE_CLIENT);
+        Grid grid = config.configure();
+        grid.connect();
+        Client client = grid.getClient();
+        List input = new ArrayList();
+        for (int i = 0; i < 10; i++)
+            input.add(new MonteCarloPi.Input(17 * i + 1, 10000));
+        TaskRequest request = new TaskRequest(
+                MonteCarloPi.class.getName(),
+                MonteCarloPi.MCPiAggregator.class.getName(),
+                10, input);
+
+        // Create two server JVMs.
+        ServerJvms jvms = new ServerJvms(grid,2,1);
+        jvms.start();
+
+        try
+        {
+            log.info("Background task 1...");
+            client.background(request);
+            log.info("Background task 2...");
+            client.background(request);
+            log.info("Background task 3...");
+            client.background(request);
+            log.info("### All background tasks started ###");
+        }
+        finally
+        {
+            jvms.stop();
+        }
+    }
+
 }

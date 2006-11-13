@@ -88,7 +88,6 @@ public class JavaProcess
         String[] cmdarray = (String[]) commandLine.toArray(new String[commandLine.size()]);
         
         process = rt.exec(cmdarray);
-
         StreamCopier stdout = new StreamCopier(process.getInputStream(), out);
         StreamCopier stderr = new StreamCopier(process.getErrorStream(), err);
         errThread = new Thread(stderr);
@@ -117,18 +116,21 @@ public class JavaProcess
     {
         if (errThread != null)
         {
-            errThread.interrupt();
-            errThread = null;
+            stopThread(errThread);
         }
         if (outThread != null)
         {
-            outThread.interrupt();
-            outThread = null;
+            stopThread(outThread);
         }
         if (process != null)
         {
             process.destroy();
         }
+    }
+
+    private void stopThread(Thread t)
+    {
+        t.interrupt();
     }
 
     /**

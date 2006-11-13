@@ -1,7 +1,5 @@
 package org.jegrid.util;
 
-import org.apache.log4j.Logger;
-
 import java.io.*;
 import java.util.ArrayList;
 
@@ -15,9 +13,6 @@ import java.util.ArrayList;
  */
 public class StreamCopier implements Runnable
 {
-    /** A logger for this class. **/
-    private static Logger log = Logger.getLogger(StreamCopier.class);
-
     /** The default buffer size. **/
     public static final int DEFAULT_BUFFER_SIZE = 256;
     /** The input stream. **/
@@ -30,6 +25,7 @@ public class StreamCopier implements Runnable
     private IOException exception;
     /** True, if the copying is complete. **/
     private boolean complete = false;
+
     private static final int DEFAULT_BYTE_ARRAY_BUFSZ = 128;
     private static final int UNLIMITED = -1;
 
@@ -325,8 +321,6 @@ public class StreamCopier implements Runnable
         }
         catch (IOException e)
         {
-            // Log the exception!
-            log.error("Unexpected: " + e.getMessage(), e);
             // Remember the exception, just in case anyone cares.
             synchronized (this)
             {
@@ -335,7 +329,11 @@ public class StreamCopier implements Runnable
         }
         catch (InterruptedException e)
         {
-            log.info("Interrupted: " + e.getMessage());
+            // Ignore, just stop.
+        }
+        catch (Throwable e)
+        {
+            // Ignore.
         }
     }
 

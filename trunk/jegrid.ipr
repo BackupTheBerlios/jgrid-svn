@@ -278,8 +278,8 @@
   </component>
   <component name="ProjectRootManager" version="2" assert-keyword="true" jdk-15="false" project-jdk-name="1.4" />
   <component name="ProjectRunConfigurationManager">
-    <configuration default="false" name="GridSingletonTest" type="Application" factoryName="Application" enabled="false" merge="false">
-      <option name="MAIN_CLASS_NAME" value="org.jegrid.GridSingletonTest" />
+    <configuration default="false" name="ServerMain" type="Application" factoryName="Application" enabled="false" merge="false">
+      <option name="MAIN_CLASS_NAME" value="org.jegrid.ServerMain" />
       <option name="VM_PARAMETERS" value="" />
       <option name="PROGRAM_PARAMETERS" value="test" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
@@ -293,8 +293,8 @@
         <option name="Make" value="true" />
       </method>
     </configuration>
-    <configuration default="false" name="ServerMain" type="Application" factoryName="Application" enabled="false" merge="false">
-      <option name="MAIN_CLASS_NAME" value="org.jegrid.ServerMain" />
+    <configuration default="false" name="GridSingletonTest" type="Application" factoryName="Application" enabled="false" merge="false">
+      <option name="MAIN_CLASS_NAME" value="org.jegrid.GridSingletonTest" />
       <option name="VM_PARAMETERS" value="" />
       <option name="PROGRAM_PARAMETERS" value="test" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />

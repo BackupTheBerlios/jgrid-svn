@@ -33,7 +33,7 @@ public class ServerImpl implements Server
         poolSize = config.getThreadPoolSize();
         if (poolSize == 0)
             throw new GridException("Cannot start a server with zero threads!");
-        
+
         log.info("Starting server with " + poolSize + " threads.");
         this.bus = bus;
         this.grid = grid;
@@ -59,11 +59,12 @@ public class ServerImpl implements Server
 
     public void onGo(GoMessage goMessage)
     {
-        InputProcessingWorker worker = findWorker(goMessage.getTaskId());
+        if (goMessage == null)
+            return;
+        TaskId taskId = goMessage.getTaskId();
+        InputProcessingWorker worker = findWorker(taskId);
         if (worker != null)
             worker.go(goMessage);
-        else
-            log.info("Not working on " + goMessage);
     }
 
     public void onRelease(TaskId id)
@@ -74,31 +75,30 @@ public class ServerImpl implements Server
             worker.setReleased(true);
             done(id);
         }
-        else
-            log.info("Not working on " + id);
     }
 
     public boolean onAssignTask(TaskRequest request)
     {
-        try
+        if (log.isDebugEnabled())
+            log.debug("onAssignTask()");
+        synchronized (this)
         {
-            synchronized (this)
+            int freeThreads = _freeThreads();
+            if (freeThreads <= 0)
+                return false;
+            Task task = grid.getClient().createTask();
+            RemoteTaskWorker worker = new RemoteTaskWorker(this,
+                    grid.getClient(), request, task.getTaskId());
+            try
             {
-                int freeThreads = _freeThreads();
-                if (freeThreads <= 0)
-                    return false;
-                Task task = grid.getClient().createTask();
-                RemoteTaskWorker worker = new RemoteTaskWorker(this,
-                        grid.getClient(), request, task.getTaskId());
-                workers.addWorker(task.getTaskId(), worker);
-                pool.execute(worker);
-                bus.broadcastNodeStatus();
-                return true;
+                executeWorker(task.getTaskId(), worker);
             }
-        }
-        catch (InterruptedException e)
-        {
-            throw new GridException(e);
+            catch (Exception e)
+            {
+                log.warn("Task not accepted due to :" + e);
+                return false;
+            }
+            return true;
         }
     }
 
@@ -147,30 +147,35 @@ public class ServerImpl implements Server
             int freeThreads = _freeThreads();
             if (freeThreads <= 0)
                 return new AssignResponse(bus.getAddress(), _freeThreads(), false);
-            if (workers.contains(id))
-                throw new GridException("Already working on " + id);
-            workers.addWorker(id, worker);
-            try
-            {
-                pool.execute(worker);
-            }
-            catch (ServerBusyException sbe)
-            {
-                log.info("This server is busy.");
-                workers.removeWorker(id);
-                throw new GridException(sbe);
-            }
-            catch (InterruptedException e)
-            {
-                log.info("This server was interrupted.");
-                workers.removeWorker(id);
-                throw new GridException(e);
-            }
-            tasksAccepted++;
-            lastTaskAccepted = System.currentTimeMillis();
-            bus.broadcastNodeStatus();
+            executeWorker(id, worker);
             return new AssignResponse(bus.getAddress(), _freeThreads(), true);
         }
+    }
+
+    private void executeWorker(TaskId id, Worker worker)
+    {
+        if (workers.contains(id))
+            throw new GridException("Already working on " + id);
+        workers.addWorker(id, worker);
+        try
+        {
+            pool.execute(worker);
+        }
+        catch (ServerBusyException sbe)
+        {
+            log.info("This server is busy.");
+            workers.removeWorker(id);
+            throw sbe;
+        }
+        catch (InterruptedException e)
+        {
+            log.info("This server was interrupted.");
+            workers.removeWorker(id);
+            throw new GridException(e);
+        }
+        tasksAccepted++;
+        lastTaskAccepted = System.currentTimeMillis();
+        bus.broadcastNodeStatus();
     }
 
     public void run()
@@ -229,7 +234,7 @@ public class ServerImpl implements Server
 
     synchronized void done(TaskId id)
     {
-        log.info("done() " + id);        
+        log.info("done() " + id);
         workers.removeWorker(id);
         bus.broadcastNodeStatus();
     }

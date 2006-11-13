@@ -147,7 +147,7 @@ public class MonteCarloPi implements InputProcessor, LifecycleAware
         // The needle will cross the line if 'A' < 'l' * sin(theta)
         double d = in.getDistance();
         double l = in.getLength();
-        int n = MonteCarloPi.ITERATIONS;
+        int n = in.getIterations();
         Random r = new Random(in.getSeed());
         int hits = 0;
         for (int i = 0; i < n; i++)

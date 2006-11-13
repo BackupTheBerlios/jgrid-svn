@@ -20,12 +20,14 @@ public class ServerJvms
     private int numberOfServers;
     private JavaProcess[] jvms;
     private Grid grid;
+    private int numberOfThreads;
 
-    public ServerJvms(Grid grid, int numberOfServers)
+    public ServerJvms(Grid grid, int numberOfServers, int numberOfThreads)
     {
         this.grid = grid;
         this.gridName = grid.getGridName();
         this.numberOfServers = numberOfServers;
+        this.numberOfThreads = numberOfThreads;
         jvms = new JavaProcess[numberOfServers];
         for (int i = 0; i < jvms.length; i++)
             jvms[i] = new JavaProcess(ServerMain.class.getName());
@@ -36,7 +38,7 @@ public class ServerJvms
         for (int i = 0; i < jvms.length; i++)
         {
             JavaProcess jvm = jvms[i];
-            jvm.setArgs(new String[] { gridName });
+            jvm.setArgs(new String[] { gridName , Integer.toString(numberOfThreads)});
             jvm.start();
         }
 
@@ -55,19 +57,15 @@ public class ServerJvms
         } while (addresses.length < numberOfServers);
     }
     
-    protected void finalize() throws Throwable
-    {
-        super.finalize();
-        stop();
-    }
-
     public void stop()
     {
+        log.info("stop() : ENTER");
         for (int i = 0; i < jvms.length; i++)
         {
             JavaProcess jvm = jvms[i];
             jvm.kill();
         }
+        log.info("stop() : LEAVE");
     }
 
     public void waitFor()
