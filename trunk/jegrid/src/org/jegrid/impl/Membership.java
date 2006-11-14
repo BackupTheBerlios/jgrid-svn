@@ -17,6 +17,7 @@ class Membership implements GridStatus
     private static Logger log = Logger.getLogger(Membership.class);
 
     private static final long TIMEOUT_FOR_FIRST_MEMBERSHIP_CHANGE = 10000;
+    private static final long REFRESH_TIMEOUT = 3000;
 
     private int numberOfMembershipChanges;
     private Mutex membershipMutex;
@@ -27,6 +28,7 @@ class Membership implements GridStatus
     private Map serverNodes = new HashMap();
     private GridImpl grid;
     private NodeAddress coordinator;
+    private long lastRefresh;
 
     public Membership(GridImpl grid)
     {
@@ -200,6 +202,7 @@ class Membership implements GridStatus
         membershipMutex.acquire();
         try
         {
+            lastRefresh = System.currentTimeMillis();
             for (int i = 0; i < ns.length; i++)
                 updateStatus(ns[i]);
         }
@@ -304,5 +307,22 @@ class Membership implements GridStatus
         {
             releaseMutex();
         }
+    }
+
+    public boolean needsRefresh()
+    {
+        membershipMutex.acquire();
+        try
+        {
+            if (unknownNodes.size() > 0)
+                return true;
+            if (System.currentTimeMillis() - lastRefresh > REFRESH_TIMEOUT)
+                return true;
+        }
+        finally
+        {
+            releaseMutex();
+        }
+        return false;
     }
 }

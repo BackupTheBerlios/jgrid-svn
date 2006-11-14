@@ -121,7 +121,7 @@ public class GridImpl implements GridImplementor
 
     public GridStatus getGridStatus(boolean cached)
     {
-        if (!cached || membership.getNumberOfUnknownNodes() > 0)
+        if (!cached || membership.needsRefresh())
         {
             NodeStatus[] ns = bus.getGridStatus();
             membership.refreshStatus(ns);

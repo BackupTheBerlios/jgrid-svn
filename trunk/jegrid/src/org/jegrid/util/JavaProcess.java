@@ -110,6 +110,16 @@ public class JavaProcess
     {
         log.info("Kill...");
         stopIt();
+        int rc = 0;
+        try
+        {
+            rc = process.waitFor();
+        }
+        catch (InterruptedException ignore)
+        {
+            // ignore
+        }
+        log.info("Process killed.  return code = " + rc);
     }
 
     private void stopIt()
