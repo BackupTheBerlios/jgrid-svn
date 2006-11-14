@@ -1,5 +1,10 @@
 <project name="jegrid" default="all">
 
+    <property name="javac.debug" value="true"/>
+    <property name="javac.optimize" value="true"/>
+    <property name="javac.deprecation" value="true"/>
+    <property name="javac.verbose" value="false"/>
+
     <property name="lib.dir" value="${basedir}/../lib"/>
     <property name="build.dir" value="${basedir}/build"/>
     <path id="main.classpath">
@@ -31,7 +36,11 @@
 
     <target name="compile" description="Compile all the java code.">
         <mkdir dir="${build.dir}/classes"/>
-        <javac srcdir="${basedir}/src" destdir="${build.dir}/classes">
+        <javac srcdir="${basedir}/src" destdir="${build.dir}/classes"
+            debug="${javac.debug}"
+            optimize="${javac.optimize}"
+            deprecation="${javac.deprecation}"
+            verbose="${javac.verbose}">
             <classpath refid="main.classpath"/>
         </javac>
         <mkdir dir="${build.dir}/test_classes"/>

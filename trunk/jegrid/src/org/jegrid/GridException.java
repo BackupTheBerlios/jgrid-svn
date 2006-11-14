@@ -17,7 +17,7 @@ public class GridException extends RuntimeException
         super(message);
     }
 
-    public GridException(Exception e)
+    public GridException(Throwable e)
     {
         super(e);
     }

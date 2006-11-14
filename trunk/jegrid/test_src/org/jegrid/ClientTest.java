@@ -8,6 +8,7 @@ import org.jegrid.util.Util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -140,6 +141,55 @@ public class ClientTest extends TestCase
         log.info("output : " + output.showResult());
     }
 
+    public void testLocalException() throws Exception
+    {
+        GridConfiguration config = new GridConfiguration();
+        config.setGridName("test");
+        config.setType(Grid.TYPE_CLIENT);
+        Grid grid = config.configure();
+        grid.connect();
+        Client client = grid.getClient();
+        Task task = client.createTask();
+        for (int i = 0; i < 10; i++)
+            task.addInput(new Integer(i));
+        task.addInput(new NullPointerException("Wheee!"));
+        task.addInput("Huh?");
+        // Create two server JVMs.
+        ServerJvms jvms = new ServerJvms(grid,2,2);
+        jvms.start();
+
+        Exception ex = null;
+        GridStatus status = null;
+        try
+        {
+            task.run(ExceptionThrower.Processor.class.getName(),null, 10, true);
+            status = grid.getGridStatus(true);
+        }
+        catch (Exception e)
+        {
+            status = grid.getGridStatus(true);
+            ex = e;
+        }
+        finally
+        {
+            jvms.stop();
+        }
+        showStatus(status);
+        assertNotNull(ex);
+        log.info("Done.");
+    }
+
+    private void showStatus(GridStatus status)
+    {
+        log.info("--- Status: " + status.getNumberOfNodes() + " nodes ---");
+        Iterator iter = status.iterator();
+        while (iter.hasNext())
+        {
+            NodeStatus nodeStatus = (NodeStatus) iter.next();
+            log.info(nodeStatus.toString());
+        }
+    }
+
     public void testBackgroundTask() throws Exception
     {
         GridConfiguration config = new GridConfiguration();
@@ -210,5 +260,4 @@ public class ClientTest extends TestCase
             jvms.stop();
         }
     }
-
 }

@@ -31,31 +31,6 @@ abstract class AbstractInputProcessingWorker extends Worker implements TaskConte
         this.goLatch = new Latch();
     }
 
-    private void waitForGoThenProcess()
-    {
-        // Get the next input from the client's queue of inputs for the task.
-        try
-        {
-            // Wait for the client to say go.
-            boolean okay = goLatch.attempt(GO_TIMEOUT);
-            if (!okay)
-                throw new GridException("Timeout waiting for 'go' from client.");
-            // Paranoid checking.
-            if (id.getClient() == null)
-                throw new GridException("No client address!");
-            processInput();
-        }
-        catch (GridException e)
-        {
-            handleException(e);
-        }
-        catch (Exception e)
-        {
-            GridException ge = new GridException(e);
-            handleException(ge);
-        }
-    }
-
     protected void processInput()
             throws Exception
     {
@@ -149,10 +124,27 @@ abstract class AbstractInputProcessingWorker extends Worker implements TaskConte
 
     public void run()
     {
+        log.debug("run() : ENTER");
         pushLoggingContext();
         try
         {
-            waitForGoThenProcess();
+            // Get the next input from the client's queue of inputs for the task.
+            // Wait for the client to say go.
+            boolean okay = goLatch.attempt(GO_TIMEOUT);
+            if (!okay)
+                throw new GridException("Timeout waiting for 'go' from client.");
+            // Paranoid checking.
+            if (id.getClient() == null)
+                throw new GridException("No client address!");
+            processInput();
+        }
+        catch (GridException e)
+        {
+            handleException(e);
+        }
+        catch (Throwable t)
+        {
+            handleException(new GridException(t));
         }
         finally
         {
@@ -166,6 +158,7 @@ abstract class AbstractInputProcessingWorker extends Worker implements TaskConte
                 log.warn("Unexpected: " + e, e);
             }
         }
+        log.debug("run() : LEAVE");
     }
 
     protected void popLoggingContext()

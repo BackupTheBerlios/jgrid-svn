@@ -50,7 +50,7 @@ public class TaskImpl implements Task
         this.inprogress = new HashMap();
         this.serverAddresses = new HashSet();
         this.outputQueue = new LinkedQueue();
-        localWorker = new LocalWorker(grid,this);
+        localWorker = new LocalWorker(grid, this);
     }
 
     public TaskId getTaskId()
@@ -174,15 +174,6 @@ public class TaskImpl implements Task
 
     private void releaseTask(Exception e)
     {
-        try
-        {
-            Bus bus = client.getBus();
-            bus.release(id);
-        }
-        catch (Exception e1)
-        {
-            log.warn("Unexpected exception while sending 'release' message: " + e1, e1);
-        }
         if (e != null)
         {
             log.error("Task failure: " + e);
@@ -195,13 +186,23 @@ public class TaskImpl implements Task
         serverAddresses.clear();
         inprogress.clear();
         inputQueue.clear();
+        //noinspection EmptyCatchBlock
         try
         {
             outputQueue.put(TaskData.END);
         }
         catch (InterruptedException e1)
         {
-            throw new GridException(e1);
+            // Ignore
+        }
+        try
+        {
+            Bus bus = client.getBus();
+            bus.release(id);
+        }
+        catch (Exception e1)
+        {
+            log.warn("Unexpected exception while sending 'release' message: " + e1, e1);
         }
         log.info("Task " + id + " released.");
     }
@@ -322,26 +323,32 @@ public class TaskImpl implements Task
         if (o != null && o instanceof TaskData)
         {
             TaskData output = (TaskData) o;
-            if (output.getInputId() == TaskData.END_OF_OUTPUT) // This signals the end.
+
+            boolean atEnd = output.getInputId() == TaskData.END_OF_OUTPUT;
+            if (atEnd) // This signals the end.
             {
                 mutex.acquire();
                 try
                 {
                     done = true;
-                    aggregator.done();
                 }
                 finally
                 {
                     mutex.release();
                 }
-                return false;
             }
-            else if (aggregator != null)
-                aggregator.aggregate(output);
+            if (aggregator != null)
+            {
+                if (atEnd)
+                    aggregator.done();
+                else
+                    aggregator.aggregate(output);
+            }
+            // Return true if we should keep going.
+            return !atEnd;
         }
         else
             throw new IllegalStateException("Unexpected object on output queue: " + o);
-        return true;
     }
 
     private void setFailure(Exception e)

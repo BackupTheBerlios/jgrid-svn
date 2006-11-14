@@ -35,7 +35,6 @@ class WorkerThreadPool extends PooledExecutor
 
     public void execute(Runnable command) throws InterruptedException
     {
-        log.info("Executing " + command);
         super.execute(command);
     }
 

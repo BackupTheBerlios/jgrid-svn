@@ -16,4 +16,7 @@ abstract class Worker implements Runnable
         if (grid == null)
             throw new IllegalArgumentException("No grid?");
     }
+
+    public abstract void run();    
+
 }

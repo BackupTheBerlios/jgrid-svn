@@ -58,8 +58,8 @@ public class LocalWorker extends AbstractInputProcessingWorker
 
     protected void handleException(GridException ge)
     {
-        log.error("Local worker " + id + " failed: " + ge,ge);
-        throw ge;
+        log.error("Local worker " + id + " failed: " + ge);
+        taskImpl.onFailure(ge);        
     }
 
     public void setAggregator(Aggregator aggregator)
