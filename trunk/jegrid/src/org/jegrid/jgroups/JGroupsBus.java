@@ -35,6 +35,7 @@ public class JGroupsBus implements Bus
     private JGroupsListener listener;
     private GridImplementor grid;
     private RpcDispatcher dispatcher;
+    private NodeAddress coordinator;
 
     public JGroupsBus(GridConfiguration config, GridImplementor grid)
     {
@@ -280,6 +281,11 @@ public class JGroupsBus implements Bus
                 new Class[0],
                 GroupRequest.GET_NONE,
                 0);
+    }
+
+    public NodeAddress getCoordinator()
+    {
+        return listener.getCoordinator();
     }
 
     public NodeStatus[] getGridStatus()

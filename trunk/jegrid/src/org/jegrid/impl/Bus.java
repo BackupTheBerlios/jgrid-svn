@@ -47,4 +47,5 @@ public interface Bus
     void shutdownServers()
             ;
 
+    NodeAddress getCoordinator();
 }

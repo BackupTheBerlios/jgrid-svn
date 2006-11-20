@@ -27,6 +27,7 @@ public class GridImpl implements GridImplementor
     private long startTime;
     private MicroContainer singletons;
     private String hostName;
+    private NodeAddress coordinator;
 
     public GridImpl(GridConfiguration config)
     {
@@ -110,7 +111,7 @@ public class GridImpl implements GridImplementor
         return new NodeStatusImpl(
                 bus.getAddress(),
                 config.getType(),
-                membership.getCoordinator(),
+                bus.getCoordinator(),
                 freeMemory,
                 totalMemory,
                 freeThreads,
@@ -182,7 +183,6 @@ public class GridImpl implements GridImplementor
             log.info("*** I am the coordinator ***");
             initializeGridSingletons();
         }
-        membership.onNewCoordinator(address);
     }
 
     private void initializeGridSingletons()

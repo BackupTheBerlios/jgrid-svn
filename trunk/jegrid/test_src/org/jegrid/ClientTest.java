@@ -72,7 +72,7 @@ public class ClientTest extends TestCase
         {
             jvms.stop();
         }
-
+        grid.disconnect();
     }
 
     public void testSimpleClient() throws Exception
@@ -108,6 +108,7 @@ public class ClientTest extends TestCase
         {
             jvms.stop();
         }
+        grid.disconnect();
         log.info("output : " + output.showResult());
     }
 
@@ -138,6 +139,7 @@ public class ClientTest extends TestCase
         {
             jvms.stop();
         }
+        grid.disconnect();
         log.info("output : " + output.showResult());
     }
 
@@ -174,6 +176,7 @@ public class ClientTest extends TestCase
         {
             jvms.stop();
         }
+        grid.disconnect();
         showStatus(status);
         assertNotNull(ex);
         log.info("Done.");
@@ -223,6 +226,7 @@ public class ClientTest extends TestCase
         {
             jvms.stop();
         }            
+        grid.disconnect();
     }
 
     public void testBackgroundTaskSingleThreaded() throws Exception
@@ -259,5 +263,6 @@ public class ClientTest extends TestCase
         {
             jvms.stop();
         }
+        grid.disconnect();
     }
 }

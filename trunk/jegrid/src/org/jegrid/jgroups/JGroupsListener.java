@@ -1,6 +1,7 @@
 package org.jegrid.jgroups;
 
 import org.apache.log4j.Logger;
+import org.jegrid.NodeAddress;
 import org.jegrid.impl.GridImplementor;
 import org.jgroups.*;
 
@@ -19,6 +20,7 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
     private static Logger log = Logger.getLogger(JGroupsListener.class);
     private GridImplementor grid;
     private View currentView;
+    private NodeAddress coordinator;
 
     public JGroupsListener(GridImplementor grid)
     {
@@ -66,14 +68,35 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
     {
         log.info("viewAccepted " + newView);
         // Diff the views.
-        ViewDiff diff = new ViewDiff(currentView, newView);
+        ViewDiff diff;
+        NodeAddress coord;
+        synchronized (this)
+        {
+            diff = new ViewDiff(currentView, newView);
+            if (diff.isCoordinatorChanged())
+            {
+                coord = new JGroupsAddress(diff.getCoordinator());
+                log.info("*** Coordinator changed from " + coordinator + " to " + coord);
+                coordinator = coord;
+            }
+            else
+            {
+                // Otherwise, the coordinator hasn't changed so get it out in to a local
+                // so we don't have to sync again.
+                coord = coordinator;
+            }
+            currentView = newView;
+        } // synchronized
+
+        // Notify about coordinator changes first.
+        if (diff.isCoordinatorChanged())
+            grid.onNewCoordinator(coord);
+
         // Create a set of JGroupsAddresses for the diff.
         Set joined = toNodeAddresses(diff.getJoined());
         Set left = toNodeAddresses(diff.getLeft());
+        // Notify all the other components about the membership change.
         grid.onMembershipChange(joined, left);
-        if (diff.isCoordinatorChanged())
-            grid.onNewCoordinator(new JGroupsAddress(diff.getCoordinator()));
-        currentView = newView;
     }
 
     private Set toNodeAddresses(Set joined)
@@ -93,5 +116,13 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
 
     public void block()
     {
+    }
+
+    NodeAddress getCoordinator()
+    {
+        synchronized (this)
+        {
+            return coordinator;
+        }
     }
 }

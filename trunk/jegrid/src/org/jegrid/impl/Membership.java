@@ -27,7 +27,6 @@ class Membership implements GridStatus
     private Map unknownNodes = new HashMap();
     private Map serverNodes = new HashMap();
     private GridImpl grid;
-    private NodeAddress coordinator;
     private long lastRefresh;
 
     public Membership(GridImpl grid)
@@ -53,10 +52,11 @@ class Membership implements GridStatus
 
     public void onMembershipChange(Set joined, Set left)
     {
+        NodeAddress localAddress = grid.getLocalAddress();
         membershipMutex.acquire();
         try
         {
-            log.info("--- NODE " + grid.getLocalAddress() + " MEMBERSHIP CHANGE #" + numberOfMembershipChanges + " ---");
+            log.info("--- NODE " + localAddress + " MEMBERSHIP CHANGE #" + numberOfMembershipChanges + " ---");
             for (Iterator iterator = joined.iterator(); iterator.hasNext();)
             {
                 NodeAddress address = (NodeAddress) iterator.next();
@@ -68,7 +68,7 @@ class Membership implements GridStatus
                 {
                     // Don't make up a new status for the local node.  If the
                     // address is mine, then use my own status.
-                    NodeStatus node = (address.equals(grid.getLocalAddress())) ?
+                    NodeStatus node = (address.equals(localAddress)) ?
                             grid.getLocalStatus() :
                             new NodeStatusImpl(address);
                     putNode(address, node, null);
@@ -270,17 +270,6 @@ class Membership implements GridStatus
             releaseMutex();
         }
         return list.iterator();
-    }
-
-    public void onNewCoordinator(NodeAddress address)
-    {
-        log.info("Coordinator is " + address);
-        coordinator = address;
-    }
-
-    public NodeAddress getCoordinator()
-    {
-        return coordinator;
     }
 
     public int getNumberOfUnknownNodes()
