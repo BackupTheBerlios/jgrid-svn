@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
 import org.jegrid.*;
 import org.jegrid.impl.*;
-import org.jgroups.Address;
 import org.jgroups.Channel;
 import org.jgroups.ChannelException;
 import org.jgroups.JChannel;
@@ -32,7 +31,6 @@ public class JGroupsBus implements Bus
     private boolean running = false;
     private Channel channel;
     private GridConfiguration config;
-    private Address address;
     private JGroupsAddress localAddress;
     private JGroupsListener listener;
     private GridImplementor grid;
@@ -49,20 +47,17 @@ public class JGroupsBus implements Bus
         return channel;
     }
 
-    public void connect()
+    public synchronized void connect()
     {
-        synchronized (this)
+        if (running)
         {
-            if (running)
-            {
-                return;
-            }
-            log.info("Connecting...");
-            doConnect();
-            running = true;
-            notify();
-            log.info(getAddress() + " connected.");
+            return;
         }
+        log.info("Connecting...");
+        doConnect();
+        running = true;
+        notify();
+        log.info(getAddress() + " connected.");
     }
 
     private void doConnect()
@@ -90,8 +85,6 @@ public class JGroupsBus implements Bus
             channel.connect(config.getGridName());      // Okay, connect the channel.
             if (log.isDebugEnabled())
                 log.debug("doConnect() : channel connected.");
-            address = channel.getLocalAddress();
-            localAddress = new JGroupsAddress(address);
             broadcastNodeStatus();
         }
         // Re-throw GridExceptions
@@ -131,30 +124,30 @@ public class JGroupsBus implements Bus
         }
     }
 
-    public void disconnect()
+    public synchronized void disconnect()
     {
-        synchronized (this)
-        {
-            if (!running)
-                return;
+        if (!running)
+            return;
 
-            // Close the channel.
-            if (channel != null)
-            {
-                channel.disconnect();
-                channel.close();
-                channel = null;
-            }
-            listener = null;
-            address = null;
-            running = false;
-            notify();
-            log.info(localAddress + " disconnected.");
+        JGroupsAddress addr = localAddress;
+        localAddress = null;
+        // Close the channel.
+        if (channel != null)
+        {
+            channel.disconnect();
+            channel.close();
+            channel = null;
         }
+        listener = null;
+        running = false;
+        notify();
+        log.info(addr + " disconnected.");
     }
 
-    public NodeAddress getAddress()
+    public synchronized NodeAddress getAddress()
     {
+        if (localAddress == null)
+            localAddress = new JGroupsAddress(channel.getLocalAddress());
         return localAddress;
     }
 
@@ -291,7 +284,7 @@ public class JGroupsBus implements Bus
 
     public NodeStatus[] getGridStatus()
     {
-        List responses = null;
+        List responses;
         try
         {
             responses = dispatcher.broadcastWithExceptionCheck(
@@ -313,10 +306,5 @@ public class JGroupsBus implements Bus
                 list.add(ns);
         }
         return (NodeStatus[]) list.toArray(new NodeStatus[list.size()]);
-    }
-
-    Address getJGroupsAddress()
-    {
-        return channel.getLocalAddress();
     }
 }

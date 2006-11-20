@@ -84,7 +84,10 @@ public class GridImpl implements GridImplementor
 
     public NodeAddress getLocalAddress()
     {
-        return bus.getAddress();
+        NodeAddress address = bus.getAddress();
+        if (address == null)
+            throw new IllegalStateException("No local address!");
+        return address;
     }
 
     public NodeStatus getLocalStatus()
