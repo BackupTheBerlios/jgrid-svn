@@ -50,10 +50,11 @@ public interface GridImplementor extends Grid
     /**
      * Invoked when the membership changes.
      *
-     * @param joined The addresses that joined up with the grid.
-     * @param left   The addresses that have left the grid.
+     * @param joined       The addresses that joined up with the grid.
+     * @param left         The addresses that have left the grid.
+     * @param localAddress
      */
-    void onMembershipChange(Set joined, Set left);
+    void onMembershipChange(Set joined, Set left, NodeAddress localAddress);
 
     /**
      * Invoked when a node joins the grid for the first time.   Everybody says hello.
@@ -73,4 +74,6 @@ public interface GridImplementor extends Grid
 
     void doShutdownServers()
             ;
+
+    void onNodeStopped(NodeAddress addr);
 }

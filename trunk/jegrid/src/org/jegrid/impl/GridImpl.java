@@ -27,7 +27,7 @@ public class GridImpl implements GridImplementor
     private long startTime;
     private MicroContainer singletons;
     private String hostName;
-    private NodeAddress coordinator;
+    private boolean disconnecting;
 
     public GridImpl(GridConfiguration config)
     {
@@ -85,10 +85,7 @@ public class GridImpl implements GridImplementor
 
     public NodeAddress getLocalAddress()
     {
-        NodeAddress address = bus.getAddress();
-        if (address == null)
-            throw new IllegalStateException("No local address!");
-        return address;
+        return bus.getAddress();
     }
 
     public NodeStatus getLocalStatus()
@@ -103,7 +100,7 @@ public class GridImpl implements GridImplementor
             freeThreads = server.freeThreads();
             totalThreads = server.totalThreads();
             tasksAccepted = server.tasksAccepted();
-            lastTaskAccepted = server.lastTaskAccepted();            
+            lastTaskAccepted = server.lastTaskAccepted();
         }
         Runtime rt = Runtime.getRuntime();
         long freeMemory = rt.freeMemory();
@@ -120,7 +117,7 @@ public class GridImpl implements GridImplementor
                 tasksAccepted,
                 lastTaskAccepted,
                 hostName
-                );
+        );
     }
 
     public GridStatus getGridStatus(boolean cached)
@@ -163,9 +160,9 @@ public class GridImpl implements GridImplementor
 
     // Callback methods for grid membership invoked by the bus listener.
 
-    public void onMembershipChange(Set joined, Set left)
+    public void onMembershipChange(Set joined, Set left, NodeAddress localAddress)
     {
-        membership.onMembershipChange(joined, left);
+        membership.onMembershipChange(joined, left, localAddress);
         if (client != null)
             client.onMembershipChange(joined, left);
     }
@@ -218,5 +215,10 @@ public class GridImpl implements GridImplementor
     {
         if (server != null)
             server.doShutdown();
+    }
+
+    public void onNodeStopped(NodeAddress addr)
+    {
+        membership.onNodeStopped(addr);
     }
 }

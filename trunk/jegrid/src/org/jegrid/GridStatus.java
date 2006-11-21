@@ -23,4 +23,11 @@ public interface GridStatus
      * @return iterator returning a NodeStatus for each node on the grid.
      */
     Iterator iterator();
+
+    /**
+     * The number of servers in the grid.
+     *
+     * @return the number of servers in the grid.
+     */
+    int getNumberOfServers();
 }

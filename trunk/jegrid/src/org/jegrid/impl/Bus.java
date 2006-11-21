@@ -48,4 +48,6 @@ public interface Bus
             ;
 
     NodeAddress getCoordinator();
+
+    void goodbye(NodeAddress addr);
 }

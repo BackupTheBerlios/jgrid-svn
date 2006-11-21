@@ -56,8 +56,11 @@ public class ClientTest extends TestCase
         Grid grid = config.configure();
         grid.connect();
 
+        GridStatus status = grid.getGridStatus(false);
+        assertEquals(0, status.getNumberOfServers());
+
         // Create server JVMs.
-        ServerJvms jvms = new ServerJvms(grid,3,2);
+        ServerJvms jvms = new ServerJvms(grid, 3, 2);
         jvms.start();
 
         try
@@ -72,6 +75,8 @@ public class ClientTest extends TestCase
         {
             jvms.stop();
         }
+        status = grid.getGridStatus(false);
+        assertEquals(0, status.getNumberOfServers());
         grid.disconnect();
     }
 
@@ -84,7 +89,7 @@ public class ClientTest extends TestCase
         grid.connect();
 
         // Create two server JVMs.
-        ServerJvms jvms = new ServerJvms(grid,2,2);
+        ServerJvms jvms = new ServerJvms(grid, 2, 2);
         jvms.start();
 
         final MonteCarloPi.Output output;
@@ -128,7 +133,7 @@ public class ClientTest extends TestCase
         aggregator.setAggregate(output);
 
         // Create two server JVMs.
-        ServerJvms jvms = new ServerJvms(grid,2,2);
+        ServerJvms jvms = new ServerJvms(grid, 2, 2);
         jvms.start();
 
         try
@@ -157,14 +162,14 @@ public class ClientTest extends TestCase
         task.addInput(new NullPointerException("Wheee!"));
         task.addInput("Huh?");
         // Create two server JVMs.
-        ServerJvms jvms = new ServerJvms(grid,2,2);
+        ServerJvms jvms = new ServerJvms(grid, 2, 2);
         jvms.start();
 
         Exception ex = null;
         GridStatus status = null;
         try
         {
-            task.run(ExceptionThrower.Processor.class.getName(),null, 10, true);
+            task.run(ExceptionThrower.Processor.class.getName(), null, 10, true);
             status = grid.getGridStatus(true);
         }
         catch (Exception e)
@@ -210,7 +215,7 @@ public class ClientTest extends TestCase
                 10, input);
 
         // Create two server JVMs.
-        ServerJvms jvms = new ServerJvms(grid,2,2);
+        ServerJvms jvms = new ServerJvms(grid, 2, 2);
         jvms.start();
 
         try
@@ -225,7 +230,7 @@ public class ClientTest extends TestCase
         finally
         {
             jvms.stop();
-        }            
+        }
         grid.disconnect();
     }
 
@@ -246,7 +251,7 @@ public class ClientTest extends TestCase
                 10, input);
 
         // Create two server JVMs.
-        ServerJvms jvms = new ServerJvms(grid,2,1);
+        ServerJvms jvms = new ServerJvms(grid, 2, 1);
         jvms.start();
 
         try

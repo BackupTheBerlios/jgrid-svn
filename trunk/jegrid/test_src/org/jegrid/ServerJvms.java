@@ -38,7 +38,7 @@ public class ServerJvms
         for (int i = 0; i < jvms.length; i++)
         {
             JavaProcess jvm = jvms[i];
-            jvm.setArgs(new String[] { gridName , Integer.toString(numberOfThreads)});
+            jvm.setArgs(new String[]{gridName, Integer.toString(numberOfThreads)});
             jvm.start();
         }
 
@@ -50,13 +50,14 @@ public class ServerJvms
             for (int i = 0; i < addresses.length; i++)
             {
                 NodeAddress address = addresses[i];
-                log.info("Server#" + (i+1) + " = " + address);
+                log.info("Server#" + (i + 1) + " = " + address);
             }
             if (addresses.length < numberOfServers)
                 Util.sleep(1000);
-        } while (addresses.length < numberOfServers);
+        }
+        while (addresses.length < numberOfServers);
     }
-    
+
     public void stop()
     {
         log.info("stop() : ENTER");
@@ -64,6 +65,15 @@ public class ServerJvms
         {
             JavaProcess jvm = jvms[i];
             jvm.kill();
+        }
+        GridStatus gridStatus = grid.getGridStatus(false);
+        int servers = gridStatus.getNumberOfServers();
+        while (servers > 0)
+        {
+            log.info("" + servers + " servers.");
+            Util.sleep(1000);
+            gridStatus = grid.getGridStatus(false);
+            servers = gridStatus.getNumberOfServers();
         }
         log.info("stop() : LEAVE");
     }
@@ -73,7 +83,7 @@ public class ServerJvms
         for (int i = 0; i < jvms.length; i++)
         {
             JavaProcess jvm = jvms[i];
-            jvm.setArgs(new String[] { gridName });
+            jvm.setArgs(new String[]{gridName});
             try
             {
                 int rc = jvm.waitFor();

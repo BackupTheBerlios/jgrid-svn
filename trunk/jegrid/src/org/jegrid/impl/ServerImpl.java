@@ -210,6 +210,8 @@ public class ServerImpl implements Server
         finally
         {
             log.info("*** SERVER " + addr + " STOPPED ***");
+            bus.goodbye(addr);
+            bus.disconnect();
         }
     }
 

@@ -13,7 +13,8 @@ import javax.naming.NamingException;
 import java.util.Hashtable;
 
 /**
- * Receives TaskRequest objects from a JMS queue and submits them on the grid.
+ * Receives TaskRequest objects from a JMS queue and submits them on the grid
+ * as background jobs.
  * <br>User: Joshua Davis
  * Date: Oct 8, 2006
  * Time: 3:49:38 PM
@@ -68,7 +69,7 @@ public class JmsTaskPump implements Runnable, LifecycleAware
     public void initialize()
     {
         log.info("initialize()");
-        Thread t = new Thread(this,"JmsTaskPump");
+        Thread t = new Thread(this, "JmsTaskPump");
         t.setDaemon(true);
         t.start();
     }
@@ -85,6 +86,7 @@ public class JmsTaskPump implements Runnable, LifecycleAware
             while (true)
             {
                 // Wait for servers first, so we don't drop (ignore) JMS messages.
+                log.info("Waiting for available servers...");
                 client.waitForServers(1);
                 try
                 {
@@ -104,11 +106,16 @@ public class JmsTaskPump implements Runnable, LifecycleAware
                                 client.background(taskRequest);
                             }
                         }
+                        else
+                        {
+                            log.error("Discarding message!  It was not a TaskRequest!");
+                        }
                     }
                 }
                 catch (Exception e)
                 {
-                    log.error(e, e);
+                    log.error("Exception: " + e, e);
+                    log.warn("Disconnecting because of exception...");
                     disconnect();
                     // Go to sleep....
                     Util.sleep(RECONNECT_WAIT);

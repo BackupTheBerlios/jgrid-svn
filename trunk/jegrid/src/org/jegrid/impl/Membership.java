@@ -50,9 +50,8 @@ class Membership implements GridStatus
         }
     }
 
-    public void onMembershipChange(Set joined, Set left)
+    public void onMembershipChange(Set joined, Set left, NodeAddress localAddress)
     {
-        NodeAddress localAddress = grid.getLocalAddress();
         membershipMutex.acquire();
         try
         {
@@ -100,7 +99,10 @@ class Membership implements GridStatus
     {
         allNodesByAddress.remove(address);
         unknownNodes.remove(address);
-        log.info("Removed " + address);
+        if (serverNodes.remove(address) != null)
+        {
+            log.debug("Removed server: " + address + " there are now " + serverNodes.size());
+        }
     }
 
     private boolean nodeExists(NodeAddress address)
@@ -118,6 +120,7 @@ class Membership implements GridStatus
                 break;
             case Grid.TYPE_SERVER:
                 serverNodes.put(address, node);
+                log.debug("New server: " + address + " there are now " + serverNodes.size());
                 // If the old status was 'no free threads' and the new is not
                 // then notify anyone waiting on available threads.
                 if (node.getAvailableWorkers() > 0)
@@ -225,12 +228,14 @@ class Membership implements GridStatus
 
         // Don't use the status for the local node.  If the
         // address is mine, then use my own status.
-        NodeStatus node = (address.equals(grid.getLocalAddress())) ?
+        NodeAddress localAddress = grid.getLocalAddress();
+        boolean isLocal = address.equals(localAddress);
+        NodeStatus node = isLocal ?
                 grid.getLocalStatus() :
                 nodeStatus;
 
         NodeStatus old = findNode(address);
-        if (old != null)
+        if (old != null || isLocal)
             putNode(address, node, old);
         else
             log.warn("Status from non-member? " + node);
@@ -270,6 +275,19 @@ class Membership implements GridStatus
             releaseMutex();
         }
         return list.iterator();
+    }
+
+    public int getNumberOfServers()
+    {
+        membershipMutex.acquire();
+        try
+        {
+            return serverNodes.size();
+        }
+        finally
+        {
+            releaseMutex();
+        }
     }
 
     public int getNumberOfUnknownNodes()
@@ -313,5 +331,21 @@ class Membership implements GridStatus
             releaseMutex();
         }
         return false;
+    }
+
+    public void onNodeStopped(NodeAddress addr)
+    {
+        membershipMutex.acquire();
+        try
+        {
+            // Remove the node from all the maps.
+            removeNode(addr);
+            // Add the node as an 'unknown'.
+            putNode(addr, new NodeStatusImpl(addr), null);
+        }
+        finally
+        {
+            releaseMutex();
+        }
     }
 }

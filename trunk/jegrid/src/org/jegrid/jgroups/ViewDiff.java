@@ -1,14 +1,14 @@
 package org.jegrid.jgroups;
 
-import org.jgroups.View;
 import org.jgroups.Address;
+import org.jgroups.View;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
-import java.util.HashSet;
 
 /**
- * Computes the members that joined or left a view.
+ * Computes the members that joined or left a JGroups view.
  * <br>User: Joshua Davis
  * Date: Oct 3, 2006
  * Time: 7:33:18 AM

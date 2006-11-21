@@ -30,10 +30,9 @@ public class RpcHandler
         return "hi there!";
     }
 
-    public String _goodbye()
+    public String _goodbye(NodeAddress addr)
     {
-        if (log.isDebugEnabled())
-            log.debug("_goodbye");
+        grid.onNodeStopped(addr);
         return "see ya!";
     }
 

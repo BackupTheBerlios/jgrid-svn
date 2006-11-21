@@ -21,6 +21,7 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
     private GridImplementor grid;
     private View currentView;
     private NodeAddress coordinator;
+    boolean connected = false;
 
     public JGroupsListener(GridImplementor grid)
     {
@@ -30,15 +31,28 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
     public void channelConnected(Channel channel)
     {
         log.info("channelConnected() " + channel.getLocalAddress());
+        synchronized (this)
+        {
+            connected = true;
+        }
     }
 
     public void channelDisconnected(Channel channel)
     {
         log.info("channelDisconnected() " + channel.getLocalAddress());
+        synchronized (this)
+        {
+            connected = false;
+        }
     }
 
     public void channelClosed(Channel channel)
     {
+        log.info("channelClosed() " + channel.getLocalAddress());
+        synchronized (this)
+        {
+            connected = false;
+        }
     }
 
     public void channelShunned()
@@ -48,6 +62,10 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
     public void channelReconnected(Address addr)
     {
         log.info("channelReconnected() " + addr);
+        synchronized (this)
+        {
+            connected = true;
+        }
     }
 
     public void receive(Message msg)
@@ -86,6 +104,11 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
                 coord = coordinator;
             }
             currentView = newView;
+            if (!connected)
+            {
+                log.info("not connected");
+                return;
+            }
         } // synchronized
 
         // Notify about coordinator changes first.
@@ -96,7 +119,8 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
         Set joined = toNodeAddresses(diff.getJoined());
         Set left = toNodeAddresses(diff.getLeft());
         // Notify all the other components about the membership change.
-        grid.onMembershipChange(joined, left);
+        NodeAddress localAddress = grid.getLocalAddress();
+        grid.onMembershipChange(joined, left, localAddress);
     }
 
     private Set toNodeAddresses(Set joined)

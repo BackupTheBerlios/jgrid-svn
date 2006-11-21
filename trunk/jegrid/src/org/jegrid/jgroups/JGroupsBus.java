@@ -35,7 +35,6 @@ public class JGroupsBus implements Bus
     private JGroupsListener listener;
     private GridImplementor grid;
     private RpcDispatcher dispatcher;
-    private NodeAddress coordinator;
 
     public JGroupsBus(GridConfiguration config, GridImplementor grid)
     {
@@ -57,8 +56,7 @@ public class JGroupsBus implements Bus
         log.info("Connecting...");
         doConnect();
         running = true;
-        notify();
-        log.info(getAddress() + " connected.");
+        log.info("*** " + doGetAddress() + " CONNECTED ***");
     }
 
     private void doConnect()
@@ -84,8 +82,6 @@ public class JGroupsBus implements Bus
             dispatcher = new RpcDispatcher(channel, listener, new RpcHandler(grid));
             channel.addChannelListener(listener);       // Listens for connect/disconnect events.
             channel.connect(config.getGridName());      // Okay, connect the channel.
-            if (log.isDebugEnabled())
-                log.debug("doConnect() : channel connected.");
             broadcastNodeStatus();
         }
         // Re-throw GridExceptions
@@ -100,7 +96,7 @@ public class JGroupsBus implements Bus
             disconnect();
             throw new GridException(e);
         }
-        // Log and wrap unexpected exceptions.        
+        // Log and wrap unexpected exceptions.
         catch (Exception e)
         {
             disconnect();
@@ -125,29 +121,46 @@ public class JGroupsBus implements Bus
         }
     }
 
-    public synchronized void disconnect()
+    public void disconnect()
     {
-        if (!running)
-            return;
-
-        JGroupsAddress addr = localAddress;
-        localAddress = null;
-        // Close the channel.
-        if (channel != null)
+        JGroupsAddress addr;
+        Channel chan;
+        synchronized (this)
         {
-            channel.disconnect();
-            channel.close();
-            channel = null;
+            if (!running)
+                return;
+            addr = localAddress;
+            chan = channel;
         }
-        listener = null;
-        running = false;
-        notify();
-        log.info(addr + " disconnected.");
+        // Unsynchronize now, as disconnecting will cause other threads to do things.
+        log.info("" + addr + " Disconnecting...");
+        // Close the channel.
+        if (chan != null)
+        {
+            log.info("Disconnecting channel...");
+            chan.disconnect();
+            log.info("Closing channel...");
+            chan.close();
+        }
+        synchronized (this)
+        {
+            listener = null;
+            running = false;
+            channel = null;
+            localAddress = null;
+            dispatcher = null;
+        }
+        log.info("*** " + addr + " DISCONNECTED ***");
     }
 
     public synchronized NodeAddress getAddress()
     {
-        if (localAddress == null)
+        return doGetAddress();
+    }
+
+    private NodeAddress doGetAddress()
+    {
+        if (localAddress == null && channel != null)
             localAddress = new JGroupsAddress(channel.getLocalAddress());
         return localAddress;
     }
@@ -179,12 +192,6 @@ public class JGroupsBus implements Bus
                 new Class[]{taskId.getClass(), ge.getClass()},
                 GroupRequest.GET_ALL,
                 TIMEOUT);
-    }
-
-    public void sayGoodbye()
-    {
-        dispatcher.broadcast(
-                null, "_goodbye", NO_ARGS, NO_TYPES, GroupRequest.GET_NONE, 0);
     }
 
     /**
@@ -286,6 +293,16 @@ public class JGroupsBus implements Bus
     public NodeAddress getCoordinator()
     {
         return listener.getCoordinator();
+    }
+
+    public void goodbye(NodeAddress addr)
+    {
+        dispatcher.broadcast(
+                null, "_goodbye",
+                new Object[]{addr},
+                new Class[]{NodeAddress.class},
+                GroupRequest.GET_ALL,
+                TIMEOUT);
     }
 
     public NodeStatus[] getGridStatus()
