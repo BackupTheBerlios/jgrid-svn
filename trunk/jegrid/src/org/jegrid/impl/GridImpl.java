@@ -27,7 +27,6 @@ public class GridImpl implements GridImplementor
     private long startTime;
     private MicroContainer singletons;
     private String hostName;
-    private boolean disconnecting;
 
     public GridImpl(GridConfiguration config)
     {

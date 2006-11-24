@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 /**
- * Translates JGroups messages into grid callbacks.
+ * Translates JGroups messages (e.g. membership changes) into grid callbacks.
  * <br> User: jdavis
  * Date: Sep 30, 2006
  * Time: 9:35:11 PM

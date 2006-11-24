@@ -92,11 +92,12 @@ public class ClientTest extends TestCase
         ServerJvms jvms = new ServerJvms(grid, 2, 2);
         jvms.start();
 
+        String taskKey = "test task";
         final MonteCarloPi.Output output;
         try
         {
             Client client = grid.getClient();
-            Task task = client.createTask();
+            Task task = client.createTask(taskKey);
             for (int i = 0; i < 10; i++)
                 task.addInput(new MonteCarloPi.Input(17 * i + 1, 1000));
             output = new MonteCarloPi.Output();
@@ -125,7 +126,8 @@ public class ClientTest extends TestCase
         Grid grid = config.configure();
         grid.connect();
         Client client = grid.getClient();
-        Task task = client.createTask();
+        String taskKey = "test task";
+        Task task = client.createTask(taskKey);
         for (int i = 0; i < 10; i++)
             task.addInput(new MonteCarloPi.Input(17 * i + 1, 1000));
         final MonteCarloPi.Output output = new MonteCarloPi.Output();
@@ -156,7 +158,8 @@ public class ClientTest extends TestCase
         Grid grid = config.configure();
         grid.connect();
         Client client = grid.getClient();
-        Task task = client.createTask();
+        String taskKey = "test task";
+        Task task = client.createTask(taskKey);
         for (int i = 0; i < 10; i++)
             task.addInput(new Integer(i));
         task.addInput(new NullPointerException("Wheee!"));
@@ -209,10 +212,6 @@ public class ClientTest extends TestCase
         List input = new ArrayList();
         for (int i = 0; i < 10; i++)
             input.add(new MonteCarloPi.Input(17 * i + 1, 10000));
-        TaskRequest request = new TaskRequest(
-                MonteCarloPi.class.getName(),
-                MonteCarloPi.MCPiAggregator.class.getName(),
-                10, input);
 
         // Create two server JVMs.
         ServerJvms jvms = new ServerJvms(grid, 2, 2);
@@ -220,18 +219,35 @@ public class ClientTest extends TestCase
 
         try
         {
-            log.info("Background task 1...");
-            client.background(request);
-            log.info("Background task 2...");
-            client.background(request);
-            log.info("Background task 3...");
-            client.background(request);
+            backgroundThree(input, client);
         }
         finally
         {
             jvms.stop();
         }
         grid.disconnect();
+    }
+
+    private void backgroundThree(List input, Client client)
+    {
+        log.info("Background task 1...");
+        TaskRequest request = new TaskRequest(
+                MonteCarloPi.class.getName(),
+                MonteCarloPi.MCPiAggregator.class.getName(),
+                10, input, "task1");
+        client.background(request);
+        log.info("Background task 2...");
+        request = new TaskRequest(
+                MonteCarloPi.class.getName(),
+                MonteCarloPi.MCPiAggregator.class.getName(),
+                10, input, "task2");
+        client.background(request);
+        log.info("Background task 3...");
+        request = new TaskRequest(
+                MonteCarloPi.class.getName(),
+                MonteCarloPi.MCPiAggregator.class.getName(),
+                10, input, "task3");
+        client.background(request);
     }
 
     public void testBackgroundTaskSingleThreaded() throws Exception
@@ -245,10 +261,6 @@ public class ClientTest extends TestCase
         List input = new ArrayList();
         for (int i = 0; i < 10; i++)
             input.add(new MonteCarloPi.Input(17 * i + 1, 10000));
-        TaskRequest request = new TaskRequest(
-                MonteCarloPi.class.getName(),
-                MonteCarloPi.MCPiAggregator.class.getName(),
-                10, input);
 
         // Create two server JVMs.
         ServerJvms jvms = new ServerJvms(grid, 2, 1);
@@ -256,13 +268,7 @@ public class ClientTest extends TestCase
 
         try
         {
-            log.info("Background task 1...");
-            client.background(request);
-            log.info("Background task 2...");
-            client.background(request);
-            log.info("Background task 3...");
-            client.background(request);
-            log.info("### All background tasks started ###");
+            backgroundThree(input, client);
         }
         finally
         {

@@ -5,7 +5,7 @@ import org.apache.log4j.Logger;
 import java.io.Serializable;
 
 /**
- * TODO: Add class level javadoc.
+ * Exception throwing task.
  * <br>User: jdavis
  * Date: Nov 14, 2006
  * Time: 2:04:16 PM

@@ -25,7 +25,7 @@
     <orderEntry type="library" name="concurrent" level="project" />
     <orderEntry type="library" name="commons-logging-1.0.4" level="project" />
     <orderEntry type="library" name="log4j-1.2.13" level="project" />
-    <orderEntry type="library" name="picocontainer-1.1" level="project" />
+    <orderEntry type="library" name="picocontainer" level="project" />
     <orderEntry type="library" name="junit-3.8.1" level="project" />
     <orderEntry type="library" name="jms" level="project" />
     <orderEntry type="module-library">
@@ -38,6 +38,7 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="JBoss 4.0.4.GA" level="application_server_libraries" />
+    <orderEntry type="library" name="ant 1.6.5" level="application" />
     <orderEntryProperties />
   </component>
 </module>

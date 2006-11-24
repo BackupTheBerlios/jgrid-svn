@@ -1,5 +1,7 @@
 package org.jegrid;
 
+import java.io.Serializable;
+
 /**
  * Grid client interface.
  * <br> User: jdavis
@@ -12,9 +14,11 @@ public interface Client
      * Creates a new task that can be executed on the grid servers.
      * The client portions of this task will run locally, and synchronously.
      *
+     * @param taskKey the task key - unused by JEGrid, but passed along to the caller
+     *                for easy identification of a particular task.
      * @return the new task
      */
-    Task createTask();
+    Task createTask(Serializable taskKey);
 
     /**
      * Runs the entire task remotely in the background.  The input queue, workers, output queue will
@@ -26,7 +30,8 @@ public interface Client
 
     /**
      * Waits for at most specified number of servers to become available.
-     * @param max  The maximum number of servers needed.
+     *
+     * @param max The maximum number of servers needed.
      * @return An array of server addresses.
      * @throws InterruptedException if the thread is interrupted.
      */

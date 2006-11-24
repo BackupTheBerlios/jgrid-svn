@@ -4,6 +4,7 @@ import EDU.oswego.cs.dl.util.concurrent.Channel;
 import EDU.oswego.cs.dl.util.concurrent.LinkedQueue;
 import org.apache.log4j.Logger;
 import org.jegrid.*;
+import org.jegrid.util.Mutex;
 
 import java.io.Serializable;
 import java.util.*;
@@ -38,9 +39,9 @@ public class TaskImpl implements Task
     private GridImplementor grid;
     private LocalWorker localWorker;    // The local worker.
 
-    public TaskImpl(GridImplementor grid, ClientImpl client, int taskId, String inputProcesorClassName)
+    public TaskImpl(GridImplementor grid, ClientImpl client, int taskId, String inputProcesorClassName, Serializable taskKey)
     {
-        id = new TaskId(client.getBus().getAddress(), taskId);
+        id = new TaskId(client.getBus().getAddress(), taskId, taskKey);
         inputProcessorClassName = inputProcesorClassName;
         mutex = new Mutex();
         this.grid = grid;

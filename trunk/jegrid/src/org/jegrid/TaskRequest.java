@@ -16,13 +16,15 @@ public class TaskRequest implements Serializable
     private String aggregatorClassName;
     private int maxWorkers;
     private List input;
+    private Serializable taskKey;
 
-    public TaskRequest(String inputProcessorClassName, String aggregatorClassName, int maxWorkers, List input)
+    public TaskRequest(String inputProcessorClassName, String aggregatorClassName, int maxWorkers, List input, Serializable taskKey)
     {
         this.inputProcessorClassName = inputProcessorClassName;
         this.aggregatorClassName = aggregatorClassName;
         this.maxWorkers = maxWorkers;
         this.input = input;
+        this.taskKey = taskKey;
     }
 
     public String getInputProcessorClassName()
@@ -43,5 +45,10 @@ public class TaskRequest implements Serializable
     public int getMaxWorkers()
     {
         return maxWorkers;
+    }
+
+    public Serializable getTaskKey()
+    {
+        return taskKey;
     }
 }

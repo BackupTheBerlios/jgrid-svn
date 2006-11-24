@@ -12,16 +12,18 @@ public class TaskId implements Serializable
 {
     private NodeAddress client;
     private int taskId;
+    private Serializable taskKey;
 
-    public TaskId(NodeAddress client, int taskId)
+    public TaskId(NodeAddress client, int taskId, Serializable taskKey)
     {
         this.client = client;
         this.taskId = taskId;
+        this.taskKey = taskKey;
     }
 
     public TaskId(TaskId id)
     {
-        this(id.client, id.taskId);
+        this(id.client, id.taskId, null);
     }
 
     public NodeAddress getClient()
@@ -32,6 +34,11 @@ public class TaskId implements Serializable
     public int getTaskId()
     {
         return taskId;
+    }
+
+    public Serializable getTaskKey()
+    {
+        return taskKey;
     }
 
     public boolean equals(Object o)

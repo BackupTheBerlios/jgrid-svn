@@ -3,6 +3,7 @@ package org.jegrid.impl;
 import EDU.oswego.cs.dl.util.concurrent.CondVar;
 import org.apache.log4j.Logger;
 import org.jegrid.*;
+import org.jegrid.util.Mutex;
 
 import java.util.*;
 

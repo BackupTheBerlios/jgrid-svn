@@ -3,9 +3,11 @@ package org.jegrid.util;
 import org.apache.log4j.Logger;
 import org.jegrid.GridSingletonDescriptor;
 import org.jegrid.LifecycleAware;
+import org.picocontainer.ComponentMonitor;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoContainer;
 import org.picocontainer.defaults.*;
+import org.picocontainer.gems.monitors.Log4JComponentMonitor;
 
 import java.util.Iterator;
 import java.util.List;
@@ -21,15 +23,21 @@ public class MicroContainer
     private static Logger log = Logger.getLogger(MicroContainer.class);
 
     private MutablePicoContainer pico;
+    private ComponentMonitor monitor;
+    private LifecycleStrategy lifecycleStrategy;
 
     public MicroContainer()
     {
-        pico = new DefaultPicoContainer();
+        this(null);
     }
 
     public MicroContainer(MicroContainer parent)
     {
-        pico = new DefaultPicoContainer(parent.pico);
+        MutablePicoContainer parentPico = (parent == null) ? null : parent.pico;
+        monitor = new Log4JComponentMonitor();
+        lifecycleStrategy = new GridLifecycleStrategy();
+        ComponentAdapterFactory adapterFactory = new DefaultComponentAdapterFactory(monitor,lifecycleStrategy);
+        pico = new DefaultPicoContainer(adapterFactory,lifecycleStrategy,parentPico);
     }
 
     public Object getComponentInstance(Object key)
@@ -52,23 +60,18 @@ public class MicroContainer
         // No properties? Just do the normal registration.
         if (properties == null || properties.size() == 0)
         {
-            // Once an implementation has been created, the same one should be returned
-            // every time.  This is what CachingComponentAdapter does (see javadocs for
-            // ConstructorInjectionComponentAdapter.
-            // log.debug("Registering " + key + "->" + implementation.getName());        
-            pico.registerComponent(
-                    new CachingComponentAdapter(
-                            new ConstructorInjectionComponentAdapter(
-                                    key, implementation)));
+            // Use the default component adapter factory to create an adapter for this implementation.
+            pico.registerComponentImplementation(key, implementation);
         }
         else
         {
             // Otherwise, add the Bean adapter to inject all the properties
             // into the object using setters after it is constructed.
-            log.info("Registering " + key + "->" + implementation.getName() + " with bean properties.");        
             ConstructorInjectionComponentAdapter componentAdapter =
                     new ConstructorInjectionComponentAdapter(
-                            key, implementation);
+                            key, implementation, null, false, monitor, lifecycleStrategy);
+            // The bean property component adapter needs to wrap the CI component adapter
+            // because the bean properties should be injected after the component is created.
             BeanPropertyComponentAdapter beanAdaptor =
                     new BeanPropertyComponentAdapter(componentAdapter);
             beanAdaptor.setProperties(properties);
@@ -125,7 +128,6 @@ public class MicroContainer
         {
             GridSingletonDescriptor descriptor = (GridSingletonDescriptor) iterator.next();
             Object key = descriptor.getKey();
-            log.info("Instantiating " + key + " ...");
             Object component = getComponentInstance(key);
             MicroContainer.initializeComponent(component);
         }
@@ -138,13 +140,27 @@ public class MicroContainer
         {
             GridSingletonDescriptor descriptor = (GridSingletonDescriptor) iterator.next();
             Object key = descriptor.getKey();
-            log.info("Destroying " + key + " ...");
             Object component = getComponentInstance(key);
             destroyComponent(component);
         }
-        pico.dispose();
-
+        dispose();
     }
+
+    public void dispose()
+    {
+        pico.dispose();
+    }
+
+    public void start()
+    {
+        pico.start();
+    }
+
+    public void stop()
+    {
+        pico.stop();
+    }
+
     private class EmptyComponentAdapter extends InstanceComponentAdapter
     {
 

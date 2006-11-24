@@ -27,7 +27,7 @@ public class RemoteTaskWorker extends Worker
         this.server = server;
         this.taskId = taskId;
         this.request = request;
-        task = client.createTask();
+        task = client.createTask(request.getTaskKey());
     }
 
     public void run()

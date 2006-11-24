@@ -6,7 +6,8 @@ import org.jegrid.*;
 import org.jegrid.impl.*;
 
 /**
- * Handles RPCs from the GridRpcDispatcher in the JGroupsBus.
+ * Handles RPCs from the GridRpcDispatcher in the JGroupsBus.  Invokes
+ * methods on the various grid components.
  * <br> User: jdavis
  * Date: Oct 7, 2006
  * Time: 11:06:40 AM
@@ -127,24 +128,17 @@ public class RpcHandler
         if (log.isDebugEnabled())
             log.debug("_taskFailed");
         ClientImplementor client = (ClientImplementor) grid.getClient();
-        if (client == null)
-        {
-            log.warn("No client here.");
-        }
-        else
+        if (client != null)
             client.taskFailed(taskId, t);
     }
 
-    public void _append(TaskId taskId, LoggingEvent event)
+    public void _append(NodeAddress from,TaskId taskId, LoggingEvent event)
     {
-        //hmm... now what
+        // If the event is from the local node, don't bother.
+        if (from.equals(grid.getLocalAddress()))
+            return;
         ClientImplementor client = (ClientImplementor) grid.getClient();
-        if (client == null)
-        {
-            log.warn("No client here.");
-        }
-        else
+        if (client != null)
             client.append(taskId, event);
-
     }
 }

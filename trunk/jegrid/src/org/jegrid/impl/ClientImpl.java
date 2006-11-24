@@ -5,6 +5,7 @@ import org.apache.log4j.spi.LoggingEvent;
 import org.jegrid.*;
 import org.jegrid.log.LogEventPump;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -86,9 +87,9 @@ public class ClientImpl implements ClientImplementor
         }
     }
 
-    public Task createTask()
+    public Task createTask(Serializable taskKey)
     {
-        TaskImpl task = new TaskImpl(grid, this, nextTaskId(), null);
+        TaskImpl task = new TaskImpl(grid, this, nextTaskId(), null, taskKey);
         addTask(task);
         return task;
     }
@@ -195,7 +196,7 @@ public class ClientImpl implements ClientImplementor
 
     public void append(TaskId taskId, LoggingEvent event)
     {
-        // Errr... not sure if this is the right thing to do.
+        // Put the loggging event from the remote node onto the queue.
         logPump.append(event);
     }
 

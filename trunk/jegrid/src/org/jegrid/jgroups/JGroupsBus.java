@@ -153,6 +153,11 @@ public class JGroupsBus implements Bus
         log.info("*** " + addr + " DISCONNECTED ***");
     }
 
+    public NodeAddress getCoordinator()
+    {
+        return listener.getCoordinator();
+    }
+
     public synchronized NodeAddress getAddress()
     {
         return doGetAddress();
@@ -164,6 +169,8 @@ public class JGroupsBus implements Bus
             localAddress = new JGroupsAddress(channel.getLocalAddress());
         return localAddress;
     }
+
+    // --- Outgoing messages ---
 
     public void broadcastNodeStatus()
     {
@@ -274,8 +281,8 @@ public class JGroupsBus implements Bus
     public void apppend(TaskId taskId, LoggingEvent event) throws RpcTimeoutException
     {
         dispatcher.call(taskId.getClient(), "_append",
-                new Object[]{taskId, event},
-                new Class[]{taskId.getClass(), event.getClass()},
+                new Object[]{getAddress(), taskId, event},
+                new Class[]{NodeAddress.class, taskId.getClass(), event.getClass()},
                 GroupRequest.GET_NONE,
                 0);
     }
@@ -288,11 +295,6 @@ public class JGroupsBus implements Bus
                 new Class[0],
                 GroupRequest.GET_NONE,
                 0);
-    }
-
-    public NodeAddress getCoordinator()
-    {
-        return listener.getCoordinator();
     }
 
     public void goodbye(NodeAddress addr)

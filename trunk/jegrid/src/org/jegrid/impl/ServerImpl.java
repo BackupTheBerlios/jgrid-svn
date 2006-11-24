@@ -86,7 +86,7 @@ public class ServerImpl implements Server
             int freeThreads = _freeThreads();
             if (freeThreads <= 0)
                 return false;
-            Task task = grid.getClient().createTask();
+            Task task = grid.getClient().createTask(request.getTaskKey());
             RemoteTaskWorker worker = new RemoteTaskWorker(this,
                     grid.getClient(), request, task.getTaskId());
             try

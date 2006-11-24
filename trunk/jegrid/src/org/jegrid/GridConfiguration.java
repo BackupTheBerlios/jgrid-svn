@@ -128,7 +128,7 @@ public class GridConfiguration
         mc.registerSingleton(Client.class, clientImplClass);
         // Register this configuration with the container.
         mc.registerComponentInstance(this);
-        
+        mc.start();        
         // This will perform the constructor dependency injection.
         GridImplementor grid = (GridImplementor) mc.getComponentInstance(Grid.class);
         // Perform the rest of the initialization that cannot be done with DI.
