@@ -23,6 +23,7 @@
     <path id="test.classpath">
         <path refid="main.classpath"/>
         <pathelement location="${build.dir}/classes"/>
+        <pathelement location="${build.dir}/test_classes"/>
         <fileset dir="${lib.dir}">
             <include name="junit*.jar"/>
         </fileset>
@@ -37,16 +38,178 @@
     <target name="compile" description="Compile all the java code.">
         <mkdir dir="${build.dir}/classes"/>
         <javac srcdir="${basedir}/src" destdir="${build.dir}/classes"
-            debug="${javac.debug}"
-            optimize="${javac.optimize}"
-            deprecation="${javac.deprecation}"
-            verbose="${javac.verbose}">
+               debug="${javac.debug}"
+               optimize="${javac.optimize}"
+               deprecation="${javac.deprecation}"
+               verbose="${javac.verbose}">
             <classpath refid="main.classpath"/>
         </javac>
         <mkdir dir="${build.dir}/test_classes"/>
         <javac srcdir="${basedir}/test_src" destdir="${build.dir}/test_classes">
             <classpath refid="test.classpath"/>
         </javac>
+        <copy todir="${build.dir}/classes">
+            <fileset dir="src" includes="**/*.xml"/>
+            <fileset dir="src" includes="**/*.properties"/>
+        </copy>
+        <copy todir="${build.dir}/test_classes">
+            <fileset dir="test_src" includes="**/*.xml"/>
+            <fileset dir="test_src" includes="**/*.properties"/>
+        </copy>
+    </target>
+
+
+    <patternset id="test.files">
+        <include name="**/*Test.java"/>
+        <exclude name="**/JGroupsTest.java"/>
+        <exclude name="**/JmsTest.java"/>
+        <exclude name="**/GridSingletonTest.java"/>
+    </patternset>
+
+    <property name="junit.max.memory" value="640M"/>
+
+    <target name="test.init">
+        <delete failonerror="false" dir="${build.dir}/junit"/>
+        <mkdir dir="${build.dir}/junit"/>
+    </target>
+
+    <target name="test" depends="test.init,compile" description="Runs all the unit tests">
+        <junit dir="${build.dir}/junit" printsummary="yes" fork="yes" forkmode="once" haltonfailure="yes">
+            <classpath refid="test.classpath"/>
+            <formatter type="plain"/>
+            <batchtest errorproperty="test.error" failureproperty="test.failure">
+                <fileset dir="${basedir}/test_src">
+                    <patternset refid="test.files"/>
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="test.xmlreport" depends="test.init,compile" description="Performs unit tests with XML output">
+        <junit dir="${build.dir}/junit" printsummary="yes" fork="on" forkmode="once"
+               errorproperty="junit.error"
+               failureproperty="junit.failure">
+            <jvmarg value="-Xmx${junit.max.memory}"/>
+            <classpath>
+                <path refid="test.classpath"/>
+            </classpath>
+            <formatter type="xml"/>
+            <batchtest todir="${build.dir}/junit" errorproperty="test.error" failureproperty="test.failure">
+                <fileset dir="${basedir}/test_src">
+                    <patternset refid="test.files"/>
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="test.html" depends="test.xmlreport,junit.html"
+            description="Performs junit tests, generates html report.">
+    </target>
+
+    <target name="junit.html" description="Generates html report.">
+        <mkdir dir="${build.dir}/junit-html"/>
+        <junitreport todir="${build.dir}/junit-html">
+            <fileset dir="${build.dir}/junit">
+                <include name="**/TEST-*.xml"/>
+            </fileset>
+            <report format="frames" todir="${build.dir}/junit-html"/>
+        </junitreport>
+    </target>
+
+
+    <property name="emma.enabled" value="true"/>
+
+    <!-- directory that contains emma.jar and emma_ant.jar: -->
+    <property name="emma.dir" value="${basedir}/../lib/emma"/>
+    <path id="emma.lib">
+        <pathelement location="${emma.dir}/emma.jar"/>
+        <pathelement location="${emma.dir}/emma_ant.jar"/>
+    </path>
+
+    <taskdef resource="emma_ant.properties" classpathref="emma.lib"/>
+
+    <!-- EMMA instr class output directory: -->
+    <property name="out.instr.dir" value="${build.dir}/outinstr"/>
+    <property name="coverage.dir" value="${build.dir}/coverage"/>
+
+    <target name="emma.clean">
+        <delete dir="${out.instr.dir}" failonerror="false"/>
+        <delete dir="${coverage.dir}" failonerror="false"/>
+    </target>
+
+    <target name="emma.init" description="turns on EMMA instrumentation/reporting">
+        <mkdir dir="${out.instr.dir}"/>
+        <mkdir dir="${coverage.dir}"/>
+    </target>
+
+    <target name="emma.instrument" depends="emma.init,compile">
+        <!-- Compile the main source files with debug information. -->
+        <javac destdir="${out.instr.dir}" classpathref="main.classpath" debug="true"
+               optimize="false" deprecation="false"
+               verbose="${javac.verbose}">
+            <src path="${basedir}/src"/>
+        </javac>
+        <!-- Instrument the compiled code. -->
+        <emma enabled="${emma.enabled}">
+            <instr verbosity="info"
+                   instrpath="${out.instr.dir}"
+                   mode="overwrite"
+                   metadatafile="${coverage.dir}/metadata.emma"
+                    >
+                <filter includes="org.jegrid.*"/>
+            </instr>
+        </emma>
+    </target>
+
+    <path id="emma.test.classpath">
+        <!-- Add the insrumented classes -->
+        <pathelement location="${out.instr.dir}"/>
+        <!-- Add the rest of the classes -->
+        <path refid="test.classpath"/>
+        <!-- Add EMMA libraries -->
+        <path refid="emma.lib"/>
+    </path>
+
+    <target name="emma.test" depends="emma.init">
+        <!-- Delete the previous coverage results. -->
+        <delete file="${coverage.dir}/coverage*.emma" failonerror="false"/>
+        <!--
+        Since this is intended for the nightly build, don't halt on error, and use an XML formatter.
+        Also, emma requires that the JVM is forked.
+        -->
+        <junit dir="${build.dir}/junit" printsummary="yes" fork="on" forkmode="once"
+               errorproperty="junit.error"
+               failureproperty="junit.failure">
+            <jvmarg value="-Xmx${junit.max.memory}"/>
+            <jvmarg value="-Demma.coverage.out.file=${coverage.dir}/coverage.emma"/>
+            <jvmarg value="-Demma.coverage.out.merge=true"/>
+            <classpath>
+                <pathelement location="${out.instr.dir}"/>
+                <path refid="test.classpath"/>
+                <path refid="emma.lib"/>
+            </classpath>
+            <formatter type="xml"/>
+            <batchtest todir="${build.dir}/junit" errorproperty="test.error" failureproperty="test.failure">
+                <fileset dir="${basedir}/test_src">
+                    <patternset refid="test.files"/>
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="emma.report" depends="emma.init">
+        <emma enabled="${emma.enabled}">
+            <report sourcepath="${basedir}/src">
+                <fileset dir="${coverage.dir}">
+                    <include name="*.emma"/>
+                </fileset>
+                <txt outfile="${coverage.dir}/coverage.txt"/>
+                <html outfile="${coverage.dir}/coverage.html"/>
+            </report>
+        </emma>
+    </target>
+
+    <target name="emma.all" depends="emma.init,emma.instrument,emma.test,emma.report">
     </target>
 
     <target name="jar" depends="compile">
@@ -54,8 +217,6 @@
         <jar jarfile="${build.dir}/dist/jegrid.jar">
             <fileset dir="${build.dir}/classes" includes="**"/>
             <fileset dir="${build.dir}/test_classes" includes="**"/>
-            <fileset dir="src" includes="**/*.xml"/>
-            <fileset dir="test_src" includes="**/*.properties"/>
         </jar>
     </target>
 

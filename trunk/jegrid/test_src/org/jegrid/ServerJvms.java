@@ -4,7 +4,9 @@ import org.apache.log4j.Logger;
 import org.jegrid.util.JavaProcess;
 import org.jegrid.util.Util;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Properties;
 
 /**
  * TODO: Add class level javadoc
@@ -15,7 +17,7 @@ import java.io.IOException;
 public class ServerJvms
 {
     private static Logger log = Logger.getLogger(ServerJvms.class);
-
+    private static int counter = 0;
     private String gridName;
     private int numberOfServers;
     private JavaProcess[] jvms;
@@ -35,9 +37,23 @@ public class ServerJvms
 
     public void start() throws IOException, InterruptedException
     {
+
         for (int i = 0; i < jvms.length; i++)
         {
             JavaProcess jvm = jvms[i];
+            Properties props = new Properties();
+            String p = System.getProperty("emma.coverage.out.file");
+            if (p != null && p.length() > 0)
+            {
+                File f = new File(p);
+                props.setProperty("emma.coverage.out.file",
+                        f.getParent() + File.separator + "server-" + (counter++) + ".emma");
+            }
+            p = System.getProperty("emma.coverage.out.merge");
+            if (p != null && p.length() > 0)
+                props.setProperty("emma.coverage.out.merge", p);
+            if (props.size() > 0)
+                jvm.setSysprops(props);
             jvm.setArgs(new String[]{gridName, Integer.toString(numberOfThreads)});
             jvm.start();
         }

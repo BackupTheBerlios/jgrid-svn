@@ -1,7 +1,6 @@
 package org.jegrid;
 
 import junit.framework.TestCase;
-import org.jegrid.impl.GridImplementor;
 
 import java.util.Iterator;
 
@@ -59,6 +58,7 @@ public class ConfigurationTest extends TestCase
         return config;
     }
 
+/*
     public void test2Servers() throws Exception
     {
         GridConfiguration config = getConfiguration();
@@ -92,6 +92,7 @@ public class ConfigurationTest extends TestCase
             disconnect(grid2);
         }
     }
+*/
 
     private void checkServerNodes(GridStatus status)
     {
@@ -99,7 +100,7 @@ public class ConfigurationTest extends TestCase
         for (Iterator iterator = status.iterator(); iterator.hasNext();)
         {
             NodeStatus node = (NodeStatus) iterator.next();
-            assertEquals(Grid.TYPE_SERVER,node.getType());
+            assertEquals(Grid.TYPE_SERVER, node.getType());
         }
     }
 

@@ -109,6 +109,8 @@ public class ClientTest extends TestCase
                 log.info(servers[i]);
             }
             task.run(MonteCarloPi.class.getName(), aggregator, 10, false);
+            grid.shutdownServers();
+            jvms.waitFor();
         }
         finally
         {
@@ -141,6 +143,8 @@ public class ClientTest extends TestCase
         try
         {
             task.run(MonteCarloPi.class.getName(), aggregator, 10, true);
+            grid.shutdownServers();
+            jvms.waitFor();
         }
         finally
         {
@@ -174,6 +178,8 @@ public class ClientTest extends TestCase
         {
             task.run(ExceptionThrower.Processor.class.getName(), null, 10, true);
             status = grid.getGridStatus(true);
+            grid.shutdownServers();
+            jvms.waitFor();
         }
         catch (Exception e)
         {
@@ -220,6 +226,8 @@ public class ClientTest extends TestCase
         try
         {
             backgroundThree(input, client);
+            grid.shutdownServers();
+            jvms.waitFor();
         }
         finally
         {
@@ -269,6 +277,8 @@ public class ClientTest extends TestCase
         try
         {
             backgroundThree(input, client);
+            grid.shutdownServers();
+            jvms.waitFor();
         }
         finally
         {

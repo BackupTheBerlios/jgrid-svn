@@ -5,13 +5,12 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * Launches a JVM in a separate process using the specified classpath and main class.  The standard
  * output and error streams are piped into the parent's streams.
+ *
  * @author josh Jan 4, 2005 10:11:37 PM
  */
 public class JavaProcess
@@ -20,6 +19,7 @@ public class JavaProcess
 
     private Process process;
     private String classpath;
+    private Properties sysprops;
     private String mainClass;
     private String[] args;
     private OutputStream out;
@@ -63,12 +63,17 @@ public class JavaProcess
         String old = getClasspath();
         setClasspath(old + File.pathSeparator + classpath);
     }
-    
+
     public void setArgs(String[] args)
     {
         this.args = args;
     }
-    
+
+    public void setSysprops(Properties props)
+    {
+        this.sysprops = props;
+    }
+
     public void start() throws IOException
     {
         if (process != null)
@@ -80,13 +85,23 @@ public class JavaProcess
         String cp = getClasspath();
         // TODO: Chop the classpath up and remove duplicates.
         commandLine.add(cp);
+        if (sysprops != null && sysprops.size() > 0)
+        {
+            Enumeration en = sysprops.propertyNames();
+            while (en.hasMoreElements())
+            {
+                String key = (String) en.nextElement();
+                String value = (String) sysprops.get(key);
+                commandLine.add("-D" + key + "=" + value);
+            }
+        }
         commandLine.add(mainClass);
 
         if (args != null && args.length > 0)
             commandLine.addAll(Arrays.asList(args));
-        
+
         String[] cmdarray = (String[]) commandLine.toArray(new String[commandLine.size()]);
-        
+
         process = rt.exec(cmdarray);
         StreamCopier stdout = new StreamCopier(process.getInputStream(), out);
         StreamCopier stderr = new StreamCopier(process.getErrorStream(), err);
@@ -145,6 +160,7 @@ public class JavaProcess
 
     /**
      * Waits for the process to complete.
+     *
      * @return the return code from the process.
      * @throws InterruptedException if the thread is interrupted.
      */
