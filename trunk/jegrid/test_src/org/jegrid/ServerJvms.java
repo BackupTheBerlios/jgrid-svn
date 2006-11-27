@@ -62,7 +62,7 @@ public class ServerJvms
         do
         {
             log.info("Waiting...");
-            addresses = grid.getClient().waitForServers(-1);
+            addresses = grid.getClient().waitForServers(Client.ALL_SERVERS, 1, 1000);
             for (int i = 0; i < addresses.length; i++)
             {
                 NodeAddress address = addresses[i];

@@ -24,6 +24,7 @@ public class ClientImpl implements ClientImplementor
     private GridImplementor grid;
     private Comparator serverComparator;
     private LogEventPump logPump;
+    private static final int DEFAULT_BACKGROUND_TIMEOUT = 10000;
 
     public ClientImpl(Bus bus, GridImplementor grid)
     {
@@ -94,31 +95,42 @@ public class ClientImpl implements ClientImplementor
         return task;
     }
 
-    public NodeAddress[] waitForServers(int max) throws InterruptedException
+    public NodeAddress[] waitForServers(int max, int min, long timeout) throws InterruptedException
     {
-        while (true)
+        long start = System.currentTimeMillis();
+        boolean loop = true;
+        NodeAddress[] addresses = null;
+        while (loop)
         {
-            NodeAddress[] addresses = getSeverAddresses(max);
-            if (addresses == null || addresses.length == 0)
+            addresses = getSeverAddresses(max);
+            int count = (addresses == null) ? 0 : addresses.length;
+            if (count < min)
             {
-                // Wait for a membership change.
+                long remaining = timeout - (start - System.currentTimeMillis());
                 if (log.isDebugEnabled())
-                    log.debug("waitForServers() : No servers, waiting...");
-                grid.waitForServers();
+                    log.debug("waitForServers() count=" + count + " remaining=" + remaining);
+                // Wait for a membership change.
+                if (timeout == WAIT_FOREVER)
+                    grid.waitForServers(timeout);
+                else if (timeout == NO_WAIT || remaining <= 0)
+                    loop = false;
+                else
+                    grid.waitForServers(remaining);
             }
             else
-                return addresses;
+                loop = false;
         }
+        return addresses;
     }
 
-    public void background(TaskRequest request)
+    public void background(TaskRequest request, long timeout)
     {
         boolean loop = true;
         while (loop)
         {
             try
             {
-                NodeAddress[] addresses = waitForServers(-1);
+                NodeAddress[] addresses = waitForServers(-1, 1, WAIT_FOREVER);
                 // Try to assign a worker thread to this task.
                 for (int i = 0; i < addresses.length; i++)
                 {

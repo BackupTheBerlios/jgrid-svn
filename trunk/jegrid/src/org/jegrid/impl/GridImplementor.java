@@ -66,7 +66,7 @@ public interface GridImplementor extends Grid
     void onNewCoordinator(NodeAddress address)
             ;
 
-    void waitForServers() throws InterruptedException
+    void waitForServers(long timeout) throws InterruptedException
             ;
 
     Object instantiateObject(String clazz)
@@ -76,4 +76,6 @@ public interface GridImplementor extends Grid
             ;
 
     void onNodeStopped(NodeAddress addr);
+
+    boolean isMember(NodeAddress client);
 }

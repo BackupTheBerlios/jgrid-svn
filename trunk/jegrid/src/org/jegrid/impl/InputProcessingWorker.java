@@ -42,7 +42,7 @@ public class InputProcessingWorker extends AbstractInputProcessingWorker
         //noinspection EmptyCatchBlock
         try
         {
-            log.error("Task " + id + " failed: " + ge,ge);
+            log.error("Task " + id + " failed: " + ge, ge);
             bus.taskFailed(id, ge); // Broadcast the exception.
         }
         catch (Exception ignore)
@@ -86,6 +86,9 @@ public class InputProcessingWorker extends AbstractInputProcessingWorker
                 log.debug("InputProcessingWorker released from " + id);
             return null;
         }
+        if (log.isDebugEnabled())
+            log.debug("Waiting for next input from client...");
+        // If the client is no longer a member, then we're done.
         return bus.getNextInput(id, output);
     }
 }

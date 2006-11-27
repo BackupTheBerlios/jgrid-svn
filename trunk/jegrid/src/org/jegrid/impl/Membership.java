@@ -121,7 +121,6 @@ class Membership implements GridStatus
                 break;
             case Grid.TYPE_SERVER:
                 serverNodes.put(address, node);
-                log.debug("New server: " + address + " there are now " + serverNodes.size());
                 // If the old status was 'no free threads' and the new is not
                 // then notify anyone waiting on available threads.
                 if (node.getAvailableWorkers() > 0)
@@ -239,7 +238,10 @@ class Membership implements GridStatus
         if (old != null || isLocal)
             putNode(address, node, old);
         else
-            log.warn("Status from non-member? " + node);
+        {
+            putNode(address, node, null);
+            log.info("Node " + node + " added. (membership change is " + numberOfMembershipChanges + ")");
+        }
     }
 
     private NodeStatus findNode(NodeAddress address)
@@ -304,12 +306,17 @@ class Membership implements GridStatus
         }
     }
 
-    public void waitForServers() throws InterruptedException
+    public void waitForServers(long timeout) throws InterruptedException
     {
         membershipMutex.acquire();
         try
         {
-            serversNotFull.await();
+            if (log.isDebugEnabled())
+                log.debug("waitForServers() timeout=" + timeout);
+            if (timeout == Client.WAIT_FOREVER)
+                serversNotFull.await();
+            else
+                serversNotFull.timedwait(timeout);
         }
         finally
         {
@@ -343,6 +350,19 @@ class Membership implements GridStatus
             removeNode(addr);
             // Add the node as an 'unknown'.
             putNode(addr, new NodeStatusImpl(addr), null);
+        }
+        finally
+        {
+            releaseMutex();
+        }
+    }
+
+    public boolean isMember(NodeAddress address)
+    {
+        membershipMutex.acquire();
+        try
+        {
+            return allNodesByAddress.containsKey(address);
         }
         finally
         {

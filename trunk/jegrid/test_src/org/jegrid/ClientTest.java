@@ -103,7 +103,7 @@ public class ClientTest extends TestCase
             output = new MonteCarloPi.Output();
             MonteCarloPi.MCPiAggregator aggregator = new MonteCarloPi.MCPiAggregator();
             aggregator.setAggregate(output);
-            NodeAddress[] servers = client.waitForServers(1);
+            NodeAddress[] servers = client.waitForServers(1, 1, Client.WAIT_FOREVER);
             for (int i = 0; i < servers.length; i++)
             {
                 log.info(servers[i]);
@@ -131,7 +131,7 @@ public class ClientTest extends TestCase
         String taskKey = "test task";
         Task task = client.createTask(taskKey);
         for (int i = 0; i < 10; i++)
-            task.addInput(new MonteCarloPi.Input(17 * i + 1, 1000));
+            task.addInput(new MonteCarloPi.Input(17 * i + 1, 100000));
         final MonteCarloPi.Output output = new MonteCarloPi.Output();
         MonteCarloPi.MCPiAggregator aggregator = new MonteCarloPi.MCPiAggregator();
         aggregator.setAggregate(output);
@@ -243,19 +243,19 @@ public class ClientTest extends TestCase
                 MonteCarloPi.class.getName(),
                 MonteCarloPi.MCPiAggregator.class.getName(),
                 10, input, "task1");
-        client.background(request);
+        client.background(request, Client.WAIT_FOREVER);
         log.info("Background task 2...");
         request = new TaskRequest(
                 MonteCarloPi.class.getName(),
                 MonteCarloPi.MCPiAggregator.class.getName(),
                 10, input, "task2");
-        client.background(request);
+        client.background(request, Client.WAIT_FOREVER);
         log.info("Background task 3...");
         request = new TaskRequest(
                 MonteCarloPi.class.getName(),
                 MonteCarloPi.MCPiAggregator.class.getName(),
                 10, input, "task3");
-        client.background(request);
+        client.background(request, Client.WAIT_FOREVER);
     }
 
     public void testBackgroundTaskSingleThreaded() throws Exception

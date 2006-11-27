@@ -4,6 +4,7 @@ package org.jegrid.jms;
 import org.apache.log4j.Logger;
 import org.jegrid.Client;
 import org.jegrid.LifecycleAware;
+import org.jegrid.NodeAddress;
 import org.jegrid.TaskRequest;
 import org.jegrid.util.Util;
 
@@ -87,7 +88,7 @@ public class JmsTaskPump implements Runnable, LifecycleAware
             {
                 // Wait for servers first, so we don't drop (ignore) JMS messages.
                 log.info("Waiting for available servers...");
-                client.waitForServers(1);
+                NodeAddress[] servers = client.waitForServers(1, 1, Client.WAIT_FOREVER);
                 try
                 {
                     connect();
@@ -103,7 +104,7 @@ public class JmsTaskPump implements Runnable, LifecycleAware
                             if (o instanceof TaskRequest)
                             {
                                 TaskRequest taskRequest = (TaskRequest) o;
-                                client.background(taskRequest);
+                                client.background(taskRequest, Client.WAIT_FOREVER);
                             }
                         }
                         else

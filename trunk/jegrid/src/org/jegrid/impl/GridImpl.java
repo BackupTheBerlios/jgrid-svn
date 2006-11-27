@@ -188,9 +188,9 @@ public class GridImpl implements GridImplementor
         singletons.initializeFromDescriptors(list);
     }
 
-    public void waitForServers() throws InterruptedException
+    public void waitForServers(long timeout) throws InterruptedException
     {
-        membership.waitForServers();
+        membership.waitForServers(timeout);
     }
 
     public Object instantiateObject(String clazz)
@@ -219,5 +219,10 @@ public class GridImpl implements GridImplementor
     public void onNodeStopped(NodeAddress addr)
     {
         membership.onNodeStopped(addr);
+    }
+
+    public boolean isMember(NodeAddress client)
+    {
+        return membership.isMember(client);
     }
 }
