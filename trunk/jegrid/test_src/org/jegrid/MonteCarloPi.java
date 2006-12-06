@@ -31,8 +31,8 @@ public class MonteCarloPi implements InputProcessor, LifecycleAware
             Client client = grid.getClient();
             String taskKey = "mcpi";
             Task task = client.createTask(taskKey);
-            for (int i = 0; i < 10; i++)
-                task.addInput(new MonteCarloPi.Input(17 * i + 1, 10000));
+            for (int i = 0; i < 100; i++)
+                task.addInput(new MonteCarloPi.Input(17 * i + 1, 100000000));
             final MonteCarloPi.Output output = new MonteCarloPi.Output();
             MCPiAggregator aggregator = new MCPiAggregator();
             aggregator.setAggregate(output);
