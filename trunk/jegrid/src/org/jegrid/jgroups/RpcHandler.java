@@ -70,14 +70,14 @@ public class RpcHandler
         }
     }
 
-    public boolean _assignTask(TaskRequest request)
+    public AssignResponse _assignTask(TaskRequest request)
     {
         Server server = grid.getServer();
         // If we're not a server, return null.
         if (server == null)
         {
             log.warn("_assignTask: No server here.");
-            return false;
+            return null;
         }
         else
         {
@@ -132,7 +132,7 @@ public class RpcHandler
             client.taskFailed(taskId, t);
     }
 
-    public void _append(NodeAddress from,TaskId taskId, LoggingEvent event)
+    public void _append(NodeAddress from, TaskId taskId, LoggingEvent event)
     {
         // If the event is from the local node, don't bother.
         if (from.equals(grid.getLocalAddress()))

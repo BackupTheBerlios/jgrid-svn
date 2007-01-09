@@ -131,19 +131,24 @@ public class ClientImpl implements ClientImplementor
             try
             {
                 NodeAddress[] addresses = waitForServers(-1, 1, WAIT_FOREVER);
-                // Try to assign a worker thread to this task.
-                for (int i = 0; i < addresses.length; i++)
+                if (addresses != null)
                 {
-                    NodeAddress address = addresses[i];
-                    if (log.isDebugEnabled())
-                        log.debug("background() : trying " + address);
-                    boolean accepted = bus.assignTask(address, request);
-                    if (accepted)
+// Try to assign a worker thread to this task.
+                    for (int i = 0; i < addresses.length; i++)
                     {
+                        NodeAddress address = addresses[i];
                         if (log.isDebugEnabled())
-                            log.debug("background() : Accepted.");
-                        loop = false;
-                        break;
+                            log.debug("background() : trying " + address);
+                        AssignResponse response = bus.assignTask(address, request);
+                        if (response != null)
+                        {
+                            if (response.accepted())
+                            {
+                                log.info("Background task accepted by " + address);
+                                loop = false;
+                                break;
+                            }
+                        }
                     }
                 }
                 // If loop is still true, that means no server accepted the work so continue...

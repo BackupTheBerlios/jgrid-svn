@@ -24,13 +24,12 @@ public class ServerImpl implements Server
     private int tasksAccepted;
     private long lastTaskAccepted;
     private GridConfiguration config;
-    private int poolSize;
     private Thread runThread;
 
     public ServerImpl(GridConfiguration config, Bus bus, GridImplementor grid)
     {
         this.config = config;
-        poolSize = config.getThreadPoolSize();
+        int poolSize = config.getThreadPoolSize();
         if (poolSize == 0)
             throw new GridException("Cannot start a server with zero threads!");
 
@@ -49,12 +48,12 @@ public class ServerImpl implements Server
 
     private int _freeThreads()
     {
-        return poolSize - workers.size();
+        return pool.getMaximumPoolSize() - workers.size();
     }
 
     public int totalThreads()
     {
-        return poolSize;
+        return pool.getMaximumPoolSize();
     }
 
     public void onGo(GoMessage goMessage)
@@ -77,15 +76,16 @@ public class ServerImpl implements Server
         }
     }
 
-    public boolean onAssignTask(TaskRequest request)
+    public AssignResponse onAssignTask(TaskRequest request)
     {
         if (log.isDebugEnabled())
             log.debug("onAssignTask()");
+
         synchronized (this)
         {
             int freeThreads = _freeThreads();
             if (freeThreads <= 0)
-                return false;
+                return new AssignResponse(_getNodeStatus(), false);
             Task task = grid.getClient().createTask(request.getTaskKey());
             RemoteTaskWorker worker = new RemoteTaskWorker(this,
                     grid.getClient(), request, task.getTaskId());
@@ -96,9 +96,33 @@ public class ServerImpl implements Server
             catch (Exception e)
             {
                 log.warn("Task not accepted due to :" + e);
-                return false;
+                return new AssignResponse(_getNodeStatus(), false);
             }
-            return true;
+            return new AssignResponse(_getNodeStatus(), true);
+        }
+    }
+
+    private NodeStatus _getNodeStatus()
+    {
+        return _getNodeStatus(_freeThreads());
+    }
+
+    public AssignResponse onAssign(TaskId id)
+    {
+        if (log.isDebugEnabled())
+            log.debug("onAssign() : " + id);
+
+        // Allocate a thread from the pool and run the InputProcessingWorker.  This will loop
+        // until there is no more input available from the client.
+        // The worker will remain waiting for the 'go' command from the client.
+        InputProcessingWorker worker = new InputProcessingWorker(this, id, bus, config.isDistributedLoggingEnabled());
+        synchronized (this)
+        {
+            int freeThreads = _freeThreads();
+            if (freeThreads <= 0)
+                return new AssignResponse(_getNodeStatus(), false);
+            executeWorker(id, worker);
+            return new AssignResponse(_getNodeStatus(), true);
         }
     }
 
@@ -128,28 +152,37 @@ public class ServerImpl implements Server
         shutdownLatch.release();
     }
 
+    public NodeStatus getServerStatus()
+    {
+        int freeThreads = freeThreads();     // Use sync call to get the free threads.
+        return _getNodeStatus(freeThreads);
+    }
+
+    private NodeStatus _getNodeStatus(int freeThreads)
+    {
+        long startTime = grid.getStartTime();
+        String hostName = grid.getHostName();
+        Runtime rt = Runtime.getRuntime();
+        long freeMemory = rt.freeMemory();
+        long totalMemory = rt.totalMemory();
+        return new NodeStatusImpl(
+                bus.getAddress(),
+                config.getType(),
+                bus.getCoordinator(),
+                freeMemory,
+                totalMemory,
+                freeThreads,
+                totalThreads(),
+                startTime,
+                tasksAccepted,
+                lastTaskAccepted,
+                hostName
+        );
+    }
+
     private synchronized InputProcessingWorker findWorker(TaskId id)
     {
         return workers.findWorker(id);
-    }
-
-    public AssignResponse onAssign(TaskId id)
-    {
-        if (log.isDebugEnabled())
-            log.debug("onAssign() : " + id);
-
-        // Allocate a thread from the pool and run the InputProcessingWorker.  This will loop
-        // until there is no more input available from the client.
-        // The worker will remain waiting for the 'go' command from the client.
-        InputProcessingWorker worker = new InputProcessingWorker(this, id, bus, config.isDistributedLoggingEnabled());
-        synchronized (this)
-        {
-            int freeThreads = _freeThreads();
-            if (freeThreads <= 0)
-                return new AssignResponse(bus.getAddress(), _freeThreads(), false);
-            executeWorker(id, worker);
-            return new AssignResponse(bus.getAddress(), _freeThreads(), true);
-        }
     }
 
     private void executeWorker(TaskId id, Worker worker)

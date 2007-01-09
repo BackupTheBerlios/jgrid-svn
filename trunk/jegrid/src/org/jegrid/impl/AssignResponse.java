@@ -1,6 +1,7 @@
 package org.jegrid.impl;
 
 import org.jegrid.NodeAddress;
+import org.jegrid.NodeStatus;
 
 import java.io.Serializable;
 
@@ -12,38 +13,35 @@ import java.io.Serializable;
  */
 public class AssignResponse implements Serializable
 {
-    private int threadsRemaining;
-    private NodeAddress server;
     private boolean accepted;
+    private NodeStatus status;
 
-    public AssignResponse(NodeAddress server, int freeThreads, boolean accepted)
+    public AssignResponse(NodeStatus status, boolean accepted)
     {
-        this.server = server;
-        this.threadsRemaining = freeThreads;
+        this.status = status;
         this.accepted = accepted;
-    }
-
-    public int getThreadsRemaining()
-    {
-        return threadsRemaining;
     }
 
     public NodeAddress getServer()
     {
-        return server;
+        return status.getNodeAddress();
     }
 
     public String toString()
     {
         return "AssignResponse{" +
-                "threadsRemaining=" + threadsRemaining +
-                ", server=" + server +
-                ", accepted=" + accepted +
+                "accepted=" + accepted +
+                ", status=" + status +
                 '}';
     }
 
     public boolean accepted()
     {
         return accepted;
+    }
+
+    public NodeStatus getNodeStatus()
+    {
+        return status;
     }
 }

@@ -38,7 +38,7 @@ public interface Bus
     void release(TaskId taskId) throws Exception
             ;
 
-    boolean assignTask(NodeAddress address, TaskRequest request) throws RpcTimeoutException
+    AssignResponse assignTask(NodeAddress address, TaskRequest request) throws RpcTimeoutException
             ;
 
     void apppend(TaskId id, LoggingEvent event) throws RpcTimeoutException

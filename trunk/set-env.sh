@@ -1,5 +1,9 @@
 #!/bin/bash
 
+DEFAULT_ANT_HOME=/opt/apache-ant-1.6.5
+DEFAULT_FORREST_HOME=/opt/apache-forrest-0.7
+DEFAULT_JAVA_HOME=/usr/java/j2sdk1.4.2_09
+
 cygwin=false;
 darwin=false;
 case `uname` in
@@ -12,8 +16,8 @@ case `uname` in
 esac
 
 if [ -z "$ANT_HOME" ] ; then
-    if [ -d /usr/local/apache-ant ] ; then
-        export ANT_HOME=/usr/local/apache-ant
+    if [ -d $DEFAULT_ANT_HOME ] ; then
+        export ANT_HOME=$DEFAULT_ANT_HOME
     else
         echo "ERROR: Unable to locate ANT. Please set ANT_HOME."
         exit -1
@@ -21,8 +25,8 @@ if [ -z "$ANT_HOME" ] ; then
 fi
 
 if [ -z "$FORREST_HOME" ] ; then
-    if [ -d /usr/local/apache-forrest-0.7 ] ; then
-        export FORREST_HOME=/usr/local/apache-forrest-0.7
+    if [ -d $DEFAULT_FORREST_HOME ] ; then
+        export FORREST_HOME=$DEFAULT_FORREST_HOME
     else
         echo "ERROR: Unable to locate FORREST. Please set FORREST_HOME."
         exit -1
@@ -30,7 +34,7 @@ if [ -z "$FORREST_HOME" ] ; then
 fi
 
 if [ -z "$JAVA_HOME" ] ; then
-    export JAVA_HOME=/usr/java/j2sdk1.4.2_09
+    export JAVA_HOME=$DEFAULT_JAVA_HOME
 fi
 
 if [ ! -d "$JAVA_HOME" ] ; then

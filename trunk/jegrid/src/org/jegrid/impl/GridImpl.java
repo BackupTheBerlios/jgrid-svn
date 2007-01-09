@@ -96,27 +96,27 @@ public class GridImpl implements GridImplementor
         // If there is a server on this node, get it's stats.
         if (server != null)
         {
-            freeThreads = server.freeThreads();
-            totalThreads = server.totalThreads();
-            tasksAccepted = server.tasksAccepted();
-            lastTaskAccepted = server.lastTaskAccepted();
+            return server.getServerStatus();
         }
-        Runtime rt = Runtime.getRuntime();
-        long freeMemory = rt.freeMemory();
-        long totalMemory = rt.totalMemory();
-        return new NodeStatusImpl(
-                bus.getAddress(),
-                config.getType(),
-                bus.getCoordinator(),
-                freeMemory,
-                totalMemory,
-                freeThreads,
-                totalThreads,
-                startTime,
-                tasksAccepted,
-                lastTaskAccepted,
-                hostName
-        );
+        else
+        {
+            Runtime rt = Runtime.getRuntime();
+            long freeMemory = rt.freeMemory();
+            long totalMemory = rt.totalMemory();
+            return new NodeStatusImpl(
+                    bus.getAddress(),
+                    config.getType(),
+                    bus.getCoordinator(),
+                    freeMemory,
+                    totalMemory,
+                    freeThreads,
+                    totalThreads,
+                    startTime,
+                    tasksAccepted,
+                    lastTaskAccepted,
+                    hostName
+            );
+        }
     }
 
     public GridStatus getGridStatus(boolean cached)
@@ -224,5 +224,15 @@ public class GridImpl implements GridImplementor
     public boolean isMember(NodeAddress client)
     {
         return membership.isMember(client);
+    }
+
+    public long getStartTime()
+    {
+        return startTime;
+    }
+
+    public String getHostName()
+    {
+        return hostName;
     }
 }

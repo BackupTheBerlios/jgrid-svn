@@ -78,4 +78,8 @@ public interface GridImplementor extends Grid
     void onNodeStopped(NodeAddress addr);
 
     boolean isMember(NodeAddress client);
+
+    long getStartTime();
+
+    String getHostName();
 }

@@ -18,6 +18,7 @@ public class MonteCarloPi implements InputProcessor, LifecycleAware
 
     private static final int ITERATIONS = 10000000;
     private static final double RADIUS = 5.0;
+    private static final int INPUTS = 100;
 
     public static void main(String[] args)
     {
@@ -31,8 +32,8 @@ public class MonteCarloPi implements InputProcessor, LifecycleAware
             Client client = grid.getClient();
             String taskKey = "mcpi";
             Task task = client.createTask(taskKey);
-            for (int i = 0; i < 100; i++)
-                task.addInput(new MonteCarloPi.Input(17 * i + 1, 100000000));
+            for (int i = 0; i < INPUTS; i++)
+                task.addInput(new MonteCarloPi.Input(17 * i + 1, ITERATIONS));
             final MonteCarloPi.Output output = new MonteCarloPi.Output();
             MCPiAggregator aggregator = new MCPiAggregator();
             aggregator.setAggregate(output);

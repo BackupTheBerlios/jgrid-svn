@@ -223,7 +223,10 @@ public class JGroupsBus implements Bus
                 log.debug("assign() : Rsp #" + i + " " + o);
             rv[i] = null;
             if (o instanceof AssignResponse)
+            {
                 rv[i] = (AssignResponse) o;
+                handleAssignResponse(rv[i]);
+            }
             else if (o instanceof ServerBusyException)
             {
                 ServerBusyException sbe = (ServerBusyException) o;
@@ -235,6 +238,20 @@ public class JGroupsBus implements Bus
             }
         }
         return rv;
+    }
+
+    private void handleAssignResponse(AssignResponse assignResponse)
+    {
+        if (assignResponse != null)
+        {
+            NodeStatus status = assignResponse.getNodeStatus();
+            // If the assign response contains a node status, then update the local node status cache now.
+            if (status != null)
+            {
+                if (log.isDebugEnabled()) log.debug("handleAssignResponse() : Updating grid status with " + status);
+                grid.onNodeStatus(status);
+            }
+        }
     }
 
     public void go(AssignResponse[] servers, GoMessage goMessage) throws Exception
@@ -265,17 +282,23 @@ public class JGroupsBus implements Bus
                 GroupRequest.GET_NONE, 0);
     }
 
-    public boolean assignTask(NodeAddress server, TaskRequest request) throws RpcTimeoutException
+    public AssignResponse assignTask(NodeAddress server, TaskRequest request) throws RpcTimeoutException
     {
         Object o = dispatcher.call(server, "_assignTask",
                 new Object[]{request},
                 new Class[]{TaskRequest.class},
                 GroupRequest.GET_ALL,
                 NEXT_INPUT_TIMEOUT);   // Wait a little longer for this, sometimes the client is slow.
-        if (o == null)
-            return false;
-        Boolean accpted = (Boolean) o;
-        return accpted.booleanValue();
+        if (o instanceof AssignResponse)
+        {
+            AssignResponse assignResponse = (AssignResponse) o;
+            handleAssignResponse(assignResponse);
+            return assignResponse;
+        }
+        else if (o == null)
+            return null;
+        else
+            throw new GridException("Unexpected response from _assignTask() : " + o);
     }
 
     public void apppend(TaskId taskId, LoggingEvent event) throws RpcTimeoutException

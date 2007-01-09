@@ -1,5 +1,6 @@
 package org.jegrid.impl;
 
+import org.jegrid.NodeStatus;
 import org.jegrid.TaskId;
 import org.jegrid.TaskRequest;
 
@@ -58,11 +59,12 @@ public interface Server
      * @param request The task request.
      * @return true if it was accepted, false if not
      */
-    boolean onAssignTask(TaskRequest request)
+    AssignResponse onAssignTask(TaskRequest request)
             ;
 
     /**
      * Returns the number of tasks accepted by this server.
+     *
      * @return the number of tasks accepted by this server.
      */
     int tasksAccepted()
@@ -76,4 +78,6 @@ public interface Server
 
     void doShutdown()
             ;
+
+    NodeStatus getServerStatus();
 }
