@@ -27,6 +27,7 @@ public class RpcHandler
 
     public String _status(NodeStatus from)
     {
+        log.debug("_status() " + from);
         grid.onNodeStatus(from);
         return "hi there!";
     }

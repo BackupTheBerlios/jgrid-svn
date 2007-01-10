@@ -306,17 +306,19 @@ class Membership implements GridStatus
         }
     }
 
-    public void waitForServers(long timeout) throws InterruptedException
+    public boolean waitForServers(long timeout) throws InterruptedException
     {
         membershipMutex.acquire();
         try
         {
-            if (log.isDebugEnabled())
-                log.debug("waitForServers() timeout=" + timeout);
-            if (timeout == Client.WAIT_FOREVER)
-                serversNotFull.await();
-            else
-                serversNotFull.timedwait(timeout);
+            for (Iterator iter = serverNodes.values().iterator(); iter.hasNext();)
+            {
+                NodeStatus n = (NodeStatus) iter.next();
+                if (n.getAvailableWorkers() > 0)
+                    return true;
+            }
+            // Wait for the 'not full' signal for a while.
+            return serversNotFull.timedwait(timeout);
         }
         finally
         {

@@ -208,6 +208,10 @@ public class ServerImpl implements Server
         }
         tasksAccepted++;
         lastTaskAccepted = System.currentTimeMillis();
+        // Note: The caller cannot rely on receiving this message promptly.
+        // This is why the assign responses include the node status.  The caller
+        // can then immediately update their cached node status to reflect the assignment.
+        // If the client gets this message a little later, that should be okay.
         bus.broadcastNodeStatus();
     }
 

@@ -66,7 +66,7 @@ public interface GridImplementor extends Grid
     void onNewCoordinator(NodeAddress address)
             ;
 
-    void waitForServers(long timeout) throws InterruptedException
+    void waitForServers() throws InterruptedException
             ;
 
     Object instantiateObject(String clazz)

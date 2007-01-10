@@ -27,6 +27,7 @@ public class GridImpl implements GridImplementor
     private long startTime;
     private MicroContainer singletons;
     private String hostName;
+    private static final int SERVER_WAIT_TIMEOUT = 5000;
 
     public GridImpl(GridConfiguration config)
     {
@@ -188,9 +189,21 @@ public class GridImpl implements GridImplementor
         singletons.initializeFromDescriptors(list);
     }
 
-    public void waitForServers(long timeout) throws InterruptedException
+    public void waitForServers() throws InterruptedException
     {
-        membership.waitForServers(timeout);
+        // Use a spin loop to wait for servers in the locally cached list.
+        // If the wait times out, refresh the local cache using a synchronous
+        // broadcast query.
+        boolean available = membership.waitForServers(SERVER_WAIT_TIMEOUT);
+        int count = 0;
+        while (!available)
+        {
+            count++;
+            log.info("waitForServers() : Refreshing status (" + count + ") ...");
+            NodeStatus[] ns = bus.getGridStatus();
+            membership.refreshStatus(ns);
+            available = membership.waitForServers(SERVER_WAIT_TIMEOUT);
+        }
     }
 
     public Object instantiateObject(String clazz)

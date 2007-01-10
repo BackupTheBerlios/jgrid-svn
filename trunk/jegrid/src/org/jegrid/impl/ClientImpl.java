@@ -106,16 +106,21 @@ public class ClientImpl implements ClientImplementor
             int count = (addresses == null) ? 0 : addresses.length;
             if (count < min)
             {
-                long remaining = timeout - (start - System.currentTimeMillis());
-                if (log.isDebugEnabled())
-                    log.debug("waitForServers() count=" + count + " remaining=" + remaining);
                 // Wait for a membership change.
                 if (timeout == WAIT_FOREVER)
-                    grid.waitForServers(timeout);
-                else if (timeout == NO_WAIT || remaining <= 0)
+                    grid.waitForServers();
+                else if (timeout == NO_WAIT)
                     loop = false;
                 else
-                    grid.waitForServers(remaining);
+                {
+                    long remaining = timeout - (start - System.currentTimeMillis());
+                    if (log.isDebugEnabled())
+                        log.debug("waitForServers() count=" + count + " remaining=" + remaining);
+                    if (remaining <= 0)
+                        loop = false;
+                    else
+                        grid.waitForServers();
+                }
             }
             else
                 loop = false;
@@ -133,7 +138,7 @@ public class ClientImpl implements ClientImplementor
                 NodeAddress[] addresses = waitForServers(-1, 1, WAIT_FOREVER);
                 if (addresses != null)
                 {
-// Try to assign a worker thread to this task.
+                    // Try to assign a worker thread to this task.
                     for (int i = 0; i < addresses.length; i++)
                     {
                         NodeAddress address = addresses[i];

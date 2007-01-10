@@ -140,8 +140,6 @@ public class TaskImpl implements Task
             // Remember the input status in the map in case we have a failure
             // during processing.  It can then be put back on the queue.
             inprogress.put(is.getInputId(), is);
-//            if (log.isDebugEnabled())
-//                log.debug("Input id " + is.getInputId() + " given to server " + server + ", " + inputQueue.size() + " remain.");
             return is.getInput();
         }
     }
@@ -152,8 +150,6 @@ public class TaskImpl implements Task
         inprogress.remove(key);
         if (unfinishedInputIds.remove(key))
         {
-//            if (log.isDebugEnabled())
-//                log.debug("putOutput() : " + output.getInputId() + " finished, " + unfinishedInputIds.size() + " remain.");
             // Put the output on the queue for the aggregator thread.
             // We're on the reciever thread now, so we want to return as quickly as possible.
             try
@@ -493,13 +489,16 @@ public class TaskImpl implements Task
                 // If maximum retries has been exeeded, fail.
                 if (is.getRetries() > maxRetries)
                 {
-                    exception = new GridException("Server " + server
-                            + " left the grid, max retries exceeded!");
+                    String msg = "Server " + server
+                            + " left the grid, max retries exceeded!";
+                    log.error(msg);
+                    exception = new GridException(msg);
                 }
                 // Otherwise, remove the input from the in progress map and
-                // put it in the queue.
+                // put it back in the input queue, but put it first.
                 inputs.remove();
-                inputQueue.add(is);
+                inputQueue.add(0, is);
+                log.info("Input #" + is.getInputId() + " queued for retry.");
             }
         }
         if (exception != null)
