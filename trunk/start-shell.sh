@@ -8,7 +8,6 @@ whereami=`dirname $whereami`
 source $whereami/set-env.sh
 cd $whereami
 
-
 cygwin=false;
 darwin=false;
 case `uname` in

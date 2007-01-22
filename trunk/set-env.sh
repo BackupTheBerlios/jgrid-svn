@@ -2,7 +2,7 @@
 
 DEFAULT_ANT_HOME=/opt/apache-ant-1.6.5
 DEFAULT_FORREST_HOME=/opt/apache-forrest-0.7
-DEFAULT_JAVA_HOME=/usr/java/j2sdk1.4.2_09
+DEFAULT_JAVA_HOME=/usr/java/j2sdk1.4.2_12
 
 cygwin=false;
 darwin=false;
