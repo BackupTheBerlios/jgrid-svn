@@ -22,6 +22,7 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
     private View currentView;
     private NodeAddress coordinator;
     boolean connected = false;
+    private View deferredView; // A view that happened before the channel was connected.
 
     public JGroupsListener(GridImplementor grid)
     {
@@ -31,10 +32,17 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
     public void channelConnected(Channel channel)
     {
         log.info("channelConnected() " + channel.getLocalAddress());
+        View view = null;
         synchronized (this)
         {
             connected = true;
+            // Take the view that happened before the connection into a local variable so we can un-sync.
+            view = deferredView;
+            deferredView = null;
         }
+        // If there was a view before the channel was connected, then process that view now.
+        if (view != null)
+            doAcceptView(view, true);
     }
 
     public void channelDisconnected(Channel channel)
@@ -84,12 +92,23 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
 
     public void viewAccepted(View newView)
     {
-        log.info("viewAccepted " + newView);
+        doAcceptView(newView, false);
+    }
+
+    private void doAcceptView(View newView, boolean deferred)
+    {
+        log.info("viewAccepted(" + newView + ") deferred=" + deferred);
         // Diff the views.
         ViewDiff diff;
         NodeAddress coord;
         synchronized (this)
         {
+            if (!connected)
+            {
+                log.info("Not yet connected, deferring view for connect...");
+                deferredView = newView;
+                return;
+            }
             diff = new ViewDiff(currentView, newView);
             if (diff.isCoordinatorChanged())
             {
@@ -104,11 +123,6 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
                 coord = coordinator;
             }
             currentView = newView;
-            if (!connected)
-            {
-                log.info("not connected");
-                return;
-            }
         } // synchronized
 
         // Notify about coordinator changes first.
