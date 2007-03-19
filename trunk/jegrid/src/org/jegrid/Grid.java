@@ -1,5 +1,7 @@
 package org.jegrid;
 
+import java.util.List;
+
 /**
  * Represents a connection to the grid.
  * <br>User: jdavis
@@ -62,9 +64,10 @@ public interface Grid
     /**
      * Returns an unmodifiable collection of NodeStatus, one for very member of the grid.  This
      * will be the cached status that is on this grid node.
-     * @return an an unmodifiable collection of NodeStatus, one for very member of the grid.
+     *
      * @param cached If true, the locally cached status will be used.  Otherwise, a
-     * broadcast message will be sent out and the cache will be refreshed with the responses.
+     *               broadcast message will be sent out and the cache will be refreshed with the responses.
+     * @return an an unmodifiable collection of NodeStatus, one for very member of the grid.
      */
     GridStatus getGridStatus(boolean cached);
 
@@ -85,4 +88,19 @@ public interface Grid
      */
     String getGridName()
             ;
+
+    /**
+     * Returns all of the singleton descriptors in the configuration.
+     *
+     * @return a List of GridSingletonDescriptor
+     */
+    List getSingletonDescriptors();
+
+    /**
+     * Returns the local singleton instance for the given grid singleton descriptor key.
+     *
+     * @param key the key
+     * @return the local singleton instance, or null if there isn't one
+     */
+    Object getLocalSingleton(Object key);
 }

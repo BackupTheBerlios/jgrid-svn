@@ -80,6 +80,7 @@ public class GridImpl implements GridImplementor
 
     public void disconnect()
     {
+        destroyGridSingletons();
         bus.disconnect();
     }
 
@@ -187,6 +188,23 @@ public class GridImpl implements GridImplementor
         log.info("*** INITIALIZING GRID SINGLETONS ***");
         List list = config.getGridSingletonDescriptors();
         singletons.initializeFromDescriptors(list);
+    }
+
+    private void destroyGridSingletons()
+    {
+        log.info("*** DESTROYING GRID SINGLETONS ***");
+        List list = config.getGridSingletonDescriptors();
+        singletons.destroyFromDescriptors(list);
+    }
+
+    public List getSingletonDescriptors()
+    {
+        return config.getGridSingletonDescriptors();
+    }
+
+    public Object getLocalSingleton(Object key)
+    {
+        return singletons.getComponentInstance(key);
     }
 
     public void waitForServers() throws InterruptedException

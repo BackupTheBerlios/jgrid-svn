@@ -36,13 +36,18 @@ public class MicroContainer
         MutablePicoContainer parentPico = (parent == null) ? null : parent.pico;
         monitor = new Log4JComponentMonitor();
         lifecycleStrategy = new GridLifecycleStrategy();
-        ComponentAdapterFactory adapterFactory = new DefaultComponentAdapterFactory(monitor,lifecycleStrategy);
-        pico = new DefaultPicoContainer(adapterFactory,lifecycleStrategy,parentPico);
+        ComponentAdapterFactory adapterFactory = new DefaultComponentAdapterFactory(monitor, lifecycleStrategy);
+        pico = new DefaultPicoContainer(adapterFactory, lifecycleStrategy, parentPico);
     }
 
     public Object getComponentInstance(Object key)
     {
         return pico.getComponentInstance(key);
+    }
+
+    public List instances()
+    {
+        return pico.getComponentInstances();
     }
 
     public Class loadImplementation(String className) throws ClassNotFoundException
@@ -52,7 +57,7 @@ public class MicroContainer
 
     public void registerSingleton(Object key, Class implementation)
     {
-        registerSingleton(key,implementation,null);
+        registerSingleton(key, implementation, null);
     }
 
     public void registerSingleton(Object key, Class implementation, Map properties)
@@ -121,7 +126,7 @@ public class MicroContainer
         for (Iterator iterator = list.iterator(); iterator.hasNext();)
         {
             GridSingletonDescriptor descriptor = (GridSingletonDescriptor) iterator.next();
-            registerSingleton(descriptor.getKey(),descriptor.getImpl(),descriptor.getProperties());
+            registerSingleton(descriptor.getKey(), descriptor.getImpl(), descriptor.getProperties());
         }
         // Now create them all.
         for (Iterator iterator = list.iterator(); iterator.hasNext();)
@@ -129,6 +134,7 @@ public class MicroContainer
             GridSingletonDescriptor descriptor = (GridSingletonDescriptor) iterator.next();
             Object key = descriptor.getKey();
             Object component = getComponentInstance(key);
+            log.info("Initializing " + key + " ...");
             MicroContainer.initializeComponent(component);
         }
     }
@@ -141,7 +147,11 @@ public class MicroContainer
             GridSingletonDescriptor descriptor = (GridSingletonDescriptor) iterator.next();
             Object key = descriptor.getKey();
             Object component = getComponentInstance(key);
-            destroyComponent(component);
+            if (component != null)
+            {
+                log.info("Destroying " + key + " ...");
+                destroyComponent(component);
+            }
         }
         dispose();
     }
