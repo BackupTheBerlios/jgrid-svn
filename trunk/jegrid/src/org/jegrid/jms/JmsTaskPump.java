@@ -4,7 +4,6 @@ package org.jegrid.jms;
 import org.apache.log4j.Logger;
 import org.jegrid.Client;
 import org.jegrid.LifecycleAware;
-import org.jegrid.NodeAddress;
 import org.jegrid.TaskRequest;
 import org.jegrid.util.Util;
 
@@ -39,10 +38,14 @@ public class JmsTaskPump implements Runnable, LifecycleAware
     private Client client;
     private static final long RECEIVE_TIMEOUT = 30000;
 
+    private Thread thread;
+    private volatile boolean running;
+
     public JmsTaskPump(Client client)
     {
         log.info("<ctor>");
         this.client = client;
+        this.running = false;
     }
 
     /**
@@ -70,25 +73,31 @@ public class JmsTaskPump implements Runnable, LifecycleAware
     public void initialize()
     {
         log.info("initialize()");
-        Thread t = new Thread(this, "JmsTaskPump");
-        t.setDaemon(true);
-        t.start();
+        thread = new Thread(this, "JmsTaskPump");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     public void terminate()
     {
+        if(thread==null || !this.running)
+            return;
+        log.info("terminate()");
+        running = false;
+        thread.interrupt();
     }
 
     public void run()
     {
+        this.running=true;
         log.info("run() : ENTER");
         try
         {
-            while (true)
+            while (running)
             {
                 // Wait for servers first, so we don't drop (ignore) JMS messages.
                 log.info("Waiting for available servers...");
-                NodeAddress[] servers = client.waitForServers(1, 1, Client.WAIT_FOREVER);
+                client.waitForServers(1, 1, Client.WAIT_FOREVER);
                 try
                 {
                     connect();

@@ -28,9 +28,11 @@ public class GridImpl implements GridImplementor
     private MicroContainer singletons;
     private String hostName;
     private static final int SERVER_WAIT_TIMEOUT = 5000;
+    private boolean amCoordinator;
 
     public GridImpl(GridConfiguration config)
     {
+        this.amCoordinator=false;
         this.config = config;
         membership = new Membership(this);
         try
@@ -179,7 +181,17 @@ public class GridImpl implements GridImplementor
         if (address.equals(getLocalAddress()))
         {
             log.info("*** I am the coordinator ***");
+            amCoordinator=true;
             initializeGridSingletons();
+        }
+        else
+        {
+            if(amCoordinator)   // i was the coordinator but have been voted out
+            {
+                log.info("*** I am no longer the coordinator ***");
+                destroyGridSingletons();
+            }
+            amCoordinator=false;
         }
     }
 
