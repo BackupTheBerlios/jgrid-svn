@@ -133,7 +133,7 @@ public class JGroupsBus implements Bus
             chan = channel;
         }
         // Unsynchronize now, as disconnecting will cause other threads to do things.
-        log.info("" + addr + " Disconnecting...");
+        log.info(addr + " Disconnecting...");
         // Close the channel.
         if (chan != null)
         {
@@ -256,15 +256,19 @@ public class JGroupsBus implements Bus
 
     public void go(AssignResponse[] servers, GoMessage goMessage) throws Exception
     {
-        if (servers == null || servers.length == 0)
+        final int srvs = servers.length;
+
+        if (servers == null || srvs == 0)
             return;
-        List list = new ArrayList(servers.length);
-        for (int i = 0; i < servers.length; i++)
+
+        List list = new ArrayList(srvs+2);
+        for (int i = 0; i < srvs; i++)
         {
-            AssignResponse server = servers[i];
+            final AssignResponse server = servers[i];
             if (server != null && server.accepted())
                 list.add(server.getServer());
         }
+
         NodeAddress[] addrs = (NodeAddress[]) list.toArray(new NodeAddress[list.size()]);
         dispatcher.broadcastWithExceptionCheck(
                 addrs, "_go",
@@ -346,8 +350,10 @@ public class JGroupsBus implements Bus
         {
             throw new GridException(e);
         }
-        List list = new ArrayList(responses.size());
-        for (int i = 0; i < responses.size(); i++)
+
+        final int respCount = responses.size();
+        List list = new ArrayList(respCount+2);     // leave some room so the arraylist doesn't grow on us
+        for (int i = 0; i < respCount; i++)
         {
             NodeStatus ns = (NodeStatus) responses.get(i);
             if (ns != null)

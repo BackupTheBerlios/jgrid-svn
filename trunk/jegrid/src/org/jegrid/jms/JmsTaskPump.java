@@ -15,9 +15,9 @@ import java.util.Hashtable;
 /**
  * Receives TaskRequest objects from a JMS queue and submits them on the grid
  * as background jobs.
- * <br>User: Joshua Davis
+ * @author Joshua Davis
+ * @author Greg Kerdemelidis - added the shutdown code.
  * Date: Oct 8, 2006
- * Time: 3:49:38 PM
  */
 public class JmsTaskPump implements Runnable, LifecycleAware
 {
@@ -59,17 +59,27 @@ public class JmsTaskPump implements Runnable, LifecycleAware
         this.contextEnvironment = Util.decodeProperties(contextEnvironmentString);
     }
 
+    /**
+     * Set the name of the JMS Destination we're going to connect to.
+     * @param jmsDestinationName name of jms destination.
+     */
     public void setJmsDestinationName(String jmsDestinationName)
     {
         this.jmsDestinationName = jmsDestinationName;
     }
 
+    /**
+     * Set the class we use for creating JMS connections.
+     * @param jmsConnectionFactoryName class name.
+     */
     public void setJmsConnectionFactoryName(String jmsConnectionFactoryName)
     {
         this.jmsConnectionFactoryName = jmsConnectionFactoryName;
     }
 
-
+    /**
+     * Start the singleton thread.
+     */
     public void initialize()
     {
         log.info("initialize()");
@@ -78,6 +88,9 @@ public class JmsTaskPump implements Runnable, LifecycleAware
         thread.start();
     }
 
+    /**
+     * Shut down the background thread.
+     */
     public void terminate()
     {
         if(thread==null || !this.running)
@@ -87,6 +100,9 @@ public class JmsTaskPump implements Runnable, LifecycleAware
         thread.interrupt();
     }
 
+    /**
+     * Background thread that consumes requests from JMS and sends the requests to the grid.
+     */
     public void run()
     {
         this.running=true;
@@ -139,6 +155,9 @@ public class JmsTaskPump implements Runnable, LifecycleAware
         log.info("run() : LEAVE");
     }
 
+    /**
+     * Disconnect from the grid.
+     */
     private void disconnect()
     {
         if (consumer != null)
@@ -194,6 +213,12 @@ public class JmsTaskPump implements Runnable, LifecycleAware
         log.info("Disconnected from " + jmsDestinationName);
     }
 
+    /**
+     * Connect to the grid.
+     *
+     * @throws NamingException on JNDI lookup failure finding the JMS connection factory or the queue.
+     * @throws JMSException on messaging fault
+     */
     private void connect()
             throws NamingException, JMSException
     {
@@ -209,7 +234,11 @@ public class JmsTaskPump implements Runnable, LifecycleAware
         log.info("Connected to " + jmsDestinationName);
     }
 
-
+    /**
+     * Get the IC.
+     * @return the InitialContext.
+     * @throws NamingException on JNDI error.
+     */
     private InitialContext getInitialContext()
             throws NamingException
     {

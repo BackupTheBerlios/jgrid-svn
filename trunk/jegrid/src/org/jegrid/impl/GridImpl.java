@@ -12,40 +12,52 @@ import java.util.Set;
 /**
  * Implements a connection to the grid based on the Bus abstraction, manages
  * the other two components: client and server.
- * <br>User: jdavis
+ * @author jdavis
  * Date: Sep 21, 2006
  * Time: 5:34:18 PM
  */
 public class GridImpl implements GridImplementor
 {
     private static Logger log = Logger.getLogger(GridImpl.class);
-    private GridConfiguration config;
+    private final GridConfiguration config;
+    private final String hostName;
     private Membership membership;
     private Bus bus;
     private Server server;
     private ClientImplementor client;
     private long startTime;
     private MicroContainer singletons;
-    private String hostName;
-    private static final int SERVER_WAIT_TIMEOUT = 5000;
     private boolean amCoordinator;
 
+    private static final int SERVER_WAIT_TIMEOUT = 5000;
+
+    /**
+     * Connect to the grid using the supplied configuration.
+     * @param config grid config
+     */
     public GridImpl(GridConfiguration config)
     {
         this.amCoordinator=false;
         this.config = config;
         membership = new Membership(this);
+        String name;
         try
         {
-            hostName = InetAddress.getLocalHost().getHostName();
+            name = InetAddress.getLocalHost().getHostName();
         }
         catch (UnknownHostException e)
         {
             log.warn("Unable to get host name due to: " + e);
-            hostName = "<unknown>";
+            name = "<unknown>";
         }
+        hostName = name;
     }
 
+    /**
+     * Called by grid configuration code. Do extra config that can't be done with straight IoC.
+     *
+     * @param mc The micro container.
+     */
     public void initialize(MicroContainer mc)
     {
         // These objects need the GridImplementor in the micro-container, so
@@ -74,12 +86,20 @@ public class GridImpl implements GridImplementor
         return server;
     }
 
+    /**
+     * Connect to the grid messaging bus.
+     */
     public void connect()
     {
         startTime = System.currentTimeMillis();
         bus.connect();
     }
 
+    /**
+     * Disconnect from the grid messaging bus and remove any grid singletons we have instantiated.
+     * This will call the terminate() lifecycle callbacks on the singletons.
+     * @see org.jegrid.LifecycleAware#terminate() for the callback.
+     */
     public void disconnect()
     {
         destroyGridSingletons();
@@ -91,38 +111,47 @@ public class GridImpl implements GridImplementor
         return bus.getAddress();
     }
 
+    /**
+     * Get the status of this grid node.
+     * @return a bunch of useful info.
+     */
     public NodeStatus getLocalStatus()
     {
-        int freeThreads = 0;
-        int totalThreads = 0;
-        int tasksAccepted = 0;
-        long lastTaskAccepted = 0;
         // If there is a server on this node, get it's stats.
         if (server != null)
         {
             return server.getServerStatus();
         }
-        else
-        {
-            Runtime rt = Runtime.getRuntime();
-            long freeMemory = rt.freeMemory();
-            long totalMemory = rt.totalMemory();
-            return new NodeStatusImpl(
-                    bus.getAddress(),
-                    config.getType(),
-                    bus.getCoordinator(),
-                    freeMemory,
-                    totalMemory,
-                    freeThreads,
-                    totalThreads,
-                    startTime,
-                    tasksAccepted,
-                    lastTaskAccepted,
-                    hostName
-            );
-        }
+
+        final int freeThreads = 0;
+        final int totalThreads = 0;
+        final int tasksAccepted = 0;
+        final long lastTaskAccepted = 0;
+
+        final Runtime rt = Runtime.getRuntime();
+        final long freeMemory = rt.freeMemory();
+        final long totalMemory = rt.totalMemory();
+
+        return new NodeStatusImpl(
+                bus.getAddress(),
+                config.getType(),
+                bus.getCoordinator(),
+                freeMemory,
+                totalMemory,
+                freeThreads,
+                totalThreads,
+                startTime,
+                tasksAccepted,
+                lastTaskAccepted,
+                hostName
+        );
     }
 
+    /**
+     * Get the status of all the nodes in the grid.
+     * @param cached whether or not to use a cached status.
+     * @return grid status.
+     */
     public GridStatus getGridStatus(boolean cached)
     {
         if (!cached || membership.needsRefresh())
@@ -133,6 +162,9 @@ public class GridImpl implements GridImplementor
         return membership;
     }
 
+    /**
+     * Run the grid server thread(s).
+     */
     public void runServer()
     {
         if (server == null)
@@ -141,11 +173,18 @@ public class GridImpl implements GridImplementor
         server.run();
     }
 
+    /**
+     * Shutdown grid server thread(s).
+     */
     public void shutdownServers()
     {
         bus.shutdownServers();
     }
 
+    /**
+     * Get the unique federated name of this grid.
+     * @return name for federation.
+     */
     public String getGridName()
     {
         return config.getGridName();
