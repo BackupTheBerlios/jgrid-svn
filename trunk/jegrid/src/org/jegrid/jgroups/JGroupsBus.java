@@ -256,9 +256,10 @@ public class JGroupsBus implements Bus
 
     public void go(AssignResponse[] servers, GoMessage goMessage) throws Exception
     {
+        if(servers==null) return;
         final int srvs = servers.length;
 
-        if (servers == null || srvs == 0)
+        if (srvs == 0)
             return;
 
         List list = new ArrayList(srvs+2);
