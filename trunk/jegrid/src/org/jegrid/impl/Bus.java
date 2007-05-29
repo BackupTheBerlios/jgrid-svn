@@ -41,7 +41,7 @@ public interface Bus
     AssignResponse assignTask(NodeAddress address, TaskRequest request) throws RpcTimeoutException
             ;
 
-    void apppend(TaskId id, LoggingEvent event) throws RpcTimeoutException
+    void append(TaskId id, LoggingEvent event) throws RpcTimeoutException
             ;
 
     void shutdownServers()

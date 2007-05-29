@@ -76,7 +76,7 @@ public class GridAppender extends AsyncAppender implements Appender
             {
                 if (log.isDebugEnabled())
                     log.debug("Sending event to " + id.getClient() + " for task " + id.getTaskId());
-                bus.apppend(id, event);
+                bus.append(id, event);
             }
             catch (RpcTimeoutException e)
             {

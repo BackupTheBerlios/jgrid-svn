@@ -306,7 +306,7 @@ public class JGroupsBus implements Bus
             throw new GridException("Unexpected response from _assignTask() : " + o);
     }
 
-    public void apppend(TaskId taskId, LoggingEvent event) throws RpcTimeoutException
+    public void append(TaskId taskId, LoggingEvent event) throws RpcTimeoutException
     {
         dispatcher.call(taskId.getClient(), "_append",
                 new Object[]{getAddress(), taskId, event},
