@@ -25,13 +25,6 @@
  *
  ******************************************************************************/
 
-/**
- * Created by IntelliJ IDEA.
- * User: josh
- * Date: Nov 27, 2002
- * Time: 8:43:37 AM
- */
-
 // --- The orgiginal code is from: ---
 // Base64Encoder.java
 // $Id: Base64OutputStream.java,v 1.1 2004/01/21 13:53:26 pgmjsd Exp $
@@ -196,7 +189,7 @@ public class Base64OutputStream extends FilterOutputStream {
      * to separate the blocks (as per the BASE64 spec).
      *
      * @param b The encoded byte to write.
-     * @throws IOException
+     * @throws IOException on error
      */
     private void writeByte(int b) throws IOException {
         count++;

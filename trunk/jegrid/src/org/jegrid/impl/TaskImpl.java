@@ -223,7 +223,7 @@ public class TaskImpl implements Task
                 throw new GridException("Zero servers required.");
             responses = sendAssign(serverCount, bus, useLocalWorker);
             if (serverAddresses.size() == 0)
-                throw new GridException("No available workers.");
+                throw new NoWorkersAvailableException();
             running = true; // We're running now.
             done = false;   // We're not done.
             failure = null;
