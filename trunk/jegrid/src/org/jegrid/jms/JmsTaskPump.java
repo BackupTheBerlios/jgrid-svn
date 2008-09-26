@@ -83,7 +83,7 @@ public class JmsTaskPump implements Runnable, LifecycleAware
     public void initialize()
     {
         log.info("initialize()");
-        thread = new Thread(this, "JmsTaskPump");
+        thread = new Thread(this, "JmsTaskPump:" + jmsDestinationName);
         thread.setDaemon(true);
         thread.start();
     }
@@ -107,51 +107,44 @@ public class JmsTaskPump implements Runnable, LifecycleAware
     {
         this.running=true;
         log.info("run() : ENTER");
-        try
+        while (running)
         {
-            while (running)
+            try
             {
                 // Wait for servers first, so we don't drop (ignore) JMS messages.
                 log.info("Waiting for available servers...");
                 client.waitForServers(1, 1, Client.WAIT_FOREVER);
-                try
+                connect();
+                log.info("Waiting for JMS message...");
+                Message m = consumer.receive(RECEIVE_TIMEOUT);
+                if (m != null)
                 {
-                    connect();
-                    log.info("Waiting for JMS message...");
-                    Message m = consumer.receive(RECEIVE_TIMEOUT);
-                    if (m != null)
+                    log.info("Received " + m);
+                    if (m instanceof ObjectMessage)
                     {
-                        log.info("Received " + m);
-                        if (m instanceof ObjectMessage)
+                        ObjectMessage objectMessage = (ObjectMessage) m;
+                        Object o = objectMessage.getObject();
+                        if (o instanceof TaskRequest)
                         {
-                            ObjectMessage objectMessage = (ObjectMessage) m;
-                            Object o = objectMessage.getObject();
-                            if (o instanceof TaskRequest)
-                            {
-                                TaskRequest taskRequest = (TaskRequest) o;
-                                client.background(taskRequest, Client.WAIT_FOREVER);
-                            }
-                        }
-                        else
-                        {
-                            log.error("Discarding message!  It was not a TaskRequest!");
+                            TaskRequest taskRequest = (TaskRequest) o;
+                            client.background(taskRequest, Client.WAIT_FOREVER);
                         }
                     }
-                }
-                catch (Exception e)
-                {
-                    log.error("Exception: " + e, e);
-                    log.warn("Disconnecting because of exception...");
-                    disconnect();
-                    // Go to sleep....
-                    Util.sleep(RECONNECT_WAIT);
+                    else
+                    {
+                        log.error("Discarding message!  It was not a TaskRequest!");
+                    }
                 }
             }
-        }
-        catch (Exception e)
-        {
-            log.error(e, e);
-        }
+            catch (Exception e)
+            {
+                log.error("Exception: " + e, e);
+                log.warn("Disconnecting because of exception...");
+                disconnect();
+                // Go to sleep....
+                Util.sleep(RECONNECT_WAIT);
+            }
+        } // while
         log.info("run() : LEAVE");
     }
 

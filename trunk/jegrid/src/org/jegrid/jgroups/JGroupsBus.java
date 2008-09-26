@@ -340,26 +340,20 @@ public class JGroupsBus implements Bus
         List responses;
         try
         {
-            responses = dispatcher.broadcastWithExceptionCheck(
-                    null, "_localStatus", NO_ARGS, NO_TYPES, GroupRequest.GET_ALL, TIMEOUT);
+            // Contribution from M. Hendrikson:
+            // If any nodes return Exceptions/Throwables as responses, we will filter them out.
+            responses = dispatcher.broadcastWithClassCheck(
+                    null, "_localStatus", NO_ARGS, NO_TYPES, GroupRequest.GET_ALL, TIMEOUT, NodeStatus.class);
         }
         catch (GridException ge)
         {
             throw ge;
         }
-        catch (Exception e)
+        catch (Throwable e)
         {
             throw new GridException(e);
         }
 
-        final int respCount = responses.size();
-        List list = new ArrayList(respCount+2);     // leave some room so the arraylist doesn't grow on us
-        for (int i = 0; i < respCount; i++)
-        {
-            NodeStatus ns = (NodeStatus) responses.get(i);
-            if (ns != null)
-                list.add(ns);
-        }
-        return (NodeStatus[]) list.toArray(new NodeStatus[list.size()]);
+        return (NodeStatus[]) responses.toArray(new NodeStatus[responses.size()]);
     }
 }

@@ -80,7 +80,7 @@ public class RpcDispatcher extends GridRpcDispatcher
             // given the server the input.
             throw new RpcTimeoutException(e);
         }
-        catch (Exception e)
+        catch (Throwable e)
         {
             throw new GridException(e);
         }
@@ -97,7 +97,9 @@ public class RpcDispatcher extends GridRpcDispatcher
             throws Exception
     {
         if (o instanceof Exception)
-            throw(Exception) o;
+            throw (Exception) o;
+        else if (o instanceof Throwable)
+            throw new Exception((Throwable)o);
     }
 
     private Address toAddress(NodeAddress nodeAddress)
@@ -108,7 +110,7 @@ public class RpcDispatcher extends GridRpcDispatcher
     public List broadcast(NodeAddress[] addresses, String methodName,
                           Object[] args, Class[] types, int mode, long timeout)
     {
-        RspList responses = null;
+        RspList responses;
         try
         {
             responses = doBroadcast(addresses, methodName, args, types, mode, timeout);
@@ -142,6 +144,44 @@ public class RpcDispatcher extends GridRpcDispatcher
         }
         return rv;
     }
+
+    // Contribution from M. Hendrikson
+    public List broadcastWithClassCheck(NodeAddress[] addresses, String methodName, Object[] args, Class[] types,
+                                        int mode, long timeout, Class returnType) throws Exception
+    {
+        RspList responses = doBroadcast(addresses, methodName, args, types, mode, timeout);
+        int numberOfResponses = responses.size();
+        List rv = new ArrayList(numberOfResponses);
+        for (int i = 0; i < numberOfResponses; i++)
+        {
+            Rsp rsp = (Rsp) responses.elementAt(i);
+            Object o = rsp.getValue();
+            // check that we are returning only the class type specified
+            if (returnType.isInstance(o))
+                rv.add(o);
+            else
+            {
+
+                String prefix = "Method " + methodName + " Node " + rsp.getSender();
+                if (o instanceof Throwable)
+                {
+                    Throwable t = (Throwable) o;
+                    log.warn(prefix + " returned exception " + t.getClass() + ": " + t.getMessage());
+                }
+                else if (o != null)
+                {
+                    log.warn(prefix + " returned unexpected response " +
+                            o.getClass().getName());
+                }
+                else
+                {
+                    log.warn(prefix + " returned null, ignoring.");
+                }
+            }
+        }
+        return rv;
+    }
+
 
     private RspList doBroadcast(NodeAddress[] addresses, String methodName, Object[] args, Class[] types, int mode, long timeout) throws MarshallingException
     {
