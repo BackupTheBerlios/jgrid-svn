@@ -38,7 +38,6 @@
     </orderEntry>
     <orderEntry type="library" name="JBoss 4.0.4.GA" level="application_server_libraries" />
     <orderEntry type="library" name="ant 1.6.5" level="application" />
-    <orderEntryProperties />
   </component>
 </module>
 

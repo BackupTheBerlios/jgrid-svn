@@ -145,7 +145,7 @@ public class RpcDispatcher extends GridRpcDispatcher
         return rv;
     }
 
-    // Contribution from M. Hendrikson
+    // Contribution from M. Henrikson
     public List broadcastWithClassCheck(NodeAddress[] addresses, String methodName, Object[] args, Class[] types,
                                         int mode, long timeout, Class returnType) throws Exception
     {

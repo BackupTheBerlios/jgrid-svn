@@ -340,7 +340,7 @@ public class JGroupsBus implements Bus
         List responses;
         try
         {
-            // Contribution from M. Hendrikson:
+            // Contribution from M. Henrikson:
             // If any nodes return Exceptions/Throwables as responses, we will filter them out.
             responses = dispatcher.broadcastWithClassCheck(
                     null, "_localStatus", NO_ARGS, NO_TYPES, GroupRequest.GET_ALL, TIMEOUT, NodeStatus.class);

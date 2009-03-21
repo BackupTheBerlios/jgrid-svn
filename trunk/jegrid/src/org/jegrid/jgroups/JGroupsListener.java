@@ -65,6 +65,14 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
 
     public void channelShunned()
     {
+        // Contribution from M. Henrikson
+        log.info("channelShunned()");
+        synchronized (this)
+        {
+            // this is a bit heavy handed... but it does the job!
+            grid.disconnect();
+            grid.connect();
+        }
     }
 
     public void channelReconnected(Address addr)

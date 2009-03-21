@@ -12,7 +12,6 @@
     <orderEntry type="module" module-name="rngpack" />
     <orderEntry type="library" name="commons-logging-1.0.4" level="project" />
     <orderEntry type="library" name="log4j-1.2.13" level="project" />
-    <orderEntryProperties />
   </component>
 </module>
 
