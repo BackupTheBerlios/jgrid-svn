@@ -224,20 +224,9 @@ public class ServerImpl implements Server
             runThread = Thread.currentThread();
             log.info("*** SERVER " + addr + " RUNNING ***");
             // Spin and wait for shutdownServers.
-            long wait = 0;
-            long lastwait = wait;
-            while (!shutdownLatch.attempt(wait))
+            while (!shutdownLatch.attempt(Long.MAX_VALUE))
             {
-                // Refresh the grid status on this node.
-                GridStatus status = grid.getGridStatus(false);
-                // Set the wait time to be a multiple of the number of
-                // nodes in the grid to avoid chatter on large grids.
-                wait = 5000 * status.getNumberOfNodes();
-                if (wait != lastwait)
-                {
-                    log.debug("Refresh wait changed from " + lastwait + " to " + wait + " milliseconds.");
-                    lastwait = wait;
-                }
+                // do nothing, in particular, don't check the status of all the other nodes...
             }
         }
         catch (InterruptedException e)
