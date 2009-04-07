@@ -31,7 +31,6 @@ public class JGroupsBus implements Bus
     private boolean running = false;
     private Channel channel;
     private GridConfiguration config;
-    private JGroupsAddress localAddress;
     private JGroupsListener listener;
     private GridImplementor grid;
     private RpcDispatcher dispatcher;
@@ -74,6 +73,7 @@ public class JGroupsBus implements Bus
                     channel = new JChannel(config.getBusConfiguration());
             }
             channel.setOpt(Channel.VIEW, Boolean.TRUE);
+            channel.setOpt(Channel.AUTO_RECONNECT, Boolean.TRUE);
             channel.setOpt(Channel.GET_STATE_EVENTS, Boolean.TRUE);
             if (config.getGridName() == null || config.getGridName().length() == 0)
                 throw new GridException("No grid name.  Please provide a grid name so the grid can federate.");
@@ -123,16 +123,15 @@ public class JGroupsBus implements Bus
 
     public void disconnect()
     {
-        JGroupsAddress addr;
         Channel chan;
         synchronized (this)
         {
             if (!running)
                 return;
-            addr = localAddress;
             chan = channel;
         }
         // Unsynchronize now, as disconnecting will cause other threads to do things.
+        NodeAddress addr = doGetAddress();
         log.info(addr + " Disconnecting...");
         // Close the channel.
         if (chan != null)
@@ -147,7 +146,6 @@ public class JGroupsBus implements Bus
             listener = null;
             running = false;
             channel = null;
-            localAddress = null;
             dispatcher = null;
         }
         log.info("*** " + addr + " DISCONNECTED ***");
@@ -165,9 +163,8 @@ public class JGroupsBus implements Bus
 
     private NodeAddress doGetAddress()
     {
-        if (localAddress == null && channel != null)
-            localAddress = new JGroupsAddress(channel.getLocalAddress());
-        return localAddress;
+        // lets not cache this address, as it breaks auto-reconnecting
+        return new JGroupsAddress(channel.getLocalAddress());
     }
 
     // --- Outgoing messages ---
@@ -184,7 +181,7 @@ public class JGroupsBus implements Bus
     public TaskData getNextInput(TaskId taskId, TaskData output) throws RpcTimeoutException
     {
         Object o = dispatcher.call(taskId.getClient(), "_nextInput",
-                new Object[]{taskId, localAddress, output},
+                new Object[]{taskId, doGetAddress(), output},
                 new Class[]{taskId.getClass(), NodeAddress.class, TaskData.class},
                 GroupRequest.GET_ALL,
                 NEXT_INPUT_TIMEOUT);   // Wait a little longer for this, sometimes the client is slow.
