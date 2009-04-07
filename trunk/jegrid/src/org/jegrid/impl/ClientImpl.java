@@ -7,6 +7,7 @@ import org.jegrid.log.LogEventPump;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The client - manages a list of tasks.
@@ -19,7 +20,7 @@ public class ClientImpl implements ClientImplementor
     private static Logger log = Logger.getLogger(ClientImpl.class);
 
     private int nextTaskId = 1000;
-    private final Map tasksById = new HashMap();
+    private final Map tasksById = new ConcurrentHashMap();  // I still get ConcurrentModificationException, so changing to a ConcurrentHashMap
     private Bus bus;
     private GridImplementor grid;
     private Comparator serverComparator;
