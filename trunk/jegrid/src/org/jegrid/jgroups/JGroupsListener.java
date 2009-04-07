@@ -5,9 +5,7 @@ import org.jegrid.NodeAddress;
 import org.jegrid.impl.GridImplementor;
 import org.jgroups.*;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Translates JGroups messages (e.g. membership changes) into grid callbacks.
@@ -22,7 +20,7 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
     private View currentView;
     private NodeAddress coordinator;
     boolean connected = false;
-    private View deferredView; // A view that happened before the channel was connected.
+    private List<View> deferredView = new ArrayList<View>(); // views that happened before the channel was connected.
 
     public JGroupsListener(GridImplementor grid)
     {
@@ -32,17 +30,23 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
     public void channelConnected(Channel channel)
     {
         log.info("channelConnected() " + channel.getLocalAddress());
-        View view = null;
-        synchronized (this)
+
+        while (true)
         {
-            connected = true;
-            // Take the view that happened before the connection into a local variable so we can un-sync.
-            view = deferredView;
-            deferredView = null;
+            View view;
+            synchronized (this)
+            {
+                connected = true;
+                // Take any views that happened before the connection into a local variable so we can un-sync.
+                if (deferredView.isEmpty())
+                    break;  // if there were none then break out of the loop
+                else
+                    view = deferredView.remove(0);  // or process any deferred views to make sure we are in synch
+            }
+            // If there was a view before the channel was connected, then process that view now.
+            if (view != null)
+                doAcceptView(view, true);
         }
-        // If there was a view before the channel was connected, then process that view now.
-        if (view != null)
-            doAcceptView(view, true);
     }
 
     public void channelDisconnected(Channel channel)
@@ -69,9 +73,7 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
         log.info("channelShunned()");
         synchronized (this)
         {
-            // this is a bit heavy handed... but it does the job!
-            grid.disconnect();
-            grid.connect();
+            connected = false;
         }
     }
 
@@ -114,7 +116,7 @@ public class JGroupsListener implements ChannelListener, MessageListener, Member
             if (!connected)
             {
                 log.info("Not yet connected, deferring view for connect...");
-                deferredView = newView;
+                deferredView.add(newView);
                 return;
             }
             diff = new ViewDiff(currentView, newView);
