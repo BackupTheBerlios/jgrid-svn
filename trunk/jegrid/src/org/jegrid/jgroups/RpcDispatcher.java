@@ -78,11 +78,11 @@ public class RpcDispatcher extends GridRpcDispatcher
         {
             // NOTE: If this call times out it may mean that the client has already
             // given the server the input.
-            throw new RpcTimeoutException(e);
+            throw new RpcTimeoutException("Timed out waiting for method "+methodName+", at dest: "+address, e);
         }
         catch (Throwable e)
         {
-            throw new GridException(e);
+            throw new GridException("Caught an exception when calling method "+methodName+", dest: "+address, e);
         }
     }
 
